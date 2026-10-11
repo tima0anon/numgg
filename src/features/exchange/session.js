@@ -90,9 +90,9 @@ export function makeOrder(){
   const reward = Math.max(1, Math.round(hypo * orderMultiplier(spec) * (0.9 + Math.random()*0.25)));
   const now = Date.now();
   let lifetime = SESSION_MS;
-  if(spec >= 0.85) lifetime = 180000 + ~~(Math.random()*120000);
-  else if(spec >= 0.7) lifetime = 60000 + ~~(Math.random()*120000);
-  else if(spec >= 0.5) lifetime = 30000 + ~~(Math.random()*60000);
+  if(spec >= 0.85) lifetime = 120000 + ~~(Math.random()*60000);
+  else if(spec >= 0.7) lifetime = 60000 + ~~(Math.random()*60000);
+  else if(spec >= 0.5) lifetime = 30000 + ~~(Math.random()*30000);
   return {
     id: 'r' + (S.nextId++) + '_' + (Math.random()*1e6|0),
     mask, flag: cd.flag, country: cd.name, rarity: rid, region,
@@ -148,10 +148,12 @@ export function generateExchangeSession(){
   for(let i=0;i<toAdd;i++) market.offers.push(makeOffer());
 
   market.orders = market.orders.filter(o => o.until > now + 5000);
-  const longOrders = market.orders.filter(o => (o.until - o.createdAt) > 60000).length;
+  let longOrders = market.orders.filter(o => (o.until - o.createdAt) > 60000).length;
   while(market.orders.length < targetOrders){
     const o = makeOrder();
-    if((o.until - o.createdAt) > 60000 && longOrders >= 5) o.until = Date.now() + SESSION_MS + ~~(Math.random()*SESSION_MS*2);
+    const isLong = (o.until - o.createdAt) > 60000;
+    if(isLong && longOrders >= 5) o.until = Date.now() + SESSION_MS + ~~(Math.random()*SESSION_MS);
+    else if(isLong) longOrders++;
     market.orders.push(o);
   }
   if(market.orders.length > targetOrders + 10) market.orders = market.orders.slice(0, targetOrders + 10);
@@ -167,23 +169,33 @@ export function bumpListingsSessions(){ for(const l of market.listings) l.sessio
 
 export function tickExchange(){
   const now = Date.now();
+  let removed = 0;
   for(let i=market.offers.length-1;i>=0;i--){
     const o = market.offers[i];
     const dev = (o.hypo - o.price) / o.hypo;
     const rarityBonus = RARITY_ORDER.indexOf(o.rarity) * 0.06;
-    let p = 0.0005 + Math.max(0, dev) * 0.28 + rarityBonus * 0.01;
-    if(dev > 0) p += 0.05;
-    if(Math.random() < p) market.offers.splice(i, 1);
+    let p = 0.0003 + Math.max(0, dev) * 0.1 + rarityBonus * 0.006;
+    if(dev > 0.2) p += 0.018;
+    if(Math.random() < p){ market.offers.splice(i, 1); removed++; }
   }
   for(let i=market.orders.length-1;i>=0;i--){
     const o = market.orders[i];
-    if(now > o.until){ market.orders.splice(i,1); continue; }
+    if(now > o.until){ market.orders.splice(i,1); removed++; continue; }
     const spec = o.specificity;
-    let p = 0.0008 * (1 - spec) + 0.0003;
+    let p = 0.0005 * (1 - spec) + 0.0002;
     if(spec >= 0.85) p *= 0.3;
-    if(Math.random() < p) market.orders.splice(i, 1);
+    if(Math.random() < p){ market.orders.splice(i, 1); removed++; }
   }
   updateSessionCountdown();
+  if(removed && document.getElementById('page-exchange')?.classList.contains('active')){
+    const active = document.activeElement;
+    const typing = active && active.closest && active.closest('#page-exchange') && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
+    if(!typing){
+      const top = document.scrollingElement ? document.scrollingElement.scrollTop : 0;
+      renderExchange();
+      if(document.scrollingElement) document.scrollingElement.scrollTop = top;
+    }
+  }
   if(now >= market.sessionNextAt){
     rollListings();
     generateExchangeSession();
@@ -192,6 +204,7 @@ export function tickExchange(){
 
 export function rollListings(){
   if(!market.listings.length) return;
+  const sold = [];
   for(let i=market.listings.length-1;i>=0;i--){
     const l = market.listings[i];
     const num = S.col.find(n => n.id === l.numId);
@@ -207,10 +220,18 @@ export function rollListings(){
       const idx = S.col.findIndex(n => n.id === l.numId);
       if(idx >= 0) S.col.splice(idx, 1);
       market.listings.splice(i,1);
-      addAcctLog('💸 Продан ' + num.plate + ' за ' + l.price.toLocaleString('ru-RU') + ' ₽', 'ok');
-      notify('💸 ' + num.plate + ' продан за ' + l.price.toLocaleString('ru-RU') + ' ₽');
-      Sound.sell(); haptic(10);
+      sold.push({ plate: num.plate, price: l.price });
     }
+  }
+  if(sold.length === 1){
+    notify('💸 ' + sold[0].plate + ' продан за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽');
+    addAcctLog('💸 Продан ' + sold[0].plate + ' за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽', 'ok');
+    Sound.sell(); haptic(10);
+  } else if(sold.length > 1){
+    const sum = sold.reduce((s, x) => s + x.price, 0);
+    notify('💸 Продано ' + sold.length + ' лотов на ' + sum.toLocaleString('ru-RU') + ' ₽');
+    addAcctLog('💸 Продано лотов: ' + sold.length + ' · ' + sum.toLocaleString('ru-RU') + ' ₽', 'ok');
+    Sound.sell(); haptic(10);
   }
   updateBalances(); renderCollection(); renderExchange(); save();
 }
@@ -221,40 +242,51 @@ export function updateSessionCountdown(){
   el.textContent = (Math.max(0, market.sessionNextAt - Date.now())/1000).toFixed(1)+'с';
 }
 
-export function doBuyOffer(o, silent){
-  if(S.rub < o.price){ if(!silent) notify('Недостаточно денег'); return; }
+export function doBuyOffer(o, silent, batch){
+  if(!o || !market.offers.some(x => x.id === o.id)) return false;
+  if(S.rub < o.price){ if(!silent && !batch) notify('Недостаточно денег'); return false; }
   S.rub -= o.price; S.totalSpent += o.price;
   const item = { id: S.nextId++, country: o.country, flag: o.flag, plate: o.plate, rarity: o.rarity, price: o.hypo, favorite: false };
   S.col.push(item);
   if(!S.bestNum || item.price > S.bestNum.price) S.bestNum = item;
   const idx = market.offers.findIndex(x => x.id === o.id);
   if(idx >= 0) market.offers.splice(idx,1);
-  Sound.buy(); haptic(15);
-  if(silent) addAcctLog('🤖 Куплено: ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽', 'ok');
-  else notify('Куплено: ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽');
+  if(!batch){ Sound.buy(); haptic(15); }
+  if(silent && !batch) addAcctLog('🤖 Куплено: ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽', 'ok');
+  else if(!batch) notify('Куплено: ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽');
   S.acct.deals++;
   S.acct.profit += (o.hypo - o.price);
-  updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements();
-  save();
+  if(!batch){
+    updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements();
+    save();
+  }
+  return true;
 }
 
-export function doFulfillOrder(orderId, numId, silent){
+export function doFulfillOrder(orderId, numId, silent, batch){
   const o = market.orders.find(x => x.id === orderId);
-  if(!o) return;
   const num = S.col.find(n => n.id === numId);
-  if(!num) return;
-  if(!plateMatchesMask(num.plate, o.mask)){ if(!silent) notify('Не подходит под маску'); return; }
+  if(!o || !num) return false;
+  if(num.listed){ if(!silent && !batch) notify('Сначала сними номер с продажи'); return false; }
+  if(silent && num.favorite) return false;
+  if(!plateMatchesMask(num.plate, o.mask)){ if(!silent && !batch) notify('Не подходит под маску'); return false; }
   const reward = o.reward;
+  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
   S.rub += reward; S.totalEarned += reward;
   const idx = S.col.findIndex(n => n.id === numId);
   if(idx >= 0) S.col.splice(idx, 1);
   const oIdx = market.orders.findIndex(x => x.id === orderId);
   if(oIdx >= 0) market.orders.splice(oIdx,1);
-  Sound.coin_big(); haptic([20,20,40]);
+  const listIdx = market.listings.findIndex(l => l.numId === numId);
+  if(listIdx >= 0) market.listings.splice(listIdx, 1);
+  if(!batch){ Sound.coin_big(); haptic([20,20,40]); }
   S.acct.deals++;
-  S.acct.profit += reward;
-  if(silent) addAcctLog('🤖 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽', 'ok');
-  else notify('🎯 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽');
-  updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements();
-  save();
+  S.acct.profit += (reward - hypo);
+  if(silent && !batch) addAcctLog('🤖 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽', 'ok');
+  else if(!batch) notify('🎯 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽');
+  if(!batch){
+    updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements();
+    save();
+  }
+  return true;
 }

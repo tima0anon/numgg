@@ -43,10 +43,14 @@ import {
   updateSessionCountdown,
 } from '../features/exchange/session.js';
 import {
+  buyUnderpriced,
+  fulfillProfitable,
   renderExchange,
   renderOffers,
   renderOrders,
+  unlistAll,
 } from '../features/exchange/view.js';
+import { sellBulk } from '../features/garage/sell.js';
 import { renderCollection } from '../features/garage/view.js';
 import { updateBalances } from '../features/hud/balance.js';
 import {
@@ -163,6 +167,9 @@ export function init(){
     document.getElementById('fSearch').value = '';
     renderCollection();
   });
+  document.getElementById('sellAllLow').addEventListener('click', () => sellBulk('low'));
+  document.getElementById('sellAllMid').addEventListener('click', () => sellBulk('mid'));
+  document.getElementById('sellAllHigh').addEventListener('click', () => sellBulk('high'));
 
   document.querySelectorAll('.ex-tab').forEach(t => t.addEventListener('click', () => {
     Sound.click();
@@ -176,6 +183,8 @@ export function init(){
   const oCountry = document.getElementById('exOfferCountry');
   const oRarity = document.getElementById('exOfferRarity');
   const oSearch = document.getElementById('exOfferSearch');
+  const offerCountryOptions = '<option value="all">Все страны</option>' + COUNTRIES.map(c => '<option value="'+c.id+'">'+c.name+'</option>').join('');
+  oCountry.innerHTML = offerCountryOptions;
   oSort.value = market.filters.oSort;
   oCountry.value = market.filters.oCountry;
   oRarity.value = market.filters.oRarity;
@@ -191,6 +200,7 @@ export function init(){
 
   const ordSort = document.getElementById('exOrderSort');
   const ordCountry = document.getElementById('exOrderCountry');
+  ordCountry.innerHTML = offerCountryOptions;
   ordSort.value = market.filters.ordSort;
   ordCountry.value = market.filters.ordCountry;
   ordSort.addEventListener('change', () => { market.filters.ordSort = ordSort.value; renderOrders(); });
@@ -200,9 +210,9 @@ export function init(){
     ordSort.value = 'reward-desc'; ordCountry.value = 'all';
     renderOrders();
   });
-  const offerCountryOptions = '<option value="all">Все страны</option>' + COUNTRIES.map(c => '<option value="'+c.id+'">'+c.name+'</option>').join('');
-  oCountry.innerHTML = offerCountryOptions;
-  ordCountry.innerHTML = offerCountryOptions;
+  document.getElementById('buyDeals').addEventListener('click', buyUnderpriced);
+  document.getElementById('fillOrders').addEventListener('click', fulfillProfitable);
+  document.getElementById('unlistAll').addEventListener('click', unlistAll);
 
   document.querySelectorAll('#acctMode button').forEach(b => b.addEventListener('click', () => {
     S.acct.mode = b.dataset.mode;

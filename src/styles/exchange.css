@@ -16,7 +16,8 @@
 .ex-filters{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 12px;align-items:center}
 .ex-filters select,.ex-filters input{background:var(--bg-secondary);border:1px solid var(--sep);color:var(--label);padding:8px 14px;border-radius:100px;font-size:.8rem;font-family:var(--font);outline:none;-webkit-appearance:none;appearance:none}
 .ex-filters select{cursor:pointer;padding-right:30px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
-.ex-filters input:focus,.ex-filters select:focus{border-color:var(--blue)}
+.ex-filters input:focus,.ex-filters select:focus,.order-pick:focus{border-color:var(--blue)}
+.order-pick{width:100%;background:var(--bg-elev);border:1px solid var(--sep);color:var(--label);padding:8px 28px 8px 12px;border-radius:100px;font-size:.75rem;font-family:var(--font);font-weight:700;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
 .ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:0 16px 18px;max-height:640px;overflow-y:auto}
 .ex-grid::-webkit-scrollbar{width:6px}
 .ex-grid::-webkit-scrollbar-thumb{background:var(--label-3);border-radius:3px}

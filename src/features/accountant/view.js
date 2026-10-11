@@ -36,7 +36,7 @@ export function updateAcctUI(){
 export function buyAcctSkill(kind){
   const c = acctUpgradeCost(kind);
   if(S.rub < c || S.acct[kind] >= 8) return;
-  S.rub -= c; S.acct[kind]++;
+  S.rub -= c; S.totalSpent += c; S.acct[kind]++;
   Sound.buy(); updateBalances(); updateAcctUI(); save();
   notify('🧮 '+({speed:'скорость',accuracy:'точность',risk:'риск'})[kind]+' → '+S.acct[kind]);
 }

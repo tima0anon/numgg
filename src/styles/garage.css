@@ -5,6 +5,11 @@
 .coef-row .coef-label{display:flex;align-items:center;gap:6px}
 .coef-row input{width:64px;background:var(--bg-elev);border:1px solid var(--sep);color:var(--label);padding:7px 10px;border-radius:100px;font-family:'SF Mono',monospace;font-weight:800;text-align:center;font-size:.85rem;outline:none;-webkit-appearance:none;appearance:none}
 .coef-row .hint{margin-left:auto;font-size:.72rem;color:var(--label-3);font-weight:500}
+.bulk-sell{margin:0 16px 14px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius);display:flex;flex-direction:column;gap:10px}
+.bulk-sell-label{font-size:.78rem;font-weight:700;color:var(--label)}
+.bulk-sell-label span{display:block;margin-top:2px;font-size:.7rem;font-weight:500;color:var(--label-3)}
+.bulk-sell-trio button{padding:10px 6px}
+.bulk-sell-trio .lb{font-size:.72rem}
 .filters{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 14px}
 .filters select,.filters input{background:var(--bg-secondary);border:1px solid var(--sep);color:var(--label);padding:9px 14px;border-radius:100px;font-size:.85rem;font-family:var(--font);outline:none}
 .filters select{cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:32px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 12px center}

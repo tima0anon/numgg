@@ -38,7 +38,6 @@ export function renderHistory(){
 }
 
 export function updateAchievements(){
-  const rare = S.col.filter(n => ['epic','legendary','mythic','divine'].includes(n.rarity)).length;
   const countries = new Set(S.col.map(n => n.country)).size;
   const ach = [
     {n:'Первый дроп', d:'Дропни 1', done: S.totalSpun >= 1},
@@ -46,12 +45,12 @@ export function updateAchievements(){
     {n:'50 номеров', d:'Дропни 50', done: S.totalSpun >= 50},
     {n:'100 номеров', d:'Дропни 100', done: S.totalSpun >= 100},
     {n:'500 номеров', d:'Дропни 500', done: S.totalSpun >= 500},
-    {n:'Редкая находка', d:'Найди редкий', done: S.col.some(n => n.rarity === 'rare')},
-    {n:'Эпический', d:'Найди эпический', done: S.col.some(n => n.rarity === 'epic')},
-    {n:'Легенда', d:'Найди легендарный', done: S.col.some(n => n.rarity === 'legendary')},
-    {n:'Миф', d:'Найди мифический', done: S.col.some(n => n.rarity === 'mythic')},
-    {n:'Божество', d:'Найди божественный', done: S.col.some(n => n.rarity === 'divine')},
-    {n:'Коллекционер', d:'5+ эпик+', done: rare >= 5},
+    {n:'Редкая находка', d:'Найди редкий', done: (S.rarityCount.rare||0) > 0},
+    {n:'Эпический', d:'Найди эпический', done: (S.rarityCount.epic||0) > 0},
+    {n:'Легенда', d:'Найди легендарный', done: (S.rarityCount.legendary||0) > 0},
+    {n:'Миф', d:'Найди мифический', done: (S.rarityCount.mythic||0) > 0},
+    {n:'Божество', d:'Найди божественный', done: (S.rarityCount.divine||0) > 0},
+    {n:'Коллекционер', d:'5+ эпик+', done: ['epic','legendary','mythic','divine'].reduce((s,r)=>s+(S.rarityCount[r]||0),0) >= 5},
     {n:'Сотка', d:'100 000 ₽', done: S.totalEarned >= 100000},
     {n:'🪙 Обыватель', d:'5 000 ₽', done: S.rub >= 5000},
     {n:'💵 Копилка', d:'20 000 ₽', done: S.rub >= 20000},

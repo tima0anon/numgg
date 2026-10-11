@@ -2,7 +2,7 @@ import { extractRegion } from '../../domain/plates/countries.js';
 import { hypoPrice } from '../../domain/pricing.js';
 import { addAcctLog } from '../accountant/session.js';
 import { renderExchange } from '../exchange/view.js';
-import { renderCollection } from './view.js';
+import { getFiltered, renderCollection } from './view.js';
 import { updateBalances } from '../hud/balance.js';
 import {
   updateAchievements,
@@ -16,9 +16,15 @@ import { market } from '../../state/market.js';
 import { S } from '../../state/player.js';
 
 // SELL
+function confirmFavorite(num, verb){
+  if(!num.favorite) return true;
+  return confirm(verb + ' избранный номер ' + num.plate + '?');
+}
+
 export function sellLow(numId){
   const num = S.col.find(n => n.id === numId);
   if(!num || num.listed) return;
+  if(!confirmFavorite(num, 'Мгновенно продать')) return;
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
   const coef = Math.max(1, Math.min(90, S.coefLow)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 - coef)));
@@ -34,6 +40,7 @@ export function sellLow(numId){
 export function sellMid(numId){
   const num = S.col.find(n => n.id === numId);
   if(!num || num.listed) return;
+  if(!confirmFavorite(num, 'Выставить')) return;
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
   const price = Math.max(1, Math.round(hypo));
   num.listed = true;
@@ -46,6 +53,7 @@ export function sellMid(numId){
 export function sellHigh(numId){
   const num = S.col.find(n => n.id === numId);
   if(!num || num.listed) return;
+  if(!confirmFavorite(num, 'Выставить выше рынка')) return;
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
   const coef = Math.max(1, Math.min(200, S.coefHigh)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 + coef)));
@@ -54,4 +62,64 @@ export function sellHigh(numId){
   notify('📈 ' + num.plate + ' выставлен за ' + price.toLocaleString('ru-RU') + ' ₽');
   Sound.click();
   updateBalances(); renderCollection(); renderExchange(); save();
+}
+
+function unitPrice(num, kind){
+  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
+  if(kind === 'low'){
+    const coef = Math.max(1, Math.min(90, S.coefLow)) / 100;
+    return Math.max(1, Math.round(hypo * (1 - coef)));
+  }
+  if(kind === 'high'){
+    const coef = Math.max(1, Math.min(200, S.coefHigh)) / 100;
+    return Math.max(1, Math.round(hypo * (1 + coef)));
+  }
+  return Math.max(1, Math.round(hypo));
+}
+
+export function bulkCandidates(){
+  return getFiltered().filter(n => !n.listed && !n.favorite);
+}
+
+export function bulkQuote(){
+  const items = bulkCandidates();
+  let low = 0, mid = 0, high = 0;
+  for(const n of items){
+    low += unitPrice(n, 'low');
+    mid += unitPrice(n, 'mid');
+    high += unitPrice(n, 'high');
+  }
+  return { count: items.length, low, mid, high };
+}
+
+export function sellBulk(kind){
+  const items = bulkCandidates();
+  if(!items.length){
+    notify('Нечего продавать: избранное и номера на бирже не беру');
+    Sound.error();
+    return;
+  }
+  const priced = items.map(n => ({ n, price: unitPrice(n, kind) }));
+  const sum = priced.reduce((s, x) => s + x.price, 0);
+  const verb = kind === 'low' ? 'Мгновенно продать' : kind === 'high' ? 'Выставить выше рынка' : 'Выставить по рынку';
+  const money = kind === 'low' ? ' за ' : ' на ';
+  if(!confirm(verb + ' ' + priced.length + ' номеров' + money + sum.toLocaleString('ru-RU') + ' ₽?\nИзбранное и лоты, которые уже на бирже, останутся.')) return;
+  if(kind === 'low'){
+    const ids = new Set(priced.map(x => x.n.id));
+    S.rub += sum;
+    S.totalEarned += sum;
+    S.col = S.col.filter(n => !ids.has(n.id));
+    Sound.sell(); haptic(10);
+    notify('⚡ Продано ' + priced.length + ' номеров за ' + sum.toLocaleString('ru-RU') + ' ₽');
+    addAcctLog('⚡ Массовая продажа · ' + priced.length + ' шт · ' + sum.toLocaleString('ru-RU') + ' ₽', 'n');
+  } else {
+    for(const { n, price } of priced){
+      n.listed = true;
+      market.listings.push({ numId: n.id, price, sessions: 0, kind: kind === 'high' ? 'high' : 'mid' });
+    }
+    Sound.click();
+    notify((kind === 'high' ? '📈 ' : '📋 ') + priced.length + ' номеров выставлено на ' + sum.toLocaleString('ru-RU') + ' ₽');
+    addAcctLog('📋 На биржу · ' + priced.length + ' шт · ' + sum.toLocaleString('ru-RU') + ' ₽', 'n');
+  }
+  updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements(); save();
 }

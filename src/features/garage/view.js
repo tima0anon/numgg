@@ -8,6 +8,7 @@ import { hypoPrice } from '../../domain/pricing.js';
 import { bulkCost } from '../drop/spin.js';
 import { renderExchange } from '../exchange/view.js';
 import {
+  bulkQuote,
   sellHigh,
   sellLow,
   sellMid,
@@ -28,6 +29,10 @@ export function renderCountries(){
   sel.value = (countries.includes(cur) || cur==='all') ? cur : 'all';
 }
 
+function livePrice(n){
+  return hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag));
+}
+
 export function getFiltered(){
   const country = document.getElementById('fCountry').value;
   const rarity = document.getElementById('fRarity').value;
@@ -37,15 +42,15 @@ export function getFiltered(){
   const filtered = S.col.filter(n => {
     if(country!=='all' && n.country!==country) return false;
     if(rarity!=='all' && n.rarity!==rarity) return false;
-    if(n.price < minPrice) return false;
+    if(livePrice(n) < minPrice) return false;
     if(search && !n.plate.toLowerCase().includes(search)) return false;
     return true;
   });
   switch(sortBy){
-    case 'price-desc': filtered.sort((a,b)=>b.price-a.price||b.id-a.id); break;
-    case 'price-asc': filtered.sort((a,b)=>a.price-b.price||b.id-a.id); break;
-    case 'rarity-desc': filtered.sort((a,b)=>RARITY_ORDER.indexOf(b.rarity)-RARITY_ORDER.indexOf(a.rarity)||b.price-a.price); break;
-    case 'rarity-asc': filtered.sort((a,b)=>RARITY_ORDER.indexOf(a.rarity)-RARITY_ORDER.indexOf(b.rarity)||b.price-a.price); break;
+    case 'price-desc': filtered.sort((a,b)=>livePrice(b)-livePrice(a)||b.id-a.id); break;
+    case 'price-asc': filtered.sort((a,b)=>livePrice(a)-livePrice(b)||b.id-a.id); break;
+    case 'rarity-desc': filtered.sort((a,b)=>RARITY_ORDER.indexOf(b.rarity)-RARITY_ORDER.indexOf(a.rarity)||livePrice(b)-livePrice(a)); break;
+    case 'rarity-asc': filtered.sort((a,b)=>RARITY_ORDER.indexOf(a.rarity)-RARITY_ORDER.indexOf(b.rarity)||livePrice(b)-livePrice(a)); break;
     case 'new': filtered.sort((a,b)=>b.id-a.id); break;
     case 'old': filtered.sort((a,b)=>a.id-b.id); break;
     default: filtered.sort((a,b) => { if(!!a.favorite !== !!b.favorite) return a.favorite ? -1 : 1; return b.id - a.id; });
@@ -66,9 +71,23 @@ export function renderCollection(){
   const favTotal = S.col.filter(n => n.favorite).length;
   document.getElementById('favCount').textContent = favTotal ? ' · ⭐ '+favTotal : '';
   updateGarageSummary();
+  const quote = bulkQuote();
+  const lowBtn = document.getElementById('sellAllLow');
+  const midBtn = document.getElementById('sellAllMid');
+  const highBtn = document.getElementById('sellAllHigh');
+  if(lowBtn && midBtn && highBtn){
+    const empty = quote.count === 0;
+    lowBtn.disabled = empty;
+    midBtn.disabled = empty;
+    highBtn.disabled = empty;
+    document.getElementById('sellAllLowPrice').textContent = empty ? '—' : quote.count + ' · ' + quote.low.toLocaleString('ru-RU');
+    document.getElementById('sellAllMidPrice').textContent = empty ? '—' : quote.count + ' · ' + quote.mid.toLocaleString('ru-RU');
+    document.getElementById('sellAllHighPrice').textContent = empty ? '—' : quote.count + ' · ' + quote.high.toLocaleString('ru-RU');
+  }
   const grid = document.getElementById('grid');
   const items = getFiltered();
-  if(!items.length){ grid.innerHTML = '<div class="empty">Коллекция пуста — дропни за '+bulkCost(1)+' ₽</div>'; return; }
+  if(!S.col.length){ grid.innerHTML = '<div class="empty">Коллекция пуста — дропни за '+bulkCost(1)+' ₽</div>'; return; }
+  if(!items.length){ grid.innerHTML = '<div class="empty">По этому фильтру ничего нет.</div>'; return; }
   const MAX = 500;
   const slice = items.length > MAX ? items.slice(0, MAX) : items;
   const coefLow = Math.max(1, Math.min(90, S.coefLow)) / 100;
@@ -98,7 +117,7 @@ export function renderCollection(){
           '</div>'
       )+
       '</div>';
-  }).join('');
+  }).join('') + (items.length > MAX ? '<div class="empty">Показаны первые '+MAX+' из '+items.length+'. Сузь фильтр, чтобы увидеть остальные.</div>' : '');
   grid.querySelectorAll('[data-low]').forEach(b => b.addEventListener('click', e => sellLow(parseInt(e.currentTarget.dataset.low,10))));
   grid.querySelectorAll('[data-mid]').forEach(b => b.addEventListener('click', e => sellMid(parseInt(e.currentTarget.dataset.mid,10))));
   grid.querySelectorAll('[data-high]').forEach(b => b.addEventListener('click', e => sellHigh(parseInt(e.currentTarget.dataset.high,10))));

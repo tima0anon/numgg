@@ -21,7 +21,7 @@ export function updateDailyUI(){
   const btn = document.getElementById('dailyBtn'), sub = document.getElementById('dailySub');
   if(!btn || !sub) return;
   const left = msToNextDaily();
-  if(left <= 0){ btn.disabled = false; btn.classList.add('gold'); btn.textContent = 'Забрать'; sub.textContent = 'Бесплатная крутка · доступна!'; }
+  if(left <= 0){ btn.disabled = false; btn.classList.add('gold'); btn.textContent = 'Забрать'; sub.textContent = 'Можно забрать сумму одной крутки'; }
   else { btn.disabled = true; btn.classList.remove('gold'); btn.textContent = fmtTime(left); sub.textContent = 'Следующий бонус через '+fmtTime(left); }
 }
 

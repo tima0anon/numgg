@@ -1,4 +1,5 @@
 import { updateAcctUI } from '../accountant/view.js';
+import { updateStats } from './stats.js';
 import {
   cooldownMs,
   updateCd,
@@ -47,5 +48,5 @@ export function updateBalances(){
   const autoBtn = document.getElementById('buyAuto');
   autoBtn.textContent = autoCost.toLocaleString('ru-RU')+' ₽';
   autoBtn.disabled = S.rub < autoCost || S.autoLvl >= 8;
-  updateDropCostsUI(); updateCd(); updateEarnStats(); updateDailyUI(); updateAcctUI();
+  updateDropCostsUI(); updateCd(); updateEarnStats(); updateDailyUI(); updateAcctUI(); updateStats();
 }
