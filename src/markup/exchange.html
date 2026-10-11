@@ -1,0 +1,50 @@
+<section class="page" id="page-exchange">
+  <div class="group">
+    <div class="ex-head">
+      <h2>💹 Биржа</h2>
+      <div class="session-pill"><span class="dot"></span><span id="sessionCountdown">15.0с</span></div>
+    </div>
+    <div class="ex-note">Сессия длится <b>15 секунд</b>. Список заказов и предложений обновляется каждую сессию. Самые выгодные сделки закрываются за секунды. Особо сложные заказы живут <b>до 3 минут</b>.</div>
+    <div class="ex-tabs">
+      <button class="ex-tab active" data-extab="offers">Предложения <span class="cnt" id="cntOffers">0</span></button>
+      <button class="ex-tab" data-extab="orders">Заказы <span class="cnt" id="cntOrders">0</span></button>
+      <button class="ex-tab" data-extab="my">Мои лоты <span class="cnt" id="cntMy">0</span></button>
+    </div>
+    <div class="ex-content active" id="excontent-offers">
+      <div class="ex-filters">
+        <select id="exOfferSort">
+          <option value="dev-asc">Скидка ↑</option>
+          <option value="dev-desc">Наценка ↓</option>
+          <option value="price-asc">Цена ↑</option>
+          <option value="price-desc">Цена ↓</option>
+          <option value="rarity-desc">Редкость ↓</option>
+          <option value="rarity-asc">Редкость ↑</option>
+        </select>
+        <select id="exOfferCountry"><option value="all">Все страны</option></select>
+        <select id="exOfferRarity">
+          <option value="all">Все редкости</option>
+          <option value="common">Мусор</option><option value="uncommon">Необычный</option><option value="rare">Редкий</option><option value="epic">Эпический</option><option value="legendary">Легендарный</option><option value="mythic">Мифический</option><option value="divine">Божественный</option>
+        </select>
+        <input type="text" id="exOfferSearch" placeholder="Поиск..." style="flex:1;min-width:100px">
+        <button class="ios-btn gray" id="exOfferReset" style="padding:8px 14px;font-size:.8rem">Сброс</button>
+      </div>
+      <div class="ex-grid" id="exOfferGrid"></div>
+    </div>
+    <div class="ex-content" id="excontent-orders">
+      <div class="ex-filters">
+        <select id="exOrderSort">
+          <option value="reward-desc">Награда ↓</option>
+          <option value="reward-asc">Награда ↑</option>
+          <option value="spec-desc">Точность ↓</option>
+          <option value="matches-desc">Совпадения ↓</option>
+        </select>
+        <select id="exOrderCountry"><option value="all">Все страны</option></select>
+        <button class="ios-btn gray" id="exOrderReset" style="padding:8px 14px;font-size:.8rem">Сброс</button>
+      </div>
+      <div class="ex-grid" id="exOrderGrid"></div>
+    </div>
+    <div class="ex-content" id="excontent-my">
+      <div class="ex-grid" id="exMyGrid"></div>
+    </div>
+  </div>
+</section>

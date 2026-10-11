@@ -1,0 +1,118 @@
+<section class="page" id="page-info">
+  <div class="group">
+    <div class="group-header">📊 Правила и информация</div>
+    <div class="tabs">
+      <button class="tab active" data-tab="rarity">Редкости</button>
+      <button class="tab" data-tab="prices">Гипот. цены</button>
+      <button class="tab" data-tab="exchange">Биржа</button>
+      <button class="tab" data-tab="accountant">Бухгалтер</button>
+      <button class="tab" data-tab="elite">Блатные</button>
+      <button class="tab" data-tab="formats">Форматы</button>
+      <button class="tab" data-tab="wealth">Ранги</button>
+      <button class="tab" data-tab="stats">Статистика</button>
+    </div>
+
+    <div class="tab-content active" id="tab-rarity">
+      <div class="info-pad">
+        <table class="rar-table">
+          <thead><tr><th>Редкость</th><th>Шанс</th><th>Базовая цена</th></tr></thead>
+          <tbody>
+            <tr><td class="rar-name common">Мусор</td><td>75%</td><td class="rar-price">20 ₽</td></tr>
+            <tr><td class="rar-name uncommon">Необычный</td><td>18%</td><td class="rar-price">80 ₽</td></tr>
+            <tr><td class="rar-name rare">Редкий</td><td>6%</td><td class="rar-price">400 ₽</td></tr>
+            <tr><td class="rar-name epic">Эпический</td><td>1%</td><td class="rar-price">1 250 ₽</td></tr>
+            <tr><td class="rar-name legendary">Легендарный</td><td>0.01%</td><td class="rar-price">50 000 ₽</td></tr>
+            <tr><td class="rar-name mythic">Мифический</td><td>0.001%</td><td class="rar-price">500 000 ₽</td></tr>
+            <tr><td class="rar-name divine">Божественный</td><td>0.0001%</td><td class="rar-price">10 000 000 ₽</td></tr>
+          </tbody>
+        </table>
+        <div class="note">⭐ <b>Избранное.</b> Такие номера защищены от авто-продажи бухгалтером.</div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-prices">
+      <div class="info-pad">
+        <div class="note" style="margin-top:0">📋 <b>Гипотетическая средняя цена.</b> Расчётная величина: базовая × коэффициент страны × коэффициент региона × множитель новостей. Именно вокруг неё плавают цены на бирже.</div>
+        <div class="note">⚠️ <b>Просто так продать по этой цене нельзя.</b> Только через биржу: в заказ, в предложение или ниже рынка на мгновенный выкуп.</div>
+        <div class="group-header" style="padding:16px 0 8px;font-size:.72rem;color:var(--label-2);font-weight:700">Коэффициенты стран</div>
+        <table class="rar-table">
+          <thead><tr><th>Страна</th><th>Коэффициент</th></tr></thead>
+          <tbody>
+            <tr><td class="rar-name">🇨🇳 Китай</td><td class="rar-price">×1.80</td></tr>
+            <tr><td class="rar-name">🇺🇸 США</td><td class="rar-price">×1.40</td></tr>
+            <tr><td class="rar-name">🇷🇺 Россия</td><td class="rar-price">×1.00</td></tr>
+            <tr><td class="rar-name">🇺🇦 Украина</td><td class="rar-price">×0.70</td></tr>
+            <tr><td class="rar-name">🇧🇾 Беларусь</td><td class="rar-price">×0.55</td></tr>
+          </tbody>
+        </table>
+        <div class="group-header" style="padding:16px 0 8px;font-size:.72rem;color:var(--label-2);font-weight:700">Региональные множители (РФ)</div>
+        <table class="rar-table">
+          <thead><tr><th>Регион</th><th>Множитель</th></tr></thead>
+          <tbody>
+            <tr><td class="rar-name">99</td><td class="rar-price">×2.0</td></tr>
+            <tr><td class="rar-name">97</td><td class="rar-price">×1.8</td></tr>
+            <tr><td class="rar-name">199</td><td class="rar-price">×1.7</td></tr>
+            <tr><td class="rar-name">777</td><td class="rar-price">×1.6</td></tr>
+            <tr><td class="rar-name">77, 799</td><td class="rar-price">×1.5</td></tr>
+            <tr><td class="rar-name">01, 02, 102</td><td class="rar-price">×1.3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-exchange">
+      <div class="info-pad">
+        <div class="note" style="margin-top:0">⏱ <b>Сессия — 15 секунд.</b> Каждую сессию обновляется список предложений и заказов.</div>
+        <div class="note">🛒 <b>Предложения.</b> Другие игроки продают номера. Цены плавают вокруг гипотетической средней.</div>
+        <div class="note">🎯 <b>Заказы.</b> Кто-то ищет номер по маске (<code>*</code> — любой символ). Чем точнее маска — тем выше множитель награды (до ~5×).</div>
+        <div class="note">💰 <b>Три кнопки продажи:</b><br>↓ ниже рынка — мгновенный выкуп<br>= по рынку — шанс выкупа за сессию<br>↑ выше рынка — шанс ниже, прибыль выше</div>
+        <div class="note">🎚 <b>Коэффициенты наценки/скидки</b> настраиваются в шапке гаража.</div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-accountant">
+      <div class="info-pad">
+        <div class="note" style="margin-top:0">🧮 <b>Бухгалтер</b> ищет выгодные предложения и заказы в реальном времени.</div>
+        <div class="note">🔔 <b>Режим «Уведомления».</b> Находки подсвечиваются фиолетовым контуром.</div>
+        <div class="note">🤖 <b>Режим «Авто».</b> Бухгалтер сам выкупает и выполняет заказы.</div>
+        <div class="note">⚡ <b>Скорость</b> — сколько успевает просмотреть. <b>Точность</b> — верность оценки. <b>Риск</b> — агрессивность.</div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-elite">
+      <div class="info-pad">
+        <div class="note">🇷🇺 <b>Россия:</b> <code>АМР</code>, <code>ЕКХ</code>, <code>АММ</code>, <code>СОР</code>, <code>АМП</code>, <code>МММ</code>, <code>ККХ</code>, <code>ООО</code>, <code>ААА</code> · регионы 77, 97, 99, 199, 01</div>
+        <div class="note">🇧🇾 <b>Беларусь:</b> <code>МВ-7</code>, <code>АА-7</code>, <code>ВВ-7</code>, <code>АВ-7</code>, <code>ММ-7</code> · 0001, 0007, 7777</div>
+        <div class="note">🇨🇳 <b>Китай:</b> <code>88888</code>, <code>66666</code>, <code>99999</code> · 京, 沪, 粤</div>
+        <div class="note">🇺🇸 <b>США:</b> <code>POTUS</code>, <code>FBI</code>, <code>CIA</code>, <code>NASA</code>, <code>GOV</code>, <code>GOD</code>, <code>VIP</code>, <code>KING</code></div>
+        <div class="note">🇺🇦 <b>Украина:</b> <code>АА</code>, <code>ВВ</code>, <code>ІІ</code>, <code>СС</code>, <code>КК</code> · 0001, 0007, 7777</div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-formats">
+      <div class="info-pad"><div class="format-list" id="formatList"></div></div>
+    </div>
+
+    <div class="tab-content" id="tab-wealth">
+      <div class="info-pad">
+        <div class="note" style="margin-top:0">🏅 <b>Ранги.</b> Определяются балансом. Влияют только на сложность примеров.</div>
+        <table class="wealth-table" id="wealthTable"><thead><tr><th>Ранг</th><th>Баланс</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-stats">
+      <div class="stats-row">
+        <div class="stat-box"><div class="sv" id="stTotal">0</div><div class="sl">Дропнуто</div></div>
+        <div class="stat-box"><div class="sv" id="stSpent">0 ₽</div><div class="sl">Потрачено</div></div>
+        <div class="stat-box"><div class="sv" id="stEarned">0 ₽</div><div class="sl">Заработано</div></div>
+        <div class="stat-box"><div class="sv" id="stBest">—</div><div class="sl">Лучший</div></div>
+        <div class="stat-box"><div class="sv" id="stRare">0</div><div class="sl">Эпик+</div></div>
+        <div class="stat-box"><div class="sv" id="stCountries">0/5</div><div class="sl">Стран</div></div>
+      </div>
+      <div class="group-header" style="padding:0 22px 8px">По редкости</div>
+      <div class="rarity-stats-list" id="rarityStats"></div>
+      <div class="group-header" style="padding:8px 22px 8px">Достижения</div>
+      <div class="ach-grid" id="achList"></div>
+    </div>
+  </div>
+</section>

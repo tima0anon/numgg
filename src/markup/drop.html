@@ -1,0 +1,89 @@
+<section class="page active" id="page-drop">
+  <div class="group">
+    <div class="group-header">Дроп номеров</div>
+    <div class="spin-area">
+      <div class="country-picker" id="countryPicker">
+        <button class="cpill active" data-country="all">🌍 Все страны</button>
+        <button class="cpill" data-country="ru">🇷🇺 Россия</button>
+        <button class="cpill" data-country="by">🇧🇾 Беларусь</button>
+        <button class="cpill" data-country="cn">🇨🇳 Китай</button>
+        <button class="cpill" data-country="us">🇺🇸 США</button>
+        <button class="cpill" data-country="ua">🇺🇦 Украина</button>
+      </div>
+      <div class="plate-display rarity-common" id="plateDisplay"><div id="plateRender"></div></div>
+      <div class="drop-actions">
+        <button class="big-btn" id="spin1">Дроп ×1 · <span id="cost1">150</span> ₽</button>
+        <div class="drop-bulk">
+          <button class="bulk-btn b5" id="spin5">×5 · <span id="cost5">713</span> ₽</button>
+          <button class="bulk-btn b10" id="spin10">×10 · <span id="cost10">1350</span> ₽</button>
+        </div>
+        <div class="custom-spin-row">
+          <input type="number" class="custom-spin-input" id="customSpinCount" min="1" max="1000" value="25" inputmode="numeric" autocomplete="off">
+          <button class="bulk-btn custom" id="spinCustom">×N · <span id="costN">—</span> ₽</button>
+        </div>
+        <div class="autospin-row">
+          <button class="autospin-btn" id="autoSpinToggle"><span class="as-dot"></span><span id="autoSpinLabel">Автопрокрут: ВЫКЛ</span></button>
+          <select class="autosell-select" id="autoSellSelect">
+            <option value="off">Авто-продажа: выкл</option>
+            <option value="common">Авто-продажа: мусор</option>
+            <option value="upToUncommon">Авто-продажа: до необычных</option>
+            <option value="upToRare">Авто-продажа: до редких</option>
+          </select>
+        </div>
+      </div>
+      <div class="spin-hint">
+        <b id="dropCostLabel">150 ₽</b> <span id="dropCostHint">за дроп · все страны</span>
+        <br><span class="small">⌨ <kbd>Space</kbd> — дроп ×1 · <kbd>1</kbd>–<kbd>7</kbd> — вкладки · <kbd>Esc</kbd> — закрыть</span>
+        <br><span class="wealth-badge tier-0" id="wealthBadge">🌱 Новичок</span>
+      </div>
+      <div class="cooldown-pill" id="cd">Готов к дропу</div>
+    </div>
+  </div>
+
+  <div class="drop-results" id="dropResults" style="display:none;">
+    <div class="drop-results-head">
+      <span id="dropResultsTitle">Результаты дропа</span>
+      <button class="close-btn" id="closeResults">×</button>
+    </div>
+    <div class="drop-results-grid" id="dropResultsGrid"></div>
+    <div class="ex-note" id="dropResultsSummary" style="padding:0 20px 16px;text-align:center"></div>
+  </div>
+
+  <div class="group">
+    <div class="group-header"><span>📜 История дропа</span><span style="color:var(--label-3);font-weight:500;text-transform:none;letter-spacing:0">последние 25</span></div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  <div class="group">
+    <div class="group-header">Бонусы</div>
+    <div class="group-row">
+      <div class="icon-box pink">🎁</div>
+      <div class="row-info"><div class="row-title">Ежедневный бонус</div><div class="row-sub" id="dailySub">Бесплатная крутка ×1 · раз в 24 часа</div></div>
+      <button class="ios-btn gold" id="dailyBtn">Забрать</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-header">Улучшения</div>
+    <div class="group-row">
+      <div class="icon-box blue">⏱</div>
+      <div class="row-info"><div class="row-title">Скорость дропа</div><div class="row-sub">Кулдаун: <span id="cdVal">3.0</span>с · ур. <span id="cdLvl">0</span>/8</div></div>
+      <button class="ios-btn" id="buyCd">200 ₽</button>
+    </div>
+    <div class="group-row">
+      <div class="icon-box green">🍀</div>
+      <div class="row-info"><div class="row-title">Удача</div><div class="row-sub">Бонус к редким: +<span id="luckVal">0</span>% · ур. <span id="luckLvl">0</span>/8</div></div>
+      <button class="ios-btn" id="buyLuck">500 ₽</button>
+    </div>
+    <div class="group-row">
+      <div class="icon-box orange">🤖</div>
+      <div class="row-info"><div class="row-title">Автокликер</div><div class="row-sub">Доход: <span id="autoVal">0</span> ₽/сек · ур. <span id="autoLvl">0</span>/8</div></div>
+      <button class="ios-btn" id="buyAuto">1000 ₽</button>
+    </div>
+    <div class="group-row">
+      <div class="icon-box red">🗑</div>
+      <div class="row-info"><div class="row-title">Начать заново</div><div class="row-sub">Сброс прогресса, стартовые 1000 ₽</div></div>
+      <button class="ios-btn red" id="reset">Сброс</button>
+    </div>
+  </div>
+</section>

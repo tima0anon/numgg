@@ -1,0 +1,16 @@
+.realplate{display:inline-flex;align-items:stretch;font-family:'SF Mono',ui-monospace,'Courier New',monospace;font-weight:800;border-radius:.4em;overflow:hidden;font-size:.82rem;line-height:1;white-space:nowrap;flex-shrink:0;user-select:none;position:relative;box-shadow:0 .2em .45em rgba(0,0,0,.28),inset 0 .05em 0 rgba(255,255,255,.35),inset 0 0 0 .06em rgba(0,0,0,.08)}
+.realplate.lg{font-size:1.9rem;border-radius:.35em}
+.realplate.md{font-size:.95rem}
+.realplate .rp-main{display:flex;align-items:center;justify-content:center;padding:.55em .85em;letter-spacing:.12em;font-weight:800;white-space:nowrap}
+.realplate .rp-side{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.3em .35em;gap:.1em;min-width:2em;flex-shrink:0}
+.realplate .rp-flag{display:block;border-radius:.12em;background-size:100% 100%;background-repeat:no-repeat;flex-shrink:0}
+.realplate .rp-flag.flag{width:1.15em;height:.78em;border:none;border-radius:.1em}
+.realplate .rp-code{font-size:.62em;font-weight:800;line-height:1}
+.realplate .rp-rus{font-size:.4em;font-weight:700;letter-spacing:.06em;line-height:1;opacity:.85}
+.realplate.rp-ru{background:linear-gradient(180deg,#fff,#f0f0f0);color:#000;border:.12em solid #111}
+.realplate.rp-ru .rp-side{border-left:.1em solid #111;background:#fff}
+.realplate.rp-by{background:linear-gradient(180deg,#fff,#f0f0f0);color:#000;border:.12em solid #111}
+.realplate.rp-by .rp-side{border-left:.1em solid #111;background:#fff}
+.realplate.rp-cn{background:linear-gradient(180deg,#0d6fc4,#084a8c);color:#fff;border:.1em solid #fff}
+.realplate.rp-us{background:linear-gradient(180deg,#fafbff,#eef1ff);color:#1a2c70;border:.12em solid #1a2c70}
+.realplate.rp-ua{background:linear-gradient(180deg,#fff,#f0f0f0);color:#000;border:.12em solid #111}

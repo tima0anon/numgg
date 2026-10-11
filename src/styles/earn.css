@@ -1,0 +1,18 @@
+/* EARN */
+.earn-area{display:flex;flex-direction:column;align-items:center;padding:28px 22px 32px;gap:16px}
+.earn-info{font-size:.9rem;color:var(--label-2);text-align:center;line-height:1.55;max-width:560px}
+.earn-info b{color:var(--green);font-weight:800;font-family:'SF Mono',monospace;font-size:1.05rem}
+.earn-problem{font-family:'SF Mono',monospace;font-size:2rem;font-weight:800;letter-spacing:.5px;padding:24px 36px;background:var(--bg-secondary);border-radius:18px;border:2px solid var(--sep);text-align:center;min-width:300px;user-select:none;line-height:1.25}
+.earn-problem.pulse{animation:earnPulse .5s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes earnPulse{0%{transform:scale(1)}50%{transform:scale(1.04);border-color:var(--blue)}100%{transform:scale(1)}}
+.earn-input-row{display:flex;gap:8px;width:100%;max-width:420px}
+.earn-input-row input{flex:1;min-width:0;background:var(--bg-secondary);border:2px solid var(--sep);color:var(--label);border-radius:100px;padding:14px 20px;font-family:'SF Mono',monospace;font-size:1.15rem;font-weight:700;text-align:center;outline:none;-webkit-appearance:none;appearance:none}
+.earn-input-row input:focus{border-color:var(--blue)}
+.earn-input-row input.ok{border-color:var(--green);background:rgba(52,199,89,.1)}
+.earn-input-row input.err{border-color:var(--red);background:rgba(255,59,48,.1)}
+.earn-feedback{font-size:.92rem;font-weight:700;min-height:28px;text-align:center;padding:6px 18px;border-radius:100px;display:inline-flex;align-items:center;justify-content:center}
+.earn-feedback.ok{color:var(--green);background:rgba(52,199,89,.12)}
+.earn-feedback.err{color:var(--red);background:rgba(255,59,48,.12)}
+.earn-stats{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:6px;padding:14px 22px;background:var(--bg-secondary);border-radius:18px}
+.earn-stats>div{font-size:.82rem;color:var(--label-2);font-weight:600;display:flex;align-items:center;gap:5px}
+.earn-stats>div b{color:var(--label);font-family:'SF Mono',monospace;font-weight:800;font-size:.95rem}

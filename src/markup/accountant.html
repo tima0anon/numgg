@@ -1,0 +1,65 @@
+<section class="page" id="page-accountant">
+  <div class="group">
+    <div class="group-header">🧮 Бухгалтер</div>
+    <div class="ex-note">Бухгалтер анализирует биржу в реальном времени. Он физически не успевает просмотреть всё — предложений и заказов слишком много. Чем выше навыки, тем быстрее и точнее он работает, но тем выше риск ошибок.</div>
+    <div class="acct-mode" id="acctMode">
+      <button data-mode="off" class="active">Выкл</button>
+      <button data-mode="notify">Уведомления</button>
+      <button data-mode="auto">Авто</button>
+    </div>
+    <div class="acct-stat-row">
+      <div class="acct-stat"><div class="v" id="acctAnalyzed">0</div><div class="l">Проанализировано</div></div>
+      <div class="acct-stat"><div class="v" id="acctFound">0</div><div class="l">Находок</div></div>
+      <div class="acct-stat"><div class="v" id="acctDeals">0</div><div class="l">Сделок</div></div>
+      <div class="acct-stat"><div class="v" id="acctProfit">0 ₽</div><div class="l">Прибыль</div></div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-header">Навыки</div>
+
+    <div class="acct-skill">
+      <div class="row1"><div class="name"><div class="ic p">⚡</div>Скорость</div><div class="lv">ур. <span id="acctSpeedLvl">0</span>/8</div></div>
+      <div class="desc">Сколько предложений и заказов успевает просмотреть за сессию.</div>
+      <div class="actions"><button class="ios-btn" id="buyAcctSpeed">Купить <span id="acctSpeedPrice"></span> ₽</button></div>
+    </div>
+
+    <div class="acct-skill">
+      <div class="row1"><div class="name"><div class="ic b">🎯</div>Точность</div><div class="lv">ур. <span id="acctAccuracyLvl">0</span>/8</div></div>
+      <div class="desc">Насколько точно оценивает выгоду. Может ошибаться на низких уровнях.</div>
+      <div class="actions"><button class="ios-btn" id="buyAcctAccuracy">Купить <span id="acctAccuracyPrice"></span> ₽</button></div>
+    </div>
+
+    <div class="acct-skill">
+      <div class="row1"><div class="name"><div class="ic o">🎲</div>Риск</div><div class="lv">ур. <span id="acctRiskLvl">0</span>/8</div></div>
+      <div class="desc">Готовность брать агрессивные сделки.</div>
+      <div class="actions"><button class="ios-btn" id="buyAcctRisk">Купить <span id="acctRiskPrice"></span> ₽</button></div>
+    </div>
+
+    <div class="acct-skill">
+      <div class="row1"><div class="name"><div class="ic g">📊</div>Порог выгоды</div><div class="lv"><span id="acctThresholdVal">15</span>%</div></div>
+      <div class="desc">Минимальная выгода, при которой бухгалтер считает сделку достойной.</div>
+      <div class="actions">
+        <button class="ios-btn gray" id="acctThMinus" style="flex:0 0 52px;padding:10px">−5</button>
+        <button class="ios-btn gray" id="acctThPlus" style="flex:0 0 52px;padding:10px">+5</button>
+      </div>
+    </div>
+
+    <div class="acct-skill">
+      <div class="row1"><div class="name"><div class="ic b">🔔</div>Авто-покупка</div><div class="lv" id="acctAutoBuyVal">выкл</div></div>
+      <div class="desc">Разрешить бухгалтеру самому выкупать выгодные предложения.</div>
+      <div class="actions"><button class="ios-btn gray" id="acctAutoBuyToggle">Переключить</button></div>
+    </div>
+
+    <div class="acct-skill">
+      <div class="row1"><div class="name"><div class="ic g">💵</div>Авто-продажа</div><div class="lv" id="acctAutoSellVal">выкл</div></div>
+      <div class="desc">Разрешить бухгалтеру самому выполнять заказы совпадающими номерами из гаража.</div>
+      <div class="actions"><button class="ios-btn gray" id="acctAutoSellToggle">Переключить</button></div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-header">Журнал</div>
+    <div class="acct-log" id="acctLog"><div class="empty">Бухгалтер пока молчит.</div></div>
+  </div>
+</section>

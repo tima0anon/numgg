@@ -1,0 +1,33 @@
+<section class="page" id="page-garage">
+  <div class="group">
+    <div class="group-header" style="padding:16px 22px 8px">
+      <span>📋 Гараж · <span id="colCount" style="color:var(--blue);font-weight:700">0</span><span id="favCount" style="color:var(--yellow);font-weight:700"></span></span>
+    </div>
+    <div class="garage-summary" id="garageSummary"></div>
+    <div class="coef-row">
+      <label class="coef-label">📉 Ниже рынка: <input type="number" id="coefLow" min="1" max="90" value="20" inputmode="numeric">%</label>
+      <label class="coef-label">📈 Выше рынка: <input type="number" id="coefHigh" min="1" max="200" value="20" inputmode="numeric">%</label>
+      <span class="hint">Применяются к трём кнопкам под каждым номером</span>
+    </div>
+    <div class="filters">
+      <select id="fCountry"><option value="all">Все страны</option></select>
+      <select id="fRarity">
+        <option value="all">Все редкости</option>
+        <option value="common">Мусор</option><option value="uncommon">Необычный</option><option value="rare">Редкий</option><option value="epic">Эпический</option><option value="legendary">Легендарный</option><option value="mythic">Мифический</option><option value="divine">Божественный</option>
+      </select>
+      <select id="fSort">
+        <option value="default">Сортировка</option>
+        <option value="price-desc">Цена ↓</option>
+        <option value="price-asc">Цена ↑</option>
+        <option value="rarity-desc">Редкость ↓</option>
+        <option value="rarity-asc">Редкость ↑</option>
+        <option value="new">Новые сначала</option>
+        <option value="old">Старые сначала</option>
+      </select>
+      <input type="number" id="fPrice" placeholder="Цена от" min="0" style="width:110px">
+      <input type="text" id="fSearch" placeholder="Поиск номера..." style="width:160px">
+      <button class="ios-btn gray" id="clearF">Сброс</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>

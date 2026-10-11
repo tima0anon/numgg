@@ -1,0 +1,45 @@
+/* INFO */
+.tabs{display:flex;gap:4px;padding:4px;background:var(--bg-secondary);border-radius:100px;margin:0 16px 14px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:80px;padding:8px 12px;border-radius:100px;border:none;background:transparent;color:var(--label);font-family:var(--font);font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab.active{background:var(--bg-elev);box-shadow:var(--shadow-sm)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.info-pad{padding:4px 22px 22px}
+.rar-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.rar-table th{text-align:left;color:var(--label-2);font-weight:600;padding:10px 8px;border-bottom:1px solid var(--sep);font-size:.72rem;text-transform:uppercase}
+.rar-table td{padding:12px 8px;border-bottom:1px solid var(--sep);vertical-align:top}
+.rar-name{font-weight:700;white-space:nowrap}
+.rar-name.common{color:#8e8e93}.rar-name.uncommon{color:var(--green)}.rar-name.rare{color:var(--blue)}.rar-name.epic{color:var(--purple)}.rar-name.legendary{color:var(--orange)}.rar-name.mythic{color:var(--red)}
+.rar-price{color:var(--green);font-weight:700;font-family:'SF Mono',monospace}
+.note{background:var(--bg-secondary);border-radius:var(--radius-sm);padding:14px 16px;font-size:.85rem;color:var(--label-2);line-height:1.65;margin-top:12px}
+.note b{color:var(--label)}
+.note code{background:var(--bg-tertiary);padding:1px 6px;border-radius:5px;font-family:'SF Mono',monospace;color:var(--orange);font-size:.78rem;font-weight:600}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:0 16px 18px}
+.stat-box{background:var(--bg-secondary);border-radius:var(--radius);padding:14px;text-align:center}
+.stat-box .sv{font-size:1.15rem;font-weight:700;font-family:'SF Mono',monospace}
+.stat-box .sl{font-size:.7rem;color:var(--label-2);text-transform:uppercase;margin-top:4px;font-weight:600}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;padding:0 16px 18px}
+.ach{padding:12px 14px;background:var(--bg-secondary);border-radius:var(--radius);font-size:.78rem;opacity:.5}
+.ach.done{opacity:1;background:linear-gradient(145deg,#e8f9ee,#f2f2f7)}
+html[data-theme="dark"] .ach.done{background:linear-gradient(145deg,#14361f,#1c1c1e)}
+.ach .an{font-weight:700;margin-bottom:3px}
+.ach .ad{color:var(--label-2);font-size:.72rem}
+.ach.done .an::before{content:'✅ '}
+.ach:not(.done) .an::before{content:'⬜ '}
+.rarity-stats-list{display:flex;flex-direction:column;gap:6px;padding:0 16px 16px}
+.rarity-stat-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-secondary);border-radius:10px}
+.rarity-stat-row .rs-name{font-weight:700;font-size:.82rem;min-width:110px}
+.rarity-stat-row .rs-name.common{color:#8e8e93}.rarity-stat-row .rs-name.uncommon{color:var(--green)}.rarity-stat-row .rs-name.rare{color:var(--blue)}.rarity-stat-row .rs-name.epic{color:var(--purple)}.rarity-stat-row .rs-name.legendary{color:var(--orange)}.rarity-stat-row .rs-name.mythic{color:var(--red)}
+.rarity-stat-row .rs-bar{flex:1;height:8px;border-radius:4px;background:var(--bg-tertiary);overflow:hidden}
+.rarity-stat-row .rs-bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.rarity-stat-row .rs-bar-fill.common{background:#8e8e93}.rarity-stat-row .rs-bar-fill.uncommon{background:var(--green)}.rarity-stat-row .rs-bar-fill.rare{background:var(--blue)}.rarity-stat-row .rs-bar-fill.epic{background:var(--purple)}.rarity-stat-row .rs-bar-fill.legendary{background:var(--orange)}.rarity-stat-row .rs-bar-fill.mythic{background:var(--red)}
+.rarity-stat-row .rs-count{font-family:'SF Mono',monospace;font-weight:700;font-size:.85rem;min-width:52px;text-align:right}
+.wealth-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:8px}
+.wealth-table th{text-align:left;color:var(--label-2);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--sep);font-size:.7rem;text-transform:uppercase}
+.wealth-table td{padding:9px 6px;border-bottom:1px solid var(--sep);font-weight:600}
+.wealth-table tr.active{background:rgba(0,122,255,.1)}
+.wealth-table tr.active td{font-weight:800}
+.format-list{display:flex;flex-direction:column;gap:8px}
+.format-row{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--bg-secondary);border-radius:var(--radius-sm)}
+.format-row .fc{font-size:.75rem;color:var(--label-2);min-width:90px;font-weight:700;text-transform:uppercase}

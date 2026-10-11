@@ -1,0 +1,15 @@
+/* NEWS - fix blinking by using newsIn only for new cards */
+.news-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;min-height:100px}
+.newscard{background:var(--bg-secondary);border-radius:var(--radius);padding:14px 16px;border-left:4px solid var(--blue);display:flex;flex-direction:column;gap:6px}
+@keyframes newsIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+.newscard.new-item{animation:newsIn .45s cubic-bezier(.2,.9,.3,1.1)}
+.newscard.bull{border-left-color:var(--green)}
+.newscard.bear{border-left-color:var(--red)}
+.newscard.warn{border-left-color:var(--orange)}
+.newscard .nh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.newscard .nt{font-weight:800;font-size:.95rem;letter-spacing:-.2px}
+.newscard .nd{font-size:.82rem;color:var(--label-2);line-height:1.5}
+.newscard .ntime{font-size:.7rem;color:var(--label-3);font-variant-numeric:tabular-nums;font-weight:700;flex-shrink:0}
+.newscard .eff{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:var(--bg-elev);font-size:.72rem;font-weight:800;font-family:'SF Mono',monospace;align-self:flex-start;border:1px solid var(--sep)}
+.newscard .eff.up{color:var(--green)}
+.newscard .eff.down{color:var(--red)}
