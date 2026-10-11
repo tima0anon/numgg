@@ -28,7 +28,7 @@ export const SECRET_REWARD = 1500000000;
 
 export const SECRET_FULL_CODE = 525252;
 
-export const NEWS_MAX_ACTIVE = 3;
+export const NEWS_MAX_ACTIVE = 6;
 
 export const NEWS_MIN_LIFE = 180000;
 

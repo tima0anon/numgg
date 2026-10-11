@@ -4,6 +4,7 @@ import {
 } from '../../config/rarity.js';
 import { extractRegion } from '../../domain/plates/countries.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
+import { marketMood, saleChance, saleHint } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
 import {
   doBuyOffer,
@@ -50,6 +51,16 @@ function sortedOrders(){
   else if(sort === 'matches-desc') list.sort((a,b) => findMatchingNumbers(b.mask).length - findMatchingNumbers(a.mask).length);
   if(S.acct.mode !== 'off') list.sort((a,b) => (b.accountantFound?1:0) - (a.accountantFound?1:0));
   return list;
+}
+
+function rub(n){ return Math.round(n).toLocaleString('ru-RU') + ' ₽'; }
+
+function marketLine(price, hypo){
+  const gap = hypo - price;
+  const edge = Math.max(1, Math.round(Math.abs(gap)));
+  if(gap > hypo * 0.02) return '<div class="deal good">На '+edge.toLocaleString('ru-RU')+' ₽ дешевле рынка</div>';
+  if(-gap > hypo * 0.02) return '<div class="deal bad">На '+edge.toLocaleString('ru-RU')+' ₽ дороже рынка</div>';
+  return '<div class="deal">Цена как на рынке</div>';
 }
 
 function refreshAfterBatch(){
@@ -136,19 +147,17 @@ export function renderOffers(){
   const grid = document.getElementById('exOfferGrid');
   if(!grid) return;
   const list = sortedOffers();
-  if(!list.length){ grid.innerHTML = '<div class="empty">Нет предложений. Подожди следующую сессию.</div>'; return; }
+  if(!list.length){ grid.innerHTML = '<div class="empty">Сейчас продавать нечего. Новые номера появятся со следующим обновлением.</div>'; return; }
   grid.innerHTML = list.map(o => {
     const R = RMAP[o.rarity];
-    const dev = (o.price - o.hypo) / o.hypo;
-    const devPct = Math.round(dev*100);
-    const devCls = dev < -0.02 ? 'neg' : dev > 0.02 ? 'pos' : 'zero';
     const canBuy = S.rub >= o.price;
     const cls = (o.accountantFound?' accountant-found':'');
-    return '<div class="excard '+o.rarity+cls+'">'+renderRealPlate(o.plate, o.flag, '')+
-      '<div class="row"><span class="country">'+o.country+(o.region?' · '+o.region:'')+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
-      '<div class="pricerow"><span class="plabel">Гипот. цена</span><span class="pval hypo">'+o.hypo.toLocaleString('ru-RU')+' ₽</span></div>'+
-      '<div class="pricerow"><span class="plabel">Цена лота</span><span class="pval '+(dev<0?'good':dev>0?'bad':'ask')+'">'+o.price.toLocaleString('ru-RU')+' ₽</span><span class="dev '+devCls+'">'+(devPct>=0?'+':'')+devPct+'%</span></div>'+
-      '<button class="buy-btn" data-id="'+o.id+'"'+(canBuy?'':' disabled')+'>'+(canBuy?'Купить за '+o.price.toLocaleString('ru-RU')+' ₽':'Не хватает '+(o.price-S.rub).toLocaleString('ru-RU')+' ₽')+'</button>'+
+    return '<div class="excard '+o.rarity+cls+'">'+
+      '<div class="plate-stage">'+renderRealPlate(o.plate, o.flag, '')+'</div>'+
+      '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
+      '<div class="card-price">'+rub(o.price)+'<span>цена покупки</span></div>'+
+      marketLine(o.price, o.hypo)+
+      '<button class="buy-btn" data-id="'+o.id+'"'+(canBuy?'':' disabled')+'>'+(canBuy?'Купить':'Не хватает '+rub(o.price-S.rub))+'</button>'+
       '</div>';
   }).join('');
   grid.querySelectorAll('.buy-btn').forEach(b => b.addEventListener('click', e => {
@@ -161,25 +170,25 @@ export function renderOrders(){
   const grid = document.getElementById('exOrderGrid');
   if(!grid) return;
   const list = sortedOrders();
-  if(!list.length){ grid.innerHTML = '<div class="empty">Нет активных заказов. Сложные живут до 3 минут.</div>'; return; }
+  if(!list.length){ grid.innerHTML = '<div class="empty">Заказов нет. Новые появятся со следующим обновлением.</div>'; return; }
   grid.innerHTML = list.map(o => {
     const R = RMAP[o.rarity];
     const matches = findMatchingNumbers(o.mask).slice().sort((a,b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate, a.flag)) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate, b.flag)));
+    const shown = matches.slice(0, 3);
     const matchCount = matches.length;
-    const specPct = Math.round(o.specificity*100);
     const canFulfill = matchCount > 0;
-    const lifetimeLeft = Math.max(0, o.until - Date.now());
-    const isLong = (o.until - o.createdAt) > 60000;
     const cls = (o.accountantFound?' accountant-found':'');
-    const maskHTML = o.mask.split('').map(ch => ch==='*' ? '<span class="star">✳</span>' : (ch===' '?'&nbsp;':ch)).join('');
+    const fit = matchCount === 0 ? 'В гараже нет такого номера' : matchCount === 1 ? 'Подойдёт 1 номер из гаража' : 'Подойдёт '+matchCount+' из гаража';
+    const pick = shown.length > 1
+      ? '<select class="order-pick" aria-label="Какой номер отдать">'+shown.map(m => '<option value="'+m.id+'"'+(o.accountantBestId===m.id?' selected':'')+'>'+m.plate+(m.favorite?' ★':'')+'</option>').join('')+'</select>'
+      : '';
     return '<div class="excard '+o.rarity+cls+'">'+
-      '<div class="ordermask">'+maskHTML+'</div>'+
-      '<div class="row"><span class="country">'+o.country+(isLong?' · ⏳ долгий':'')+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
-      '<div class="pricerow"><span class="plabel">Точность</span><span class="pval '+(specPct>=60?'good':specPct<=30?'bad':'ask')+'">'+specPct+'%</span></div>'+
-      '<div class="pricerow"><span class="plabel">Награда</span><span class="pval good">'+o.reward.toLocaleString('ru-RU')+' ₽</span></div>'+
-      '<div class="mylisting-info"><span>Совпадений: '+matchCount+'</span><span>⏱ '+Math.round(lifetimeLeft/1000)+'с</span></div>'+
-      (matchCount > 1 ? '<select class="order-pick">'+matches.map(m => '<option value="'+m.id+'"'+(o.accountantBestId===m.id?' selected':'')+'>'+m.plate+(m.favorite?' ⭐':'')+' · '+hypoPrice(m.rarity, m.flag, extractRegion(m.plate, m.flag)).toLocaleString('ru-RU')+' ₽</option>').join('')+'</select>' : '')+
-      '<button class="fulfill-btn" data-id="'+o.id+'"'+(canFulfill?'':' disabled')+'>'+(canFulfill?'Выполнить ('+matchCount+')':'Нет номера')+'</button>'+
+      '<div class="plate-stage" title="Звёздочка — любой символ">'+renderRealPlate(o.mask, o.flag, '')+'</div>'+
+      '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
+      '<div class="card-price">'+rub(o.reward)+'<span>заплатят тебе</span></div>'+
+      '<div class="deal">'+(canFulfill ? fit : 'В гараже нет такого номера')+'</div>'+
+      pick+
+      '<button class="fulfill-btn" data-id="'+o.id+'"'+(canFulfill?'':' disabled')+'>'+(canFulfill?'Продать этот номер':'Нет подходящего')+'</button>'+
       '</div>';
   }).join('');
   grid.querySelectorAll('.fulfill-btn').forEach(b => b.addEventListener('click', e => {
@@ -204,20 +213,21 @@ export function renderOrders(){
 export function renderMyListings(){
   const grid = document.getElementById('exMyGrid');
   if(!grid) return;
-  if(!market.listings.length){ grid.innerHTML = '<div class="empty">У тебя нет активных лотов. Выставляй номера из гаража тремя кнопками.</div>'; return; }
+  if(!market.listings.length){ grid.innerHTML = '<div class="empty">Своих лотов нет. Выстави номер из гаража.</div>'; return; }
   grid.innerHTML = market.listings.map(l => {
-    const num = S.col.find(n => n.id === l.numId);
+    const num = S.col.find(n => Number(n.id) === Number(l.numId));
     if(!num) return '';
     const R = RMAP[num.rarity];
-    const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
-    const dev = (l.price - hypo) / hypo;
-    const devPct = Math.round(dev*100);
-    return '<div class="excard '+num.rarity+'">'+renderRealPlate(num.plate, num.flag, '')+
-      '<div class="row"><span class="country">'+num.country+'</span><span class="rar '+num.rarity+'">'+R.name+'</span></div>'+
-      '<div class="pricerow"><span class="plabel">Гипот. цена</span><span class="pval hypo">'+hypo.toLocaleString('ru-RU')+' ₽</span></div>'+
-      '<div class="pricerow"><span class="plabel">Мой лот</span><span class="pval '+(dev<0?'good':dev>0?'bad':'ask')+'">'+l.price.toLocaleString('ru-RU')+' ₽</span><span class="dev '+(dev<0?'neg':dev>0?'pos':'zero')+'">'+(devPct>=0?'+':'')+devPct+'%</span></div>'+
-      '<div class="mylisting-info"><span>Сессий: '+l.sessions+'</span></div>'+
-      '<div class="progressbar"><div style="width:'+Math.min(100, l.sessions*8)+'%"></div></div>'+
+    const region = extractRegion(num.plate, num.flag);
+    const hypo = hypoPrice(num.rarity, num.flag, region);
+    const mood = marketMood(num.flag, region, num.rarity);
+    const chance = saleChance(l.price, hypo, mood, RARITY_ORDER.indexOf(num.rarity));
+    return '<div class="excard '+num.rarity+'">'+
+      '<div class="plate-stage">'+renderRealPlate(num.plate, num.flag, '')+'</div>'+
+      '<div class="card-meta"><span class="who">'+num.country+'</span><span class="rar '+num.rarity+'">'+R.name+'</span></div>'+
+      '<div class="card-price">'+rub(l.price)+'<span>твоя цена</span></div>'+
+      '<div class="deal '+mood.cls+'">'+mood.label+' · шанс '+Math.round(chance*100)+'%</div>'+
+      '<div class="deal">'+saleHint(chance, l.price, hypo, mood)+'</div>'+
       '<button class="buy-btn" style="background:var(--red)" data-id="'+l.numId+'">Снять с продажи</button>'+
       '</div>';
   }).join('');

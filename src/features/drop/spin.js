@@ -228,10 +228,10 @@ export function showDropResults(numbers){
     html += '<div style="grid-column:1/-1;padding:14px 18px;background:var(--bg-secondary);border-radius:14px">'+
       '<div style="display:flex;justify-content:space-between;padding:4px 0"><span>Всего</span><b>'+total+'</b></div>'+
       '<div style="display:flex;justify-content:space-between;padding:4px 0"><span>Сумма гипот.</span><b style="color:var(--green)">'+totalValue.toLocaleString('ru-RU')+' ₽</b></div></div>';
-    html += top.map(n => '<div class="drcard '+n.rarity+'">'+renderRealPlate(n.plate, n.flag, '')+'<div class="drrow"><span class="rar '+n.rarity+'">'+RMAP[n.rarity].name+'</span></div><div class="drrow"><span class="price">'+n.price.toLocaleString('ru-RU')+' ₽</span></div></div>').join('');
+    html += top.map(n => '<div class="drcard '+n.rarity+'"><div class="plate-stage">'+renderRealPlate(n.plate, n.flag, '')+'</div><div class="drrow"><span class="rar '+n.rarity+'">'+RMAP[n.rarity].name+'</span></div><div class="drrow"><span class="price">'+n.price.toLocaleString('ru-RU')+' ₽</span></div></div>').join('');
     summary.textContent = 'Топ-12 из '+total+' · '+totalValue.toLocaleString('ru-RU')+' ₽';
   } else {
-    html = sorted.map(n => '<div class="drcard '+n.rarity+'">'+renderRealPlate(n.plate, n.flag, '')+'<div class="drrow"><span class="rar '+n.rarity+'">'+RMAP[n.rarity].name+'</span></div><div class="drrow"><span class="price">'+n.price.toLocaleString('ru-RU')+' ₽</span></div></div>').join('');
+    html = sorted.map(n => '<div class="drcard '+n.rarity+'"><div class="plate-stage">'+renderRealPlate(n.plate, n.flag, '')+'</div><div class="drrow"><span class="rar '+n.rarity+'">'+RMAP[n.rarity].name+'</span></div><div class="drrow"><span class="price">'+n.price.toLocaleString('ru-RU')+' ₽</span></div></div>').join('');
     summary.textContent = rarityText.join(' · ') + ' · ' + totalValue.toLocaleString('ru-RU')+' ₽';
   }
   grid.innerHTML = html;

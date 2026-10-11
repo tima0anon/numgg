@@ -44,7 +44,7 @@ export function sellMid(numId){
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
   const price = Math.max(1, Math.round(hypo));
   num.listed = true;
-  market.listings.push({ numId: num.id, price, sessions: 0, kind:'mid' });
+      market.listings.push({ numId: Number(num.id), price, sessions: 0, kind:'mid' });
   notify('📋 ' + num.plate + ' выставлен по рынку за ' + price.toLocaleString('ru-RU') + ' ₽');
   Sound.click();
   updateBalances(); renderCollection(); renderExchange(); save();
@@ -58,7 +58,7 @@ export function sellHigh(numId){
   const coef = Math.max(1, Math.min(200, S.coefHigh)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 + coef)));
   num.listed = true;
-  market.listings.push({ numId: num.id, price, sessions: 0, kind:'high' });
+  market.listings.push({ numId: Number(num.id), price, sessions: 0, kind:'high' });
   notify('📈 ' + num.plate + ' выставлен за ' + price.toLocaleString('ru-RU') + ' ₽');
   Sound.click();
   updateBalances(); renderCollection(); renderExchange(); save();
@@ -115,7 +115,7 @@ export function sellBulk(kind){
   } else {
     for(const { n, price } of priced){
       n.listed = true;
-      market.listings.push({ numId: n.id, price, sessions: 0, kind: kind === 'high' ? 'high' : 'mid' });
+      market.listings.push({ numId: Number(n.id), price, sessions: 0, kind: kind === 'high' ? 'high' : 'mid' });
     }
     Sound.click();
     notify((kind === 'high' ? '📈 ' : '📋 ') + priced.length + ' номеров выставлено на ' + sum.toLocaleString('ru-RU') + ' ₽');

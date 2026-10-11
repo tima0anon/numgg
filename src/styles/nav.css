@@ -1,4 +1,10 @@
-.topnav{position:sticky;top:8px;z-index:50;display:flex;gap:4px;padding:6px;background:var(--bg-elev);border-radius:100px;box-shadow:var(--shadow-md);margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.tape{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;margin:0 0 14px;padding:2px 2px 0}
+.tape::-webkit-scrollbar{display:none}
+.tape-item,.tape-quiet{flex:0 0 auto;border-radius:100px;padding:8px 14px;font-size:.75rem;font-weight:700;background:var(--bg-elev);border:1px solid var(--sep);box-shadow:var(--shadow-sm)}
+.tape-item.up{color:var(--green);background:rgba(52,199,89,.1)}
+.tape-item.down{color:var(--red);background:rgba(255,59,48,.1)}
+.tape-quiet{color:var(--label-2);font-weight:600;white-space:normal;max-width:100%}
+.topnav{position:sticky;top:8px;z-index:50;display:flex;gap:4px;padding:6px;background:var(--bg-elev);border-radius:100px;box-shadow:var(--shadow-md);margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
 .topnav::-webkit-scrollbar{display:none}
 .topnav-btn{flex:1;min-width:68px;padding:11px 12px;border:none;background:transparent;border-radius:100px;font-family:var(--font);font-size:.88rem;font-weight:600;color:var(--label-2);cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s}
 .topnav-btn:hover{color:var(--label)}

@@ -1,14 +1,16 @@
 <section class="page" id="page-exchange">
   <div class="group">
     <div class="ex-head">
-      <h2>💹 Биржа</h2>
-      <div class="session-pill"><span class="dot"></span><span id="sessionCountdown">15.0с</span></div>
+      <div>
+        <h2>Биржа</h2>
+        <p class="ex-lead">Купи номер по одной цене или продай свой под заказ. Звёздочка на номере — любой символ. Доска обновляется каждые 15 секунд.</p>
+      </div>
+      <div class="session-pill" title="До обновления доски"><span class="dot"></span>ещё <span id="sessionCountdown">15.0с</span></div>
     </div>
-    <div class="ex-note">Сессия длится <b>15 секунд</b>. Часть лотов остаётся, часть заменяется. Выгодные предложения уходят быстрее остальных. Заказы с точной маской живут <b>до 3 минут</b>.</div>
     <div class="ex-tabs">
-      <button class="ex-tab active" data-extab="offers">Предложения <span class="cnt" id="cntOffers">0</span></button>
+      <button class="ex-tab active" data-extab="offers">Купить <span class="cnt" id="cntOffers">0</span></button>
       <button class="ex-tab" data-extab="orders">Заказы <span class="cnt" id="cntOrders">0</span></button>
-      <button class="ex-tab" data-extab="my">Мои лоты <span class="cnt" id="cntMy">0</span></button>
+      <button class="ex-tab" data-extab="my">Мои <span class="cnt" id="cntMy">0</span></button>
     </div>
     <div class="ex-content active" id="excontent-offers">
       <div class="ex-filters">
@@ -27,7 +29,7 @@
         </select>
         <input type="text" id="exOfferSearch" placeholder="Поиск..." style="flex:1;min-width:100px">
         <button class="ios-btn gray" id="exOfferReset" style="padding:8px 14px;font-size:.8rem">Сброс</button>
-        <button class="ios-btn" id="buyDeals" type="button" style="padding:8px 14px;font-size:.8rem">Скупить ниже рынка</button>
+        <button class="ios-btn" id="buyDeals" type="button" style="padding:8px 14px;font-size:.8rem">Забрать дешевле рынка</button>
       </div>
       <div class="ex-grid" id="exOfferGrid"></div>
     </div>
@@ -41,7 +43,7 @@
         </select>
         <select id="exOrderCountry"><option value="all">Все страны</option></select>
           <button class="ios-btn gray" id="exOrderReset" style="padding:8px 14px;font-size:.8rem">Сброс</button>
-          <button class="ios-btn" id="fillOrders" type="button" style="padding:8px 14px;font-size:.8rem">Закрыть выгодные</button>
+          <button class="ios-btn" id="fillOrders" type="button" style="padding:8px 14px;font-size:.8rem">Сдать выгодные</button>
       </div>
       <div class="ex-grid" id="exOrderGrid"></div>
     </div>

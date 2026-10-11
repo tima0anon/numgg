@@ -4,6 +4,7 @@ import {
 } from '../../config/rarity.js';
 import { extractRegion } from '../../domain/plates/countries.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
+import { marketMood, saleChance, saleHint } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
 import { bulkCost } from '../drop/spin.js';
 import { renderExchange } from '../exchange/view.js';
@@ -53,7 +54,7 @@ export function getFiltered(){
     case 'rarity-asc': filtered.sort((a,b)=>RARITY_ORDER.indexOf(a.rarity)-RARITY_ORDER.indexOf(b.rarity)||livePrice(b)-livePrice(a)); break;
     case 'new': filtered.sort((a,b)=>b.id-a.id); break;
     case 'old': filtered.sort((a,b)=>a.id-b.id); break;
-    default: filtered.sort((a,b) => { if(!!a.favorite !== !!b.favorite) return a.favorite ? -1 : 1; return b.id - a.id; });
+    default: filtered.sort((a,b) => { if(!!a.listed !== !!b.listed) return a.listed ? -1 : 1; if(!!a.favorite !== !!b.favorite) return a.favorite ? -1 : 1; return b.id - a.id; });
   }
   return filtered;
 }
@@ -65,7 +66,13 @@ export function updateGarageSummary(){
   el.innerHTML = '💼 Оценка: <b>' + totalHypo.toLocaleString('ru-RU') + ' ₽</b> · уникальных: <b>' + new Set(S.col.map(n=>n.plate+'|'+n.flag)).size + '</b> · на бирже: <b>' + market.listings.length + '</b>';
 }
 
+function syncListed(){
+  const ids = new Set(market.listings.map(l => Number(l.numId)));
+  for(const n of S.col) n.listed = ids.has(Number(n.id));
+}
+
 export function renderCollection(){
+  syncListed();
   renderCountries();
   document.getElementById('colCount').textContent = S.col.length;
   const favTotal = S.col.filter(n => n.favorite).length;
@@ -98,22 +105,29 @@ export function renderCollection(){
     const lowP = Math.max(1, Math.round(hypo * (1 - coefLow)));
     const midP = Math.max(1, Math.round(hypo));
     const highP = Math.max(1, Math.round(hypo * (1 + coefHigh)));
-    const listed = !!n.listed;
+    const listing = market.listings.find(l => Number(l.numId) === Number(n.id));
+    const listed = !!listing;
+    const region = extractRegion(n.plate, n.flag);
+    const mood = marketMood(n.flag, region, n.rarity);
+    const chance = listing ? saleChance(listing.price, hypo, mood, RARITY_ORDER.indexOf(n.rarity)) : 0;
     const favClass = n.favorite ? ' favorite' : '';
     const star = n.favorite ? '⭐' : '☆';
-    return '<div class="ncard '+n.rarity+favClass+'">'+
-      '<div class="copy-plate" data-plate="'+n.plate+'" title="Клик — копировать">'+renderRealPlate(n.plate, n.flag, '')+'</div>'+
-      '<div class="row"><span class="country">'+n.country+'</span><div class="row-right">'+
-      (listed ? '<span class="rar" style="background:var(--orange)">НА БИРЖЕ</span>' : '')+
+    const lot = listing
+      ? '<div class="lot-state"><b>На продаже · '+listing.price.toLocaleString('ru-RU')+' ₽</b><span class="demand '+mood.cls+'">'+mood.label+' · шанс '+Math.round(chance*100)+'%</span><span class="lot-why">'+saleHint(chance, listing.price, hypo, mood)+'</span></div>'
+      : '';
+    return '<div class="ncard '+n.rarity+favClass+(listed?' listed':'')+'">'+
+      '<div class="plate-stage copy-plate" data-plate="'+n.plate+'" title="Нажми, чтобы скопировать">'+renderRealPlate(n.plate, n.flag, '')+'</div>'+
+      '<div class="card-meta"><span class="who">'+n.country+'</span><span class="row-right">'+
       '<span class="rar '+n.rarity+'">'+R.name+'</span>'+
-      '<button class="fav-btn'+(n.favorite?' active':'')+'" data-fav="'+n.id+'">'+star+'</button></div></div>'+
-      '<div class="row"><span class="country">#'+n.id+' · гипот. '+hypo.toLocaleString('ru-RU')+' ₽</span></div>'+
+      '<button class="fav-btn'+(n.favorite?' active':'')+'" data-fav="'+n.id+'">'+star+'</button></span></div>'+
+      '<div class="card-price">'+hypo.toLocaleString('ru-RU')+' ₽<span>рыночная цена</span></div>'+
+      lot+
       (listed
-        ? '<button class="sell-btn" style="background:var(--red);color:#fff;border-color:var(--red);border-radius:100px;padding:9px;cursor:pointer;font-weight:700" data-unlist="'+n.id+'">Снять с биржи</button>'
+        ? '<button class="sell-btn" style="background:var(--red);color:#fff;border:none;border-radius:100px;padding:10px;cursor:pointer;font-weight:700;font-family:var(--font)" data-unlist="'+n.id+'">Снять с продажи</button>'
         : '<div class="sell-trio">'+
-          '<button class="sell-low" data-low="'+n.id+'"><span class="arr">↓</span><span class="pr">'+lowP.toLocaleString('ru-RU')+'</span></button>'+
-          '<button class="sell-mid" data-mid="'+n.id+'"><span class="arr">=</span><span class="pr">'+midP.toLocaleString('ru-RU')+'</span></button>'+
-          '<button class="sell-high" data-high="'+n.id+'"><span class="arr">↑</span><span class="pr">'+highP.toLocaleString('ru-RU')+'</span></button>'+
+          '<button class="sell-low" data-low="'+n.id+'"><span class="lb">Сразу</span><span class="pr">'+lowP.toLocaleString('ru-RU')+'</span></button>'+
+          '<button class="sell-mid" data-mid="'+n.id+'"><span class="lb">По рынку</span><span class="pr">'+midP.toLocaleString('ru-RU')+'</span></button>'+
+          '<button class="sell-high" data-high="'+n.id+'"><span class="lb">Дороже</span><span class="pr">'+highP.toLocaleString('ru-RU')+'</span></button>'+
           '</div>'
       )+
       '</div>';
@@ -138,6 +152,7 @@ export function renderCollection(){
     Sound.click(); save(); renderCollection();
   }));
   grid.querySelectorAll('.copy-plate').forEach(el => el.addEventListener('click', e => {
+    if(e.target.closest('button')) return;
     const p = e.currentTarget.dataset.plate;
     if(copyText(p)){ notify('📋 '+p); Sound.click(); }
   }));

@@ -8,6 +8,7 @@ import {
   COUNTRIES,
   extractRegion,
 } from '../../domain/plates/countries.js';
+import { marketMood, saleChance } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
 import {
   randGauss,
@@ -78,12 +79,10 @@ export function makeOrder(){
   const res = cd.gen(rid);
   const region = extractRegion(res.plate, cd.flag);
   let wildcardRatio;
-  if(rid === 'divine' || rid === 'mythic') wildcardRatio = 0.15;
-  else if(rid === 'legendary') wildcardRatio = 0.20;
-  else if(rid === 'epic') wildcardRatio = 0.30;
-  else if(rid === 'rare') wildcardRatio = 0.40;
-  else if(rid === 'uncommon') wildcardRatio = 0.55;
-  else wildcardRatio = 0.65;
+  if(rid === 'divine' || rid === 'mythic') wildcardRatio = 0.08;
+  else if(rid === 'legendary') wildcardRatio = 0.1;
+  else if(rid === 'epic') wildcardRatio = 0.12;
+  else wildcardRatio = 0.18;
   const mask = maskPlate(res.plate, wildcardRatio);
   const spec = specificity(mask);
   const hypo = hypoPrice(rid, cd.flag, region);
@@ -102,14 +101,22 @@ export function makeOrder(){
 }
 
 export function maskPlate(plate, ratio){
-  let m = '';
-  for(let i=0;i<plate.length;i++){
-    const ch = plate[i];
-    if(ch === ' ') m += ' ';
-    else if(Math.random() < ratio) m += '*';
-    else m += ch;
+  const chars = plate.split('');
+  const hidden = [];
+  for(let i=0;i<chars.length;i++){
+    if(chars[i] === ' ') continue;
+    if(Math.random() < ratio){ chars[i] = '*'; hidden.push(i); }
   }
-  return m;
+  while(hidden.length > 2){
+    const at = hidden.splice(~~(Math.random()*hidden.length), 1)[0];
+    chars[at] = plate[at];
+  }
+  if(!hidden.length){
+    const open = [];
+    for(let i=0;i<plate.length;i++) if(plate[i] !== ' ') open.push(i);
+    if(open.length) chars[open[~~(Math.random()*open.length)]] = '*';
+  }
+  return chars.join('');
 }
 
 export function specificity(mask){
@@ -139,24 +146,23 @@ export function generateExchangeSession(){
   market.offers = market.offers.filter(o => !o._removed);
   market.orders = market.orders.filter(o => !o._removed && o.until > now);
 
-  const targetOffers = 40 + ~~(Math.random()*25);
-  const targetOrders = 15 + ~~(Math.random()*16);
+  const targetOffers = 8;
+  const targetOrders = 4;
 
-  const keepCount = Math.floor(market.offers.length * 0.5);
-  if(market.offers.length > keepCount) market.offers = market.offers.slice(0, keepCount);
-  const toAdd = targetOffers - market.offers.length;
-  for(let i=0;i<toAdd;i++) market.offers.push(makeOffer());
+  market.offers = market.offers.slice(-3);
+  while(market.offers.length < targetOffers) market.offers.push(makeOffer());
+  if(market.offers.length > targetOffers) market.offers = market.offers.slice(-targetOffers);
 
-  market.orders = market.orders.filter(o => o.until > now + 5000);
+  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 2);
   let longOrders = market.orders.filter(o => (o.until - o.createdAt) > 60000).length;
   while(market.orders.length < targetOrders){
     const o = makeOrder();
     const isLong = (o.until - o.createdAt) > 60000;
-    if(isLong && longOrders >= 5) o.until = Date.now() + SESSION_MS + ~~(Math.random()*SESSION_MS);
+    if(isLong && longOrders >= 2) o.until = Date.now() + SESSION_MS;
     else if(isLong) longOrders++;
     market.orders.push(o);
   }
-  if(market.orders.length > targetOrders + 10) market.orders = market.orders.slice(0, targetOrders + 10);
+  if(market.orders.length > targetOrders) market.orders = market.orders.slice(0, targetOrders);
 
   bumpListingsSessions();
   runAccountantSession();
@@ -207,17 +213,15 @@ export function rollListings(){
   const sold = [];
   for(let i=market.listings.length-1;i>=0;i--){
     const l = market.listings[i];
-    const num = S.col.find(n => n.id === l.numId);
+    const num = S.col.find(n => Number(n.id) === Number(l.numId));
     if(!num){ market.listings.splice(i,1); continue; }
-    const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
-    const dev = (l.price - hypo) / hypo;
-    const rarityBonus = RARITY_ORDER.indexOf(num.rarity) * 0.09;
-    let chance;
-    if(dev <= -0.03) chance = 1;
-    else { chance = 0.55 - dev * 1.2 + rarityBonus; chance = Math.max(0.03, Math.min(0.97, chance)); }
+    const region = extractRegion(num.plate, num.flag);
+    const hypo = hypoPrice(num.rarity, num.flag, region);
+    const mood = marketMood(num.flag, region, num.rarity);
+    const chance = saleChance(l.price, hypo, mood, RARITY_ORDER.indexOf(num.rarity));
     if(Math.random() < chance){
       S.rub += l.price; S.totalEarned += l.price;
-      const idx = S.col.findIndex(n => n.id === l.numId);
+      const idx = S.col.findIndex(n => Number(n.id) === Number(l.numId));
       if(idx >= 0) S.col.splice(idx, 1);
       market.listings.splice(i,1);
       sold.push({ plate: num.plate, price: l.price });
