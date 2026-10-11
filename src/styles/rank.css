@@ -1,0 +1,21 @@
+.rank-hero{padding:22px 22px 8px}
+.rank-kicker{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label-2)}
+.rank-place{font-size:2rem;font-weight:800;letter-spacing:-.6px;line-height:1.1;margin-top:4px}
+.rank-sub{margin-top:6px;color:var(--label-2);font-weight:650}
+.rank-list{display:flex;flex-direction:column;gap:8px;padding:8px 16px 18px}
+.rank-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--bg-secondary);border:1px solid transparent}
+.rank-row.top{background:var(--bg-elev);border-color:var(--sep);box-shadow:var(--shadow-sm)}
+.rank-row.me{outline:2px solid var(--blue)}
+.rank-row .pos{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--bg-tertiary);flex-shrink:0}
+.rank-row.top .pos{background:linear-gradient(145deg,#ffd60a,#ff9f0a);color:#3a2500}
+.rank-row .who{flex:1;min-width:0;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-row .money{font-variant-numeric:tabular-nums;font-weight:800;color:var(--green);white-space:nowrap}
+.rank-x{width:28px;height:28px;border:none;border-radius:50%;background:var(--bg-tertiary);color:var(--label-2);font-size:1.1rem;line-height:1;cursor:pointer;flex-shrink:0}
+.rank-x:hover{color:var(--red)}
+.rank-form{display:flex;flex-direction:column;gap:12px;padding:0 16px 18px}
+.rank-form label{display:flex;flex-direction:column;gap:6px;font-size:.75rem;font-weight:700;color:var(--label-2)}
+.rank-form input{background:var(--bg-secondary);border:1px solid var(--sep);color:var(--label);border-radius:14px;padding:12px 14px;font-family:var(--font);font-size:1rem;font-weight:700;outline:none}
+.rank-form input:focus{border-color:var(--blue)}
+.rank-actions{display:flex}
+.rank-hint{margin:0;font-size:.8rem;line-height:1.45;color:var(--label-2)}
+.rank-list .empty{padding:8px 4px 12px;color:var(--label-2);font-size:.9rem}

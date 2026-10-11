@@ -10,6 +10,7 @@ import { COUNTRIES } from '../domain/plates/countries.js';
 import {
   renderAcctLog,
   runAccountantSession,
+  takeAdvice,
 } from '../features/accountant/session.js';
 import {
   buyAcctSkill,
@@ -52,6 +53,8 @@ import {
 } from '../features/exchange/view.js';
 import { sellBulk } from '../features/garage/sell.js';
 import { renderCollection } from '../features/garage/view.js';
+import { ensureSession, logoutToGate } from '../features/auth/gate.js';
+import { renderRank } from '../features/rank/board.js';
 import { updateBalances } from '../features/hud/balance.js';
 import {
   renderHistory,
@@ -92,6 +95,7 @@ import {
 } from '../features/shell/secrets.js';
 import { Sound } from '../services/audio.js';
 import { notify } from '../services/notify.js';
+import { queueScore } from '../services/remote.js';
 import {
   load,
   save,
@@ -100,12 +104,14 @@ import { flags } from '../state/flags.js';
 import { market } from '../state/market.js';
 import { S } from '../state/player.js';
 
-export function init(){
+export async function init(){
   load();
+  await ensureSession();
+  queueScore(S.rub);
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
-  if(!['drop','earn','exchange','garage','accountant','news','info'].includes(savedPage)) savedPage = 'drop';
+  if(!['drop','earn','exchange','garage','accountant','news','rank','info'].includes(savedPage)) savedPage = 'drop';
   switchPage(savedPage);
 
   document.querySelectorAll('#countryPicker .cpill').forEach(b => b.addEventListener('click', () => selectCountry(b.dataset.country)));
@@ -218,7 +224,7 @@ export function init(){
     S.acct.mode = b.dataset.mode;
     Sound.click();
     updateAcctUI(); save();
-    notify('Бухгалтер: '+({off:'выключен',notify:'уведомления',auto:'авто'})[b.dataset.mode]);
+    notify('Бухгалтер: '+({off:'выключен',notify:'подсказки',auto:'сам торгует'})[b.dataset.mode]);
     if(S.acct.mode !== 'off') runAccountantSession();
     renderExchange();
   }));
@@ -227,8 +233,11 @@ export function init(){
   document.getElementById('buyAcctRisk').addEventListener('click', () => buyAcctSkill('risk'));
   document.getElementById('acctThMinus').addEventListener('click', () => { S.acct.threshold = Math.max(5, S.acct.threshold - 5); updateAcctUI(); save(); });
   document.getElementById('acctThPlus').addEventListener('click', () => { S.acct.threshold = Math.min(90, S.acct.threshold + 5); updateAcctUI(); save(); });
-  document.getElementById('acctAutoBuyToggle').addEventListener('click', () => { S.acct.autoBuy = !S.acct.autoBuy; Sound.click(); updateAcctUI(); save(); });
-  document.getElementById('acctAutoSellToggle').addEventListener('click', () => { S.acct.autoSell = !S.acct.autoSell; Sound.click(); updateAcctUI(); save(); });
+  document.getElementById('acctAdvice').addEventListener('click', e => {
+    const btn = e.target.closest('[data-act]');
+    if(!btn) return;
+    takeAdvice(btn.dataset.kind, btn.dataset.id, btn.dataset.num);
+  });
 
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
     Sound.click();
@@ -240,11 +249,18 @@ export function init(){
     if(t.dataset.tab === 'wealth') renderWealthTable();
   }));
 
+  document.getElementById('rankLogout').addEventListener('click', logoutToGate);
+  document.getElementById('accountChip').addEventListener('click', () => switchPage('rank'));
+  setInterval(() => {
+    if(document.getElementById('page-rank')?.classList.contains('active')) renderRank();
+  }, 20000);
+
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   document.getElementById('soundToggle').addEventListener('click', toggleSound);
   updateSoundUI();
 
   document.addEventListener('keydown', e => {
+    if(!document.getElementById('authGate').hidden) return;
     const tag = (e.target && e.target.tagName) || '';
     if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if(e.key === ' '){
@@ -252,8 +268,8 @@ export function init(){
       const page = document.querySelector('.topnav-btn.active')?.dataset.page;
       if(page === 'drop' && !flags.spinning) doDrop(1);
     } else if(e.key === 'Escape'){ hideDropResults(); }
-    else if(e.key >= '1' && e.key <= '7'){
-      const pages = ['drop','earn','exchange','garage','accountant','news','info'];
+    else if(e.key >= '1' && e.key <= '8'){
+      const pages = ['drop','earn','exchange','garage','accountant','news','rank','info'];
       const idx = parseInt(e.key,10) - 1;
       if(pages[idx]){ Sound.click(); switchPage(pages[idx]); }
     }

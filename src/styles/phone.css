@@ -1,0 +1,40 @@
+@media (max-width:760px){
+  body{padding:10px 10px calc(28px + env(safe-area-inset-bottom))}
+  header{gap:8px;margin-bottom:10px}
+  .brand .tag{display:none}
+  .brand .name{font-size:1.25rem}
+  .header-actions{width:100%}
+  .balance-pill{flex:1;min-width:0;padding:8px 12px 8px 8px}
+  .balance-pill .num{overflow:hidden;text-overflow:ellipsis}
+  .topnav{top:4px;margin-bottom:8px;padding:4px;gap:2px}
+  .topnav-btn{flex:1 1 0;min-width:0;padding:10px 0;gap:0}
+  .nav-label{display:none}
+  .tape{margin-bottom:10px}
+  .tape-quiet{white-space:normal}
+  .group{border-radius:18px;margin-bottom:12px}
+  .group-header,.info-pad,.rank-hero{padding-left:14px;padding-right:14px}
+  .group-row{padding:12px 14px;align-items:flex-start}
+  .plate-display{min-width:0;width:100%;padding:14px 8px;border-radius:18px}
+  .realplate.lg{font-size:clamp(1.02rem, 5.2vw, 1.55rem)}
+  .plate-stage{overflow-x:auto;min-height:64px;padding:12px 8px}
+  .country-picker{justify-content:flex-start;margin-bottom:14px}
+  .drop-actions,.custom-spin-row,.autospin-row{max-width:none}
+  input,select,textarea{font-size:16px}
+  .filters,.ex-filters,.coef-row,.bulk-sell{margin-left:10px;margin-right:10px}
+  .filters,.ex-filters{padding-left:0;padding-right:0}
+  .filters select,.filters input,.ex-filters select,.ex-filters input,.ex-filters .ios-btn{width:100%;flex:1 1 100%}
+  .coef-row{flex-direction:column;align-items:stretch}
+  .coef-row .hint{margin-left:0}
+  .coef-row input{width:72px}
+  .grid,.ex-grid{padding-left:10px;padding-right:10px}
+  .grid{max-height:none}
+  .stats-row,.ach-grid,.rarity-stats-list{padding-left:10px;padding-right:10px}
+  .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .format-row{flex-wrap:wrap}
+  .ex-head{align-items:flex-start;padding:14px 14px 8px}
+  .ex-tabs,.tabs{margin-left:10px;margin-right:10px}
+  .sell-trio button{min-height:46px}
+  .rank-list,.rank-form{padding-left:10px;padding-right:10px}
+  .rank-row .money{font-size:.92rem}
+  #notify{white-space:normal;text-align:center;width:min(92vw,420px);border-radius:18px}
+}

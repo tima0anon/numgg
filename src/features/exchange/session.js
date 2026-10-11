@@ -146,19 +146,19 @@ export function generateExchangeSession(){
   market.offers = market.offers.filter(o => !o._removed);
   market.orders = market.orders.filter(o => !o._removed && o.until > now);
 
-  const targetOffers = 8;
-  const targetOrders = 4;
+  const targetOffers = 32;
+  const targetOrders = 18;
 
-  market.offers = market.offers.slice(-3);
+  market.offers = market.offers.slice(-14);
   while(market.offers.length < targetOffers) market.offers.push(makeOffer());
   if(market.offers.length > targetOffers) market.offers = market.offers.slice(-targetOffers);
 
-  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 2);
+  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 10);
   let longOrders = market.orders.filter(o => (o.until - o.createdAt) > 60000).length;
   while(market.orders.length < targetOrders){
     const o = makeOrder();
     const isLong = (o.until - o.createdAt) > 60000;
-    if(isLong && longOrders >= 2) o.until = Date.now() + SESSION_MS;
+    if(isLong && longOrders >= 8) o.until = Date.now() + SESSION_MS;
     else if(isLong) longOrders++;
     market.orders.push(o);
   }
@@ -256,7 +256,7 @@ export function doBuyOffer(o, silent, batch){
   const idx = market.offers.findIndex(x => x.id === o.id);
   if(idx >= 0) market.offers.splice(idx,1);
   if(!batch){ Sound.buy(); haptic(15); }
-  if(silent && !batch) addAcctLog('🤖 Куплено: ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽', 'ok');
+  if(silent && !batch) addAcctLog('Купил ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽, рынок ' + Math.round(o.hypo).toLocaleString('ru-RU') + ' ₽', 'ok');
   else if(!batch) notify('Куплено: ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽');
   S.acct.deals++;
   S.acct.profit += (o.hypo - o.price);
@@ -286,7 +286,7 @@ export function doFulfillOrder(orderId, numId, silent, batch){
   if(!batch){ Sound.coin_big(); haptic([20,20,40]); }
   S.acct.deals++;
   S.acct.profit += (reward - hypo);
-  if(silent && !batch) addAcctLog('🤖 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽', 'ok');
+  if(silent && !batch) addAcctLog('Продал ' + num.plate + ' в заказ за ' + reward.toLocaleString('ru-RU') + ' ₽, рынок номера ' + Math.round(hypo).toLocaleString('ru-RU') + ' ₽', 'ok');
   else if(!batch) notify('🎯 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽');
   if(!batch){
     updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements();

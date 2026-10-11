@@ -1,0 +1,46 @@
+:root{
+  --glass:rgba(255,255,255,.58);
+  --glass-strong:rgba(255,255,255,.74);
+  --glass-line:rgba(255,255,255,.72);
+  --glass-shadow:0 10px 30px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.8);
+  --blur:blur(22px) saturate(1.8);
+}
+html[data-theme="dark"]{
+  --glass:rgba(22,22,24,.62);
+  --glass-strong:rgba(44,44,48,.72);
+  --glass-line:rgba(255,255,255,.16);
+  --glass-shadow:0 12px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.16);
+}
+body{
+  background:
+    radial-gradient(880px 520px at 8% -10%, rgba(10,132,255,.42), transparent 58%),
+    radial-gradient(720px 480px at 100% 0%, rgba(191,90,242,.34), transparent 52%),
+    radial-gradient(640px 420px at 86% 110%, rgba(255,159,10,.28), transparent 50%),
+    radial-gradient(520px 360px at 0% 90%, rgba(48,209,88,.18), transparent 50%),
+    var(--bg);
+  background-attachment:fixed;
+}
+.group,.drop-results,.topnav,.balance-pill,.rank-pill,.theme-toggle,.sound-toggle,.account-chip,.tape-item,.tape-quiet,.ncard,.excard,.drcard,.rank-row{
+  background:var(--glass);
+  border:1px solid var(--glass-line);
+  box-shadow:var(--glass-shadow);
+  backdrop-filter:var(--blur);
+  -webkit-backdrop-filter:var(--blur);
+}
+.topnav{background:var(--glass-strong)}
+.topnav-btn.active{background:var(--blue);border-color:transparent}
+.ncard,.excard,.drcard,.rank-row,.rank-row.top{background:var(--glass-strong)}
+.account-chip{border-radius:100px;padding:8px 14px;font:inherit;font-weight:800;color:var(--label);cursor:pointer}
+.auth-gate{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,10,16,.28);backdrop-filter:blur(28px) saturate(1.5);-webkit-backdrop-filter:blur(28px) saturate(1.5)}
+.auth-gate[hidden]{display:none !important}
+.auth-card{width:min(420px,100%);display:flex;flex-direction:column;gap:12px;padding:28px 22px 22px;border-radius:28px;background:var(--glass-strong);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
+.auth-card h1{margin:0;font-size:1.8rem;letter-spacing:-.6px}
+.auth-lead,.auth-note,.auth-error{margin:0;color:var(--label-2);font-size:.88rem;line-height:1.45}
+.auth-error{min-height:1.2em;color:var(--red);font-weight:700}
+.auth-tabs{display:flex;gap:4px;padding:4px;border-radius:100px;background:rgba(120,120,128,.16)}
+.auth-tabs button{flex:1;border:none;background:transparent;border-radius:100px;padding:10px;font:inherit;font-weight:750;color:var(--label);cursor:pointer}
+.auth-tabs button.active{background:var(--glass-strong);box-shadow:var(--shadow-sm)}
+.auth-card label{display:flex;flex-direction:column;gap:6px;font-size:.75rem;font-weight:700;color:var(--label-2)}
+.auth-card input{border:1px solid var(--sep);background:var(--bg-elev);color:var(--label);border-radius:14px;padding:12px 14px;font:inherit;font-size:1rem;font-weight:700;outline:none}
+.auth-card input:focus{border-color:var(--blue)}
+.auth-card .ios-btn{padding:12px 16px;font-size:1rem}

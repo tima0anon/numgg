@@ -1,0 +1,95 @@
+const SESSION_KEY = 'numdrop_session_v1';
+
+export function apiBase(){
+  const host = location.hostname;
+  if(host === '127.0.0.1' || host === 'localhost') return 'http://127.0.0.1:8787';
+  return 'https://numgg-api.certain-chip.workers.dev';
+}
+
+export function readSession(){
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(!data || typeof data.token !== 'string' || typeof data.nick !== 'string') return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export function writeSession(data){
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ token: data.token, nick: data.nick }));
+}
+
+export function clearSession(){
+  localStorage.removeItem(SESSION_KEY);
+}
+
+async function call(path, { method, body, auth } = {}){
+  const headers = {};
+  if(body) headers['content-type'] = 'application/json';
+  if(auth){
+    const session = readSession();
+    if(session) headers.authorization = 'Bearer ' + session.token;
+  }
+  let response;
+  try {
+    response = await fetch(apiBase() + path, {
+      method: method || (body ? 'POST' : 'GET'),
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    const error = new Error('Нет связи с сервером рейтинга');
+    error.status = 0;
+    throw error;
+  }
+  const data = await response.json().catch(() => ({}));
+  if(!response.ok){
+    const error = new Error(data.error || 'Сервер отклонил запрос');
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
+export function registerAccount(nick, password){
+  return call('/register', { body: { nick, password } });
+}
+
+export function loginAccount(nick, password){
+  return call('/login', { body: { nick, password } });
+}
+
+export function fetchMe(){
+  return call('/me', { auth: true });
+}
+
+export function fetchTop(){
+  return call('/top', { auth: true });
+}
+
+export function logoutAccount(){
+  const session = readSession();
+  clearSession();
+  if(!session) return Promise.resolve();
+  return fetch(apiBase() + '/logout', { method: 'POST', headers: { authorization: 'Bearer ' + session.token } }).catch(() => {});
+}
+
+let scoreTimer = 0;
+export function queueScore(balance){
+  if(!readSession()) return;
+  clearTimeout(scoreTimer);
+  scoreTimer = setTimeout(() => {
+    call('/score', { body: { balance: Math.floor(balance) }, auth: true }).then(row => {
+      const page = document.getElementById('page-rank');
+      if(page && page.classList.contains('active')){
+        const place = document.getElementById('rankPlace');
+        if(place && row.place) place.textContent = row.place + ' место';
+      }
+    }).catch(error => {
+      if(error.status === 401) clearSession();
+    });
+  }, 2500);
+}

@@ -1,4 +1,5 @@
 import { updateAcctUI } from '../accountant/view.js';
+import { rememberPeak } from '../rank/board.js';
 import { updateStats } from './stats.js';
 import {
   cooldownMs,
@@ -29,6 +30,7 @@ export function animateRubTo(target){
 }
 
 export function updateBalances(){
+  rememberPeak();
   animateRubTo(S.rub);
   document.getElementById('cdVal').textContent = (cooldownMs()/1000).toFixed(1);
   document.getElementById('cdLvl').textContent = S.cdLvl;

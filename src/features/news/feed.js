@@ -6,7 +6,6 @@ import {
 import { COUNTRY_FLAGS } from '../../config/economy.js';
 import { RMAP } from '../../config/rarity.js';
 import { rnd } from '../../domain/random.js';
-import { addAcctLog } from '../accountant/session.js';
 import { renderExchange } from '../exchange/view.js';
 import { renderCollection } from '../garage/view.js';
 import { S } from '../../state/player.js';
@@ -170,7 +169,6 @@ function pushNews(tpl, now){
     title: tpl.title, desc: tpl.desc, kind: tpl.kind,
     until: now + durMs, startedAt: now
   });
-  addAcctLog('📰 ' + tpl.title, 'n');
 }
 
 function pickFreshTemplate(){
