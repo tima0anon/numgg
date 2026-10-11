@@ -53,7 +53,6 @@ import {
 } from '../features/exchange/view.js';
 import { sellBulk } from '../features/garage/sell.js';
 import { renderCollection } from '../features/garage/view.js';
-import { ensureSession, logoutToGate } from '../features/auth/gate.js';
 import { renderRank } from '../features/rank/board.js';
 import { updateBalances } from '../features/hud/balance.js';
 import {
@@ -95,7 +94,6 @@ import {
 } from '../features/shell/secrets.js';
 import { Sound } from '../services/audio.js';
 import { notify } from '../services/notify.js';
-import { queueScore } from '../services/remote.js';
 import {
   load,
   save,
@@ -106,8 +104,6 @@ import { S } from '../state/player.js';
 
 export async function init(){
   load();
-  await ensureSession();
-  queueScore(S.rub);
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
@@ -249,8 +245,6 @@ export async function init(){
     if(t.dataset.tab === 'wealth') renderWealthTable();
   }));
 
-  document.getElementById('rankLogout').addEventListener('click', logoutToGate);
-  document.getElementById('accountChip').addEventListener('click', () => switchPage('rank'));
   setInterval(() => {
     if(document.getElementById('page-rank')?.classList.contains('active')) renderRank();
   }, 20000);
@@ -260,7 +254,6 @@ export async function init(){
   updateSoundUI();
 
   document.addEventListener('keydown', e => {
-    if(!document.getElementById('authGate').hidden) return;
     const tag = (e.target && e.target.tagName) || '';
     if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if(e.key === ' '){

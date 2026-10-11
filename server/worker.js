@@ -1,5 +1,7 @@
 const ORIGINS = new Set([
   'https://tima0anon.github.io',
+  'https://web2.castle-host.com',
+  'https://fastdl.castle-host.com',
   'http://127.0.0.1:5173',
   'http://localhost:5173',
 ]);

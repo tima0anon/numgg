@@ -4,7 +4,6 @@ import {
   MAX_CUSTOM_SPIN,
   START_RUB,
 } from '../config/constants.js';
-import { queueScore } from './remote.js';
 import { market } from '../state/market.js';
 import { S } from '../state/player.js';
 
@@ -22,7 +21,6 @@ export function save(){
       myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind }))
     };
     localStorage.setItem(KEY, JSON.stringify(data));
-    queueScore(S.rub);
   } catch(e){}
 }
 

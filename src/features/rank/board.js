@@ -1,5 +1,5 @@
 import { WEALTH_TIERS, wealthTierIdx } from '../../config/wealth.js';
-import { fetchTop, readSession } from '../../services/remote.js';
+import { fetchTop } from '../../services/remote.js';
 import { S } from '../../state/player.js';
 
 export function rememberPeak(){
@@ -14,25 +14,20 @@ export async function renderRank(){
   rememberPeak();
   const list = document.getElementById('rankList');
   if(!list) return;
-  const session = readSession();
-  const account = document.getElementById('rankAccount');
-  if(account) account.textContent = (session ? session.nick : 'Гость') + ' · в таблице баланс этого браузера';
+  const tier = WEALTH_TIERS[wealthTierIdx(S.rub)];
+  const place = document.getElementById('rankPlace');
+  const sub = document.getElementById('rankSub');
+  if(place) place.textContent = tier.emoji + ' ' + Math.floor(S.rub).toLocaleString('ru-RU') + ' ₽';
+  if(sub) sub.textContent = tier.label + ' · баланс в этом браузере';
   list.innerHTML = '<div class="empty">Загружаю топ…</div>';
   try {
     const data = await fetchTop();
     const me = data.me;
-    const tier = WEALTH_TIERS[wealthTierIdx(S.rub)];
-    const place = document.getElementById('rankPlace');
-    const sub = document.getElementById('rankSub');
     if(me && me.place){
-      place.textContent = me.place + ' место';
-      sub.textContent = tier.emoji + ' ' + tier.label + ' · ' + Math.floor(me.balance).toLocaleString('ru-RU') + ' ₽' + (me.place > 100 ? ' · вне первой сотни' : '');
-    } else {
-      place.textContent = 'без места';
-      sub.textContent = 'Баланс появится в таблице через пару секунд после входа';
+      sub.textContent = tier.label + ' · ' + me.place + ' место в общем топе';
     }
     if(!data.top.length){
-      list.innerHTML = '<div class="empty">Пока в таблице никого. Сыграй — и баланс запишется на твой ник.</div>';
+      list.innerHTML = '<div class="empty">Общая таблица пока пустая.</div>';
       return;
     }
     const myNick = me && me.nick;
