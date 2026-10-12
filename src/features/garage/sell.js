@@ -12,8 +12,21 @@ import { Sound } from '../../services/audio.js';
 import { haptic } from '../../services/haptic.js';
 import { notify } from '../../services/notify.js';
 import { save } from '../../services/storage.js';
+import { SALE_ROLL_MS } from '../../config/constants.js';
 import { market } from '../../state/market.js';
 import { S } from '../../state/player.js';
+
+function pushListing(num, price, kind){
+  const now = Date.now();
+  market.listings.push({
+    numId: Number(num.id),
+    price,
+    sessions: 0,
+    kind,
+    listedAt: now,
+    nextRollAt: now + SALE_ROLL_MS
+  });
+}
 
 // SELL
 function confirmFavorite(num, verb){
@@ -44,7 +57,7 @@ export function sellMid(numId){
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
   const price = Math.max(1, Math.round(hypo));
   num.listed = true;
-      market.listings.push({ numId: Number(num.id), price, sessions: 0, kind:'mid' });
+      pushListing(num, price, 'mid');
   notify('📋 ' + num.plate + ' выставлен по рынку за ' + price.toLocaleString('ru-RU') + ' ₽');
   Sound.click();
   updateBalances(); renderCollection(); renderExchange(); save();
@@ -58,7 +71,7 @@ export function sellHigh(numId){
   const coef = Math.max(1, Math.min(200, S.coefHigh)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 + coef)));
   num.listed = true;
-  market.listings.push({ numId: Number(num.id), price, sessions: 0, kind:'high' });
+  pushListing(num, price, 'high');
   notify('📈 ' + num.plate + ' выставлен за ' + price.toLocaleString('ru-RU') + ' ₽');
   Sound.click();
   updateBalances(); renderCollection(); renderExchange(); save();
@@ -115,7 +128,7 @@ export function sellBulk(kind){
   } else {
     for(const { n, price } of priced){
       n.listed = true;
-      market.listings.push({ numId: Number(n.id), price, sessions: 0, kind: kind === 'high' ? 'high' : 'mid' });
+      pushListing(n, price, kind === 'high' ? 'high' : 'mid');
     }
     Sound.click();
     notify((kind === 'high' ? '📈 ' : '📋 ') + priced.length + ' номеров выставлено на ' + sum.toLocaleString('ru-RU') + ' ₽');

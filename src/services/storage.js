@@ -1,9 +1,4 @@
-import {
-  HISTORY_MAX,
-  KEY,
-  MAX_CUSTOM_SPIN,
-  START_RUB,
-} from '../config/constants.js';
+import { HISTORY_MAX, KEY, MAX_CUSTOM_SPIN, SALE_ROLL_MS, START_RUB } from '../config/constants.js';
 import { queueScore } from './remote.js';
 import { market } from '../state/market.js';
 import { S } from '../state/player.js';
@@ -20,7 +15,7 @@ export function save(){
       coefLow: S.coefLow, coefHigh: S.coefHigh, news: S.news, acct: S.acct,
       earnLevel: S.earnLevel, usedCashCode: S.usedCashCode,
       playerName: S.playerName, peakRub: S.peakRub, rivals: S.rivals,
-      myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind }))
+      myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind, listedAt: l.listedAt, nextRollAt: l.nextRollAt }))
     };
     localStorage.setItem(KEY, JSON.stringify(data));
     queueScore(Math.max(S.rub, S.peakRub || 0));
@@ -58,7 +53,14 @@ export function load(){
     if(Array.isArray(p.myListings)){
       market.listings = p.myListings
         .filter(l => l && S.col.find(n => n.id === l.numId))
-        .map(l => ({ numId: l.numId, price: l.price||0, sessions: l.sessions||0, kind: l.kind||'mid' }));
+        .map(l => ({
+          numId: l.numId,
+          price: l.price||0,
+          sessions: l.sessions||0,
+          kind: l.kind||'mid',
+          listedAt: l.listedAt || Date.now(),
+          nextRollAt: l.nextRollAt || (Date.now() + SALE_ROLL_MS)
+        }));
       // Sync listed flags
       const listedIds = new Set(market.listings.map(l => l.numId));
       S.col.forEach(n => { n.listed = listedIds.has(n.id); });

@@ -32,25 +32,22 @@ export function marketMood(flag, region, rarity){
   return { heat, bull, label, cls, titles };
 }
 
-export function saleChance(price, hypo, mood, rarityIdx){
+export function saleChance(price, hypo, mood){
   const fair = Math.max(1, hypo);
   const dev = (price - fair) / fair;
-  const heat = mood.heat;
-  if(dev > 0.02 && !mood.bull) return 0;
-  let chance;
-  if(dev <= -0.10) chance = 0.28 + heat * 0.32;
-  else if(dev < -0.02) chance = 0.06 + heat * 0.2;
-  else if(dev <= 0.02) chance = 0.03 + heat * 0.22;
-  else chance = Math.max(0, (heat - 0.22) * 1.35 - dev * 1.15);
-  chance *= Math.max(0.4, 1 - (rarityIdx || 0) * 0.07);
-  return Math.max(0, Math.min(0.92, chance));
+  const heat = mood?.heat ?? 0.2;
+  let chance = 0.46 + (heat - 0.2) * 0.55;
+  if(dev < 0) chance += Math.min(0.22, -dev * 1.05);
+  else chance -= Math.min(0.4, dev * 0.5);
+  if(mood?.bull) chance += 0.12;
+  return Math.max(0.16, Math.min(0.88, chance));
 }
 
 export function saleHint(chance, price, hypo, mood){
   const dev = (price - hypo) / Math.max(1, hypo);
-  if(dev > 0.02 && !mood.bull) return 'Дороже рынка не берут: нет хорошей новости по этому номеру';
-  if(chance >= 0.55) return 'Покупатели активны, лот может уйти в ближайшее обновление';
-  if(chance >= 0.2) return 'По обычной цене берут, но не с первого раза';
-  if(chance > 0) return 'Рынок тихий: продажа возможна, но редкая';
-  return 'Сейчас этот ценник никто не платит';
+  if(mood?.bull && chance >= 0.62) return 'Новость подняла спрос: рулетка каждые 15 секунд крутится с этим шансом';
+  if(dev > 0.05) return 'Цена выше рынка, шанс меньше, но круг всё равно есть';
+  if(chance >= 0.62) return 'Спрос живой: часто хватает одного или двух кругов';
+  if(chance >= 0.38) return 'Обычный спрос. Несколько кругов, и номер обычно забирают';
+  return 'Рынок холодный, но рулетка крутится каждые 15 секунд';
 }

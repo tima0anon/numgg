@@ -1,7 +1,4 @@
-import {
-  RARITY_ORDER,
-  RMAP,
-} from '../../config/rarity.js';
+import { RMAP } from '../../config/rarity.js';
 import { extractRegion } from '../../domain/plates/countries.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
 import { marketMood, saleChance, saleHint } from '../../domain/demand.js';
@@ -156,12 +153,12 @@ export function renderMyListings(){
     const region = extractRegion(num.plate, num.flag);
     const hypo = hypoPrice(num.rarity, num.flag, region);
     const mood = marketMood(num.flag, region, num.rarity);
-    const chance = saleChance(l.price, hypo, mood, RARITY_ORDER.indexOf(num.rarity));
+    const chance = saleChance(l.price, hypo, mood);
     return '<div class="excard '+num.rarity+'">'+
       '<div class="plate-stage">'+renderRealPlate(num.plate, num.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+num.country+'</span><span class="rar '+num.rarity+'">'+R.name+'</span></div>'+
       '<div class="card-price">'+rub(l.price)+'<span>твоя цена</span></div>'+
-      '<div class="deal '+mood.cls+'">'+mood.label+' · шанс '+Math.round(chance*100)+'%</div>'+
+      '<div class="deal '+mood.cls+'"><span class="roulette">⟳</span> шанс '+Math.round(chance*100)+'%'+(l.missUntil && Date.now() < l.missUntil ? ' · мимо' : '')+' · ещё <span class="roll-wait" data-until="'+(l.nextRollAt || 0)+'">'+Math.max(0, Math.ceil(((l.nextRollAt || 0) - Date.now()) / 1000))+'</span> с</div>'+
       '<div class="deal">'+saleHint(chance, l.price, hypo, mood)+'</div>'+
       '<button class="buy-btn" style="background:var(--red)" data-id="'+l.numId+'">Снять с продажи</button>'+
       '</div>';

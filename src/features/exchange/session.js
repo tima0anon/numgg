@@ -1,5 +1,4 @@
-import { OFFER_TTL_MS, SESSION_MS } from '../../config/constants.js';
-import { RARITY_ORDER } from '../../config/rarity.js';
+import { OFFER_TTL_MS, SALE_ROLL_MS, SESSION_MS } from '../../config/constants.js';
 import {
   isRecentPlate,
   rememberPlate,
@@ -235,31 +234,43 @@ export function tickExchange(){
       if(document.scrollingElement) document.scrollingElement.scrollTop = top;
     }
   }
+  document.querySelectorAll('.roll-wait').forEach(el => {
+    const left = Math.max(0, Math.ceil((Number(el.dataset.until) - now) / 1000));
+    el.textContent = String(left);
+  });
+  rollListings(now);
   if(now >= market.sessionNextAt){
-    rollListings();
     generateExchangeSession();
   }
 }
 
-export function rollListings(){
-  if(!market.listings.length) return;
+export function rollListings(now = Date.now()){
+  if(!market.listings.length) return false;
   const sold = [];
+  let spun = false;
   for(let i=market.listings.length-1;i>=0;i--){
     const l = market.listings[i];
+    if(!l.nextRollAt) l.nextRollAt = now + SALE_ROLL_MS;
+    if(now < l.nextRollAt) continue;
     const num = S.col.find(n => Number(n.id) === Number(l.numId));
     if(!num){ market.listings.splice(i,1); continue; }
+    spun = true;
+    l.nextRollAt = now + SALE_ROLL_MS;
     const region = extractRegion(num.plate, num.flag);
     const hypo = hypoPrice(num.rarity, num.flag, region);
     const mood = marketMood(num.flag, region, num.rarity);
-    const chance = saleChance(l.price, hypo, mood, RARITY_ORDER.indexOf(num.rarity));
+    const chance = saleChance(l.price, hypo, mood);
     if(Math.random() < chance){
       S.rub += l.price; S.totalEarned += l.price;
       const idx = S.col.findIndex(n => Number(n.id) === Number(l.numId));
       if(idx >= 0) S.col.splice(idx, 1);
       market.listings.splice(i,1);
       sold.push({ plate: num.plate, price: l.price });
+    } else {
+      l.missUntil = now + 2200;
     }
   }
+  if(!spun) return false;
   if(sold.length === 1){
     notify('💸 ' + sold[0].plate + ' продан за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽');
     addAcctLog('💸 Продан ' + sold[0].plate + ' за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽', 'ok');
@@ -270,7 +281,12 @@ export function rollListings(){
     addAcctLog('💸 Продано лотов: ' + sold.length + ' · ' + sum.toLocaleString('ru-RU') + ' ₽', 'ok');
     Sound.sell(); haptic(10);
   }
-  updateBalances(); renderCollection(); renderExchange(); save();
+  updateBalances();
+  const active = document.activeElement;
+  const typing = active && active.closest && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
+  if(!typing){ renderCollection(); renderExchange(); }
+  save();
+  return true;
 }
 
 export function updateSessionCountdown(){

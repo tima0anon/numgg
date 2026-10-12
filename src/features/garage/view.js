@@ -140,11 +140,11 @@ export function renderCollection(){
     const corner = bought != null ? deltaHtml(listed ? listing.price : midP, bought) : '';
     const region = extractRegion(n.plate, n.flag);
     const mood = marketMood(n.flag, region, n.rarity);
-    const chance = listing ? saleChance(listing.price, hypo, mood, RARITY_ORDER.indexOf(n.rarity)) : 0;
+    const chance = listing ? saleChance(listing.price, hypo, mood) : 0;
     const favClass = n.favorite ? ' favorite' : '';
     const star = n.favorite ? '⭐' : '☆';
     const lot = listing
-      ? '<div class="lot-state"><b>На продаже · '+listing.price.toLocaleString('ru-RU')+' ₽</b><span class="demand '+mood.cls+'">'+mood.label+' · шанс '+Math.round(chance*100)+'%</span><span class="lot-why">'+saleHint(chance, listing.price, hypo, mood)+'</span></div>'
+      ? '<div class="lot-state"><b>На продаже · '+listing.price.toLocaleString('ru-RU')+' ₽</b><span class="demand '+mood.cls+'"><span class="roulette">⟳</span> шанс '+Math.round(chance*100)+'%'+(listing.missUntil && Date.now() < listing.missUntil ? ' · мимо' : '')+' · ещё <span class="roll-wait" data-until="'+(listing.nextRollAt || 0)+'">'+Math.max(0, Math.ceil(((listing.nextRollAt || 0) - Date.now()) / 1000))+'</span> с</span><span class="lot-why">'+saleHint(chance, listing.price, hypo, mood)+'</span></div>'
       : '';
     return '<div class="ncard '+n.rarity+favClass+(listed?' listed':'')+'">'+
       corner+
