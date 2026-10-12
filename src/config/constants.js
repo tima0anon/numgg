@@ -11,6 +11,8 @@ export const SPIN_COST_BY_COUNTRY = {
 
 export const START_RUB = 250000;
 
+export const EARN_BASE = 3000;
+
 export const KEY = 'numdrop_save_v13';
 
 export const THEME_KEY = 'numdrop_theme';

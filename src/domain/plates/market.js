@@ -191,3 +191,18 @@ export function appraisePlate(plate, flag, region, rarity){
 export function describePlate(plate, flag, region, rarity){
   return appraisePlate(plate, flag, region, rarity).line;
 }
+
+export const REGION_GUIDE = [
+  ['77 Москва', 3.2],
+  ['99 Москва', 3.1],
+  ['97 Москва', 2.9],
+  ['777 Москва', 2.8],
+  ['197 / 799 Москва', 2.7],
+  ['199 Москва', 2.6],
+  ['177 Москва', 2.5],
+  ['78 Санкт-Петербург', 1.85],
+  ['50 Московская область', 1.35],
+  ['23 Краснодар', 1.28],
+  ['16 Татарстан', 1.25],
+  ['02 Башкортостан', 1.2]
+];

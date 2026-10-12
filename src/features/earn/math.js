@@ -1,4 +1,4 @@
-import { SPIN_COST_ALL } from '../../config/constants.js';
+import { EARN_BASE } from '../../config/constants.js';
 import { WEALTH_TIERS, wealthTierIdx } from '../../config/wealth.js';
 import { rnd } from '../../domain/random.js';
 import { updateBalances } from '../hud/balance.js';
@@ -19,7 +19,7 @@ export const EARN_LEVELS = [
 
 export function earnReward(){
   const level = EARN_LEVELS[S.earnLevel] || EARN_LEVELS[0];
-  return SPIN_COST_ALL * level.mult;
+  return EARN_BASE * level.mult;
 }
 
 function roll(lo, hi){

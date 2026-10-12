@@ -3,7 +3,7 @@
     <div class="group-header">📊 Правила и информация</div>
     <div class="tabs">
       <button class="tab active" data-tab="rarity">Редкости</button>
-      <button class="tab" data-tab="prices">Гипот. цены</button>
+      <button class="tab" data-tab="prices">Цены</button>
       <button class="tab" data-tab="exchange">Биржа</button>
       <button class="tab" data-tab="accountant">Бухгалтер</button>
       <button class="tab" data-tab="elite">Блатные</button>
@@ -15,78 +15,59 @@
     <div class="tab-content active" id="tab-rarity">
       <div class="info-pad">
         <table class="rar-table">
-          <thead><tr><th>Редкость</th><th>Шанс</th><th>Базовая цена</th></tr></thead>
-          <tbody>
-            <tr><td class="rar-name common">Мусор</td><td>75%</td><td class="rar-price">20 ₽</td></tr>
-            <tr><td class="rar-name uncommon">Необычный</td><td>18%</td><td class="rar-price">80 ₽</td></tr>
-            <tr><td class="rar-name rare">Редкий</td><td>6%</td><td class="rar-price">400 ₽</td></tr>
-            <tr><td class="rar-name epic">Эпический</td><td>1%</td><td class="rar-price">1 250 ₽</td></tr>
-            <tr><td class="rar-name legendary">Легендарный</td><td>0.01%</td><td class="rar-price">50 000 ₽</td></tr>
-            <tr><td class="rar-name mythic">Мифический</td><td>0.001%</td><td class="rar-price">500 000 ₽</td></tr>
-            <tr><td class="rar-name divine">Божественный</td><td>0.0001%</td><td class="rar-price">10 000 000 ₽</td></tr>
-          </tbody>
+          <thead><tr><th>Редкость</th><th>Шанс</th><th>Пол цены</th></tr></thead>
+          <tbody id="rarityInfoBody"></tbody>
         </table>
+        <div class="note">Пол — это минимум. Красивые цифры, серия и регион поднимают цену выше. Удача чуть сдвигает шансы в сторону редких.</div>
         <div class="note">⭐ <b>Избранное.</b> Бухгалтер и кнопки «весь гараж» такие номера не продают. С карточки можно продать только после подтверждения.</div>
       </div>
     </div>
 
     <div class="tab-content" id="tab-prices">
       <div class="info-pad">
-        <div class="note" style="margin-top:0">📋 <b>Гипотетическая средняя цена.</b> Расчётная величина: базовая × коэффициент страны × коэффициент региона × множитель новостей. Именно вокруг неё плавают цены на бирже.</div>
-        <div class="note">⚠️ <b>Просто так продать по этой цене нельзя.</b> Только через биржу: в заказ, в предложение или ниже рынка на мгновенный выкуп.</div>
-        <div class="group-header" style="padding:16px 0 8px;font-size:.72rem;color:var(--label-2);font-weight:700">Коэффициенты стран</div>
+        <div class="note" style="margin-top:0">Цена считается по самому номеру: цифры, буквы, серия и регион. Новость умножает уже готовую цену. Мусор без комбинации стоит около цены дубликата, <b>4 500 ₽</b>. Тройка 777 в области — около <b>190 000 ₽</b>. <b>А777АА 77</b> — около <b>7 млн</b>, <b>А777МР 77</b> — около <b>5,9 млн</b>, первые номера с зеркалом в Москве доходят до пола божественного, <b>15 млн</b>.</div>
+        <div class="note">Беларусь стоит около 45% похожего российского номера, Украина около 55%. В Китае Пекин сильно дороже провинции, восьмёрки поднимают цену, четвёрки снижают. Американское слово считается как vanity на вторичке.</div>
+        <div class="group-header" style="padding:16px 0 8px;font-size:.72rem;color:var(--label-2);font-weight:700">Цена одной крутки</div>
         <table class="rar-table">
-          <thead><tr><th>Страна</th><th>Коэффициент</th></tr></thead>
-          <tbody>
-            <tr><td class="rar-name">🇨🇳 Китай</td><td class="rar-price">×1.80</td></tr>
-            <tr><td class="rar-name">🇺🇸 США</td><td class="rar-price">×1.40</td></tr>
-            <tr><td class="rar-name">🇷🇺 Россия</td><td class="rar-price">×1.00</td></tr>
-            <tr><td class="rar-name">🇺🇦 Украина</td><td class="rar-price">×0.70</td></tr>
-            <tr><td class="rar-name">🇧🇾 Беларусь</td><td class="rar-price">×0.55</td></tr>
-          </tbody>
+          <thead><tr><th>Страна</th><th>Крутка</th></tr></thead>
+          <tbody id="spinCostBody"></tbody>
         </table>
-        <div class="group-header" style="padding:16px 0 8px;font-size:.72rem;color:var(--label-2);font-weight:700">Региональные множители (РФ)</div>
+        <div class="note">Крутка стоит от средней цены номеров этой страны. В среднем обратно приходит около 62 копеек с рубля. Лёгкий пример даёт 3 000 ₽ и крутку не оплачивает.</div>
+        <div class="group-header" style="padding:16px 0 8px;font-size:.72rem;color:var(--label-2);font-weight:700">Регионы России, которые дороже</div>
         <table class="rar-table">
           <thead><tr><th>Регион</th><th>Множитель</th></tr></thead>
-          <tbody>
-            <tr><td class="rar-name">99</td><td class="rar-price">×2.0</td></tr>
-            <tr><td class="rar-name">97</td><td class="rar-price">×1.8</td></tr>
-            <tr><td class="rar-name">199</td><td class="rar-price">×1.7</td></tr>
-            <tr><td class="rar-name">777</td><td class="rar-price">×1.6</td></tr>
-            <tr><td class="rar-name">77, 799</td><td class="rar-price">×1.5</td></tr>
-            <tr><td class="rar-name">01, 02, 102</td><td class="rar-price">×1.3</td></tr>
-          </tbody>
+          <tbody id="regionMultBody"></tbody>
         </table>
       </div>
     </div>
 
     <div class="tab-content" id="tab-exchange">
       <div class="info-pad">
-        <div class="note" style="margin-top:0">⏱ <b>Доска маленькая.</b> 8 номеров на продажу и 4 заказа. Каждые 15 секунд список обновляется. Точный заказ может прожить до 3 минут.</div>
-        <div class="note">🛒 <b>Купить.</b> На карточке одна цена. Подпись говорит, насколько она дешевле или дороже рынка.</div>
-        <div class="note">🎯 <b>Заказ.</b> Номер нарисован как настоящий. <code>*</code> — неизвестный символ. Кнопка продаёт подходящий номер из гаража за сумму на карточке.</div>
-        <div class="note">💰 <b>Цена.</b> Мусор стоит как дубликат госномера. Тройки, первые номера, Москва 77/97/99 и серии вроде АМР поднимают ценник к реальным объявлениям. Чем реже номер, тем выше спрос. Плохая новость этот спрос роняет.</div>
-        <div class="note">💰 <b>Три кнопки продажи:</b><br>↓ ниже рынка — мгновенный выкуп<br>= по рынку — рулетка каждые 15 секунд<br>↑ выше рынка — шанс меньше, ноль не бывает</div>
+        <div class="note" style="margin-top:0">На доске около <b>96 лотов</b> и <b>12 заказов</b>. Плюс и минус примерно поровну: от мелкого до совсем плохого. Крупные лоты висят <b>3–4 секунды</b>, мелкие до 30 секунд. Вся доска обновляется <b>раз в минуту</b>. Покупка не чаще одной в <b>2 секунды</b>.</div>
+        <div class="note">🛒 На карточке цена и разница с рынком. Сортировки нет: выгодное само наверх не встаёт.</div>
+        <div class="note">🎯 <b>Заказ.</b> <code>*</code> — неизвестный символ. Награда — наценка <b>от 50% до 200%</b> к рынку. Точный заказ живёт дольше.</div>
+        <div class="note">💰 <b>Твой лот.</b> Каждые <b>15 секунд</b> с момента выставления крутится рулетка с шансом на карточке. Нуля нет. Чем реже номер, тем шанс выше. Новость о падении спроса шанс снижает, новость о спросе поднимает. Тихий рынок и обычная цена — около 23% у мусора и около 34% у божественного.</div>
+        <div class="note">💰 <b>Три кнопки в гараже:</b><br>↓ ниже рынка — деньги сразу<br>= по рынку — рулетка<br>↑ выше рынка — шанс меньше, круг всё равно есть</div>
         <div class="note">🎚 <b>Коэффициенты наценки/скидки</b> настраиваются в шапке гаража.</div>
       </div>
     </div>
 
     <div class="tab-content" id="tab-accountant">
       <div class="info-pad">
-        <div class="note" style="margin-top:0">🧮 <b>Бухгалтер</b> разбирает биржу в начале каждой 15-секундной сессии. За одну сессию он смотрит только часть лотов.</div>
-        <div class="note">🔔 <b>Режим «Уведомления».</b> Находки подсвечиваются фиолетовым контуром.</div>
-        <div class="note">🤖 <b>Режим «Авто».</b> Бухгалтер сам выкупает и выполняет заказы.</div>
+        <div class="note" style="margin-top:0">🧮 Бухгалтер смотрит доску в начале каждой минутной сессии и успевает только часть лотов. Подсказки стоят <b id="infoHire">2 200 000 ₽</b>, автоторговля ещё <b id="infoAuto">11 000 000 ₽</b>.</div>
+        <div class="note">🔔 <b>Подсказки.</b> Находки подсвечиваются. Сам ничего не покупает.</div>
+        <div class="note">🤖 <b>Автоторговля.</b> Сам выкупает плюс и закрывает выгодные заказы. Избранное не трогает.</div>
         <div class="note">⚡ <b>Скорость</b> — сколько успевает просмотреть. <b>Точность</b> — верность оценки. <b>Риск</b> — агрессивность.</div>
       </div>
     </div>
 
     <div class="tab-content" id="tab-elite">
       <div class="info-pad">
-        <div class="note">🇷🇺 <b>Россия:</b> <code>АМР</code>, <code>ЕКХ</code>, <code>АММ</code>, <code>СОР</code>, <code>АМП</code>, <code>МММ</code>, <code>ККХ</code>, <code>ООО</code>, <code>ААА</code> · регионы 77, 97, 99, 199, 01</div>
-        <div class="note">🇧🇾 <b>Беларусь:</b> <code>МВ-7</code>, <code>АА-7</code>, <code>ВВ-7</code>, <code>АВ-7</code>, <code>ММ-7</code> · 0001, 0007, 7777</div>
-        <div class="note">🇨🇳 <b>Китай:</b> <code>88888</code>, <code>66666</code>, <code>99999</code> · 京, 沪, 粤</div>
-        <div class="note">🇺🇸 <b>США:</b> <code>POTUS</code>, <code>FBI</code>, <code>CIA</code>, <code>NASA</code>, <code>GOV</code>, <code>GOD</code>, <code>VIP</code>, <code>KING</code></div>
-        <div class="note">🇺🇦 <b>Украина:</b> <code>АА</code>, <code>ВВ</code>, <code>ІІ</code>, <code>СС</code>, <code>КК</code> · 0001, 0007, 7777</div>
+        <div class="note">🇷🇺 <b>Россия:</b> <code>АМР</code>, <code>ЕКХ</code>, <code>СКР</code>, <code>ХКХ</code>, <code>АОО</code>, <code>ВОО</code>, <code>МОО</code>, <code>СОО</code>, <code>ААА</code>, <code>МММ</code>, <code>ООО</code>. Цифры <code>001</code>, <code>007</code>, <code>777</code>, <code>888</code>. Регионы 77, 97, 99, 177, 197, 199, 777, 799.</div>
+        <div class="note">🇧🇾 <b>Беларусь:</b> серия <code>МВ</code> и Минск <code>-7</code>. Цифры <code>0001</code>, <code>0007</code>, <code>7777</code>, зеркала вроде <code>1221</code>.</div>
+        <div class="note">🇨🇳 <b>Китай:</b> <code>88888</code>, <code>66666</code>, <code>16888</code>, <code>00001</code>. Дороже всего 京, потом 沪 и 粤. Литера A чуть дороже остальных.</div>
+        <div class="note">🇺🇸 <b>США:</b> короткие слова <code>GOD</code>, <code>VIP</code>, <code>KING</code>, <code>FBI</code>, <code>CIA</code>, <code>GOLD</code> и цифры <code>0001</code>, <code>7777</code>.</div>
+        <div class="note">🇺🇦 <b>Украина:</b> парные серии <code>АА</code>, <code>ВВ</code>, <code>ІІ</code>, <code>КК</code> и первые номера <code>0001</code>, <code>0007</code>, <code>7777</code>.</div>
       </div>
     </div>
 

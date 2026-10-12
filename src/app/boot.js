@@ -64,6 +64,7 @@ import {
   updateStats,
 } from '../features/hud/stats.js';
 import {
+  renderEconomyInfo,
   renderFormatsTab,
   renderWealthTable,
 } from '../features/info/panels.js';
@@ -300,6 +301,7 @@ export async function init(){
   updateCd();
   updateDropCostsUI();
   renderFormatsTab();
+  renderEconomyInfo();
   renderEarnProblem();
   updateDailyUI();
   updateAcctUI();
