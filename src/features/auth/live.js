@@ -40,8 +40,7 @@ export function startProfileSync(){
   watchProfile(applyServer);
   setInterval(() => {
     fetchMe().then(applyServer).catch(error => {
-      if(error.status === 401){ clearSession(); location.reload(); return; }
-      if(error.payload) applyServer(error.payload);
+      if(error.payload && error.payload.reset) applyServer(error.payload);
     });
   }, 8000);
 }

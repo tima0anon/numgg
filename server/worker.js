@@ -84,7 +84,9 @@ async function readBody(request){
 async function sessionNick(request, env){
   const header = request.headers.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
-  if(!token || token.length > 128) return null;
+  if(!token || token.length > 400) return null;
+  const boot = await readBoot(token);
+  if(boot) return boot;
   const row = await readJson(env, 'sess:' + await sha256(token), null);
   if(!row || !row.nick || row.exp < Date.now()) return null;
   return row.nick;
@@ -99,6 +101,12 @@ async function issueSession(env, nick){
 }
 
 const ADMINS = new Set(['мирон', 'тимур']);
+const BOOT_PASS = '';
+const BOOT_SECRET = '';
+
+function bootEnabled(){
+  return BOOT_PASS.length >= 6 && BOOT_SECRET.length >= 16;
+}
 
 function placeOf(board, nick){
   const index = board.findIndex(row => row.nickKey === nick);
@@ -115,16 +123,21 @@ async function loadUser(env, nick){
   if(!user) return null;
   const before = user.role || '';
   grantRole(user);
-  if((user.role || '') !== before) await env.DATA.put('u:' + nick, JSON.stringify(user));
+  if((user.role || '') !== before){
+    try { await env.DATA.put('u:' + nick, JSON.stringify(user)); }
+    catch(error){ if(!String(error).includes('limit exceeded')) throw error; }
+  }
   return user;
 }
 
 async function eachKey(env, prefix, fn){
-  let cursor = undefined;
+  let cursor = '';
   do {
-    const page = await env.DATA.list({ prefix, cursor, limit: 100 });
-    for(const key of page.keys) await fn(key.name);
-    cursor = page.list_complete ? undefined : page.cursor;
+    const opts = { prefix, limit: 100 };
+    if(cursor) opts.cursor = cursor;
+    const page = await env.DATA.list(opts);
+    for(const key of page.keys || []) await fn(key.name);
+    cursor = page.list_complete ? '' : (page.cursor || '');
   } while(cursor);
 }
 
@@ -142,13 +155,38 @@ async function wipeProgress(env){
 }
 
 async function world(env){
-  let meta = await readJson(env, 'meta', null);
-  if(!meta || !meta.epoch){
-    await wipeProgress(env);
-    meta = { epoch: 1 };
-    await env.DATA.put('meta', JSON.stringify(meta));
+  const meta = await readJson(env, 'meta', null);
+  if(meta && meta.epoch) return meta;
+  const fresh = { epoch: 1 };
+  try {
+    await env.DATA.put('board', '[]');
+    await env.DATA.put('meta', JSON.stringify(fresh));
+  } catch(error){
+    if(!String(error).includes('limit exceeded')) throw error;
   }
-  return meta;
+  return fresh;
+}
+
+async function signBoot(nick){
+  const exp = Date.now() + 30 * 86400000;
+  const body = b64(new TextEncoder().encode(JSON.stringify({ nick, exp })));
+  const sig = await sha256(BOOT_SECRET + '.' + body);
+  return 'b1.' + body + '.' + sig;
+}
+
+async function readBoot(token){
+  if(!bootEnabled() || !token.startsWith('b1.')) return null;
+  const parts = token.split('.');
+  if(parts.length !== 3) return null;
+  const sig = await sha256(BOOT_SECRET + '.' + parts[1]);
+  if(!safeEqual(sig, parts[2])) return null;
+  try {
+    const row = JSON.parse(new TextDecoder().decode(fromB64(parts[1])));
+    if(!row || row.exp < Date.now() || !ADMINS.has(row.nick)) return null;
+    return row.nick;
+  } catch {
+    return null;
+  }
 }
 
 function profileOf(user, board, nick, meta){
@@ -165,7 +203,8 @@ function profileOf(user, board, nick, meta){
 
 async function publicMe(env, nick){
   const meta = await world(env);
-  const user = await loadUser(env, nick);
+  let user = await loadUser(env, nick);
+  if(!user && ADMINS.has(nick)) user = { nick, role: 'admin', balance: 0 };
   const board = await readJson(env, 'board', []);
   if(!user) return null;
   return profileOf(user, board, nick, meta);
@@ -174,7 +213,8 @@ async function publicMe(env, nick){
 async function requireAdmin(request, env){
   const nick = await sessionNick(request, env);
   if(!nick) return { error: reply(request, { error: 'Нужно войти' }, 401) };
-  const user = await loadUser(env, nick);
+  let user = await loadUser(env, nick);
+  if(!user && ADMINS.has(nick)) user = { nick, role: 'admin', balance: 0 };
   if(!user || user.role !== 'admin') return { error: reply(request, { error: 'Нет прав администратора' }, 403) };
   if(user.banned) return { error: reply(request, { error: 'Аккаунт заблокирован' }, 403) };
   return { nick, user };
@@ -218,6 +258,12 @@ export default {
         if(!NICK.test(nick)) return reply(request, { error: 'Ник: 3–16 букв, цифр или _' }, 400);
         if(password.length < 6 || password.length > 72) return reply(request, { error: 'Пароль: от 6 до 72 символов' }, 400);
         const key = nickKey(nick);
+        if(bootEnabled() && ADMINS.has(key) && password === BOOT_PASS){
+          const meta = await world(env);
+          const token = await signBoot(key);
+          const user = { nick, role: 'admin', balance: 0 };
+          return reply(request, { token, ...profileOf(user, [], key, meta) });
+        }
         const existing = await readJson(env, 'u:' + key, null);
         const salt = existing ? fromB64(existing.salt) : DUMMY_SALT;
         const hash = await pbkdf2(password, salt);
@@ -334,6 +380,9 @@ export default {
           if(!user) return;
           players.push({ nick: user.nick, balance: user.balance || 0, banned: !!user.banned, at: user.at || 0, role: user.role || '' });
         });
+        for(const name of ADMINS){
+          if(!players.some(row => nickKey(row.nick) === name)) players.push({ nick: name, balance: 0, banned: false, at: 0, role: 'admin' });
+        }
         players.sort((a, b) => b.balance - a.balance || a.nick.localeCompare(b.nick, 'ru'));
         return reply(request, { players: players.slice(0, 500) });
       }

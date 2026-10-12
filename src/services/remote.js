@@ -127,8 +127,7 @@ export function queueScore(balance, epoch, forceId){
         if(place && row.place) place.textContent = row.place + ' место';
       }
     }).catch(error => {
-      if(error.status === 401) clearSession();
-      if(error.payload) emitProfile(error.payload);
+      if(error.payload && error.payload.reset) emitProfile(error.payload);
     });
   }, 2500);
 }
