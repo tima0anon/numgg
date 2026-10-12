@@ -3,7 +3,7 @@ const SESSION_KEY = 'numdrop_session_v1';
 export function apiBase(){
   const host = location.hostname;
   if(host === '127.0.0.1' || host === 'localhost') return 'http://127.0.0.1:8787';
-  return 'https://numgg-api.wind-whippoorwill.workers.dev';
+  return 'https://numgg-api.faithful-postage.workers.dev';
 }
 
 export function readSession(){
