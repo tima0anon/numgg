@@ -29,26 +29,12 @@ function sortedOffers(){
   if(market.filters.oCountry !== 'all') list = list.filter(o => o.flag === market.filters.oCountry);
   if(market.filters.oRarity !== 'all') list = list.filter(o => o.rarity === market.filters.oRarity);
   if(market.filters.oSearch){ const q = market.filters.oSearch.toLowerCase(); list = list.filter(o => o.plate.toLowerCase().includes(q)); }
-  const sort = market.filters.oSort;
-  if(sort === 'dev-asc') list.sort((a,b) => ((a.price-a.hypo)/a.hypo) - ((b.price-b.hypo)/b.hypo));
-  else if(sort === 'dev-desc') list.sort((a,b) => ((b.price-b.hypo)/b.hypo) - ((a.price-a.hypo)/a.hypo));
-  else if(sort === 'price-asc') list.sort((a,b) => a.price - b.price);
-  else if(sort === 'price-desc') list.sort((a,b) => b.price - a.price);
-  else if(sort === 'rarity-desc') list.sort((a,b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity));
-  else if(sort === 'rarity-asc') list.sort((a,b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
-  if(S.acct.mode !== 'off') list.sort((a,b) => (b.accountantFound?1:0) - (a.accountantFound?1:0));
   return list;
 }
 
 function sortedOrders(){
   let list = market.orders.slice();
   if(market.filters.ordCountry !== 'all') list = list.filter(o => o.flag === market.filters.ordCountry);
-  const sort = market.filters.ordSort;
-  if(sort === 'reward-desc') list.sort((a,b) => b.reward - a.reward);
-  else if(sort === 'reward-asc') list.sort((a,b) => a.reward - b.reward);
-  else if(sort === 'spec-desc') list.sort((a,b) => b.specificity - a.specificity);
-  else if(sort === 'matches-desc') list.sort((a,b) => findMatchingNumbers(b.mask).length - findMatchingNumbers(a.mask).length);
-  if(S.acct.mode !== 'off') list.sort((a,b) => (b.accountantFound?1:0) - (a.accountantFound?1:0));
   return list;
 }
 
@@ -96,7 +82,8 @@ export function renderOffers(){
   if(!list.length){ grid.innerHTML = '<div class="empty">Сейчас продавать нечего. Новые номера появятся со следующим обновлением.</div>'; return; }
   grid.innerHTML = list.map(o => {
     const R = RMAP[o.rarity];
-    const canBuy = S.rub >= o.price;
+    const cooling = Date.now() < (market.nextBuyAt || 0);
+    const canBuy = S.rub >= o.price && !cooling;
     const cls = (o.accountantFound?' accountant-found':'');
     return '<div class="excard '+o.rarity+cls+'">'+
       '<div class="plate-stage">'+renderRealPlate(o.plate, o.flag, '')+'</div>'+
@@ -104,7 +91,7 @@ export function renderOffers(){
       '<div class="card-price">'+rub(o.price)+'<span>цена покупки</span></div>'+
       marketLine(o.price, o.hypo)+
       '<div class="lot-life" data-until="'+(o.until || 0)+'">'+Math.max(0, Math.ceil(((o.until || 0) - Date.now()) / 1000))+' с</div>'+
-      '<button class="buy-btn" data-id="'+o.id+'"'+(canBuy?'':' disabled')+'>'+(canBuy?'Купить':'Не хватает '+rub(o.price-S.rub))+'</button>'+
+      '<button class="buy-btn" data-id="'+o.id+'"'+(canBuy?'':' disabled')+'>'+(cooling?'Подожди':canBuy?'Купить':'Не хватает '+rub(o.price-S.rub))+'</button>'+
       '</div>';
   }).join('');
   grid.querySelectorAll('.buy-btn').forEach(b => b.addEventListener('click', e => {

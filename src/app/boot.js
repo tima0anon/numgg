@@ -190,35 +190,29 @@ export async function init(){
     document.getElementById('excontent-'+t.dataset.extab).classList.add('active');
   }));
 
-  const oSort = document.getElementById('exOfferSort');
   const oCountry = document.getElementById('exOfferCountry');
   const oRarity = document.getElementById('exOfferRarity');
   const oSearch = document.getElementById('exOfferSearch');
   const offerCountryOptions = '<option value="all">Все страны</option>' + COUNTRIES.map(c => '<option value="'+c.id+'">'+c.name+'</option>').join('');
   oCountry.innerHTML = offerCountryOptions;
-  oSort.value = market.filters.oSort;
   oCountry.value = market.filters.oCountry;
   oRarity.value = market.filters.oRarity;
-  oSort.addEventListener('change', () => { market.filters.oSort = oSort.value; renderOffers(); });
   oCountry.addEventListener('change', () => { market.filters.oCountry = oCountry.value; renderOffers(); });
   oRarity.addEventListener('change', () => { market.filters.oRarity = oRarity.value; renderOffers(); });
   oSearch.addEventListener('input', () => { market.filters.oSearch = oSearch.value; renderOffers(); });
   document.getElementById('exOfferReset').addEventListener('click', () => {
-    market.filters.oSort = 'dev-asc'; market.filters.oCountry = 'all'; market.filters.oRarity = 'all'; market.filters.oSearch = '';
-    oSort.value = 'dev-asc'; oCountry.value = 'all'; oRarity.value = 'all'; oSearch.value = '';
+    market.filters.oCountry = 'all'; market.filters.oRarity = 'all'; market.filters.oSearch = '';
+    oCountry.value = 'all'; oRarity.value = 'all'; oSearch.value = '';
     renderOffers();
   });
 
-  const ordSort = document.getElementById('exOrderSort');
   const ordCountry = document.getElementById('exOrderCountry');
   ordCountry.innerHTML = offerCountryOptions;
-  ordSort.value = market.filters.ordSort;
   ordCountry.value = market.filters.ordCountry;
-  ordSort.addEventListener('change', () => { market.filters.ordSort = ordSort.value; renderOrders(); });
   ordCountry.addEventListener('change', () => { market.filters.ordCountry = ordCountry.value; renderOrders(); });
   document.getElementById('exOrderReset').addEventListener('click', () => {
-    market.filters.ordSort = 'reward-desc'; market.filters.ordCountry = 'all';
-    ordSort.value = 'reward-desc'; ordCountry.value = 'all';
+    market.filters.ordCountry = 'all';
+    ordCountry.value = 'all';
     renderOrders();
   });
   document.getElementById('unlistAll').addEventListener('click', unlistAll);
