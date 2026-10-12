@@ -47,8 +47,6 @@ import {
   updateSessionCountdown,
 } from '../features/exchange/session.js';
 import {
-  buyUnderpriced,
-  fulfillProfitable,
   renderExchange,
   renderOffers,
   renderOrders,
@@ -223,8 +221,6 @@ export async function init(){
     ordSort.value = 'reward-desc'; ordCountry.value = 'all';
     renderOrders();
   });
-  document.getElementById('buyDeals').addEventListener('click', buyUnderpriced);
-  document.getElementById('fillOrders').addEventListener('click', fulfillProfitable);
   document.getElementById('unlistAll').addEventListener('click', unlistAll);
 
   document.querySelectorAll('#acctMode button').forEach(b => b.addEventListener('click', () => {

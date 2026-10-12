@@ -38,6 +38,7 @@
 .excard .dev.neg{background:rgba(52,199,89,.15);color:var(--green)}
 .excard .dev.pos{background:rgba(255,59,48,.15);color:var(--red)}
 .excard .dev.zero{background:var(--bg-tertiary);color:var(--label-2)}
+.lot-life{font-size:.72rem;font-weight:700;color:var(--label-2);text-align:center}
 .excard .buy-btn,.excard .fulfill-btn{background:var(--orange);color:#fff;border:none;border-radius:100px;padding:10px 12px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--font);width:100%}
 .excard .fulfill-btn{background:var(--green)}
 .excard .buy-btn:hover:not(:disabled),.excard .fulfill-btn:hover:not(:disabled){filter:brightness(1.06)}

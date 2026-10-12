@@ -13,7 +13,7 @@ export function newsMult(flag, region, rarity){
     if(n.until <= now) continue;
     if(n.type === 'global') m *= n.mult;
     else if(n.type === 'country' && n.target === flag) m *= n.mult;
-    else if(n.type === 'region' && n.target === region) m *= n.mult;
+    else if(n.type === 'region' && n.target === region) m *= 1 + (n.mult - 1) * 1.8;
     else if(n.type === 'rarity' && n.target === rarity) m *= n.mult;
   }
   return m;

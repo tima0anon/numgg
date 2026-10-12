@@ -3,7 +3,7 @@
     <div class="ex-head">
       <div>
         <h2>Биржа</h2>
-        <p class="ex-lead">Листай доску: лотов много, и разница с рынком бывает и на десятки, и на сотни тысяч. Крупные плюсы боты забирают почти сразу. Доска обновляется каждые 15 секунд.</p>
+        <p class="ex-lead">Каждый лот живёт не больше 30 секунд и пропадает, как только его купили. Плюс обычно небольшой. Крупное берут другие быстрее.</p>
       </div>
       <div class="session-pill" title="До обновления доски"><span class="dot"></span>ещё <span id="sessionCountdown">15.0с</span></div>
     </div>
@@ -29,7 +29,6 @@
         </select>
         <input type="text" id="exOfferSearch" placeholder="Поиск..." style="flex:1;min-width:100px">
         <button class="ios-btn gray" id="exOfferReset" style="padding:8px 14px;font-size:.8rem">Сброс</button>
-        <button class="ios-btn" id="buyDeals" type="button" style="padding:8px 14px;font-size:.8rem">Забрать дешевле рынка</button>
       </div>
       <div class="ex-grid" id="exOfferGrid"></div>
     </div>
@@ -43,7 +42,6 @@
         </select>
         <select id="exOrderCountry"><option value="all">Все страны</option></select>
           <button class="ios-btn gray" id="exOrderReset" style="padding:8px 14px;font-size:.8rem">Сброс</button>
-          <button class="ios-btn" id="fillOrders" type="button" style="padding:8px 14px;font-size:.8rem">Сдать выгодные</button>
       </div>
       <div class="ex-grid" id="exOrderGrid"></div>
     </div>

@@ -17,7 +17,8 @@ export function marketMood(flag, region, rarity){
   for(const news of S.news){
     if(!news || news.until <= now) continue;
     if(!applies(news, flag, region, rarity)) continue;
-    const delta = (news.mult || 1) - 1;
+    let delta = (news.mult || 1) - 1;
+    if(news.type === 'region') delta *= 1.8;
     heat += delta;
     if(delta >= 0.08) bull = true;
     titles.push(news.title);

@@ -22,11 +22,11 @@ export const NEWS_TEMPLATES = [
   {type:'country', target:'ua', mult:0.82, title:'Проблемы на украинских торгах', desc:'Спрос на украинские номера упал.', kind:'bear'},
   {type:'country', target:'by', mult:1.20, title:'Белорусские коллекционеры активизировались', desc:'Белорусские номера пошли вверх.', kind:'bull'},
   {type:'country', target:'by', mult:0.85, title:'Беларусь: снижение интереса', desc:'Белорусские лоты подешевели.', kind:'bear'},
-  {type:'region', target:'97', mult:1.35, title:'Ажиотаж вокруг 97-го региона', desc:'Московские блатные серии 97 резко выросли.', kind:'bull'},
-  {type:'region', target:'99', mult:1.35, title:'99-й регион снова в топе', desc:'Премиальные московские номера дорожают.', kind:'bull'},
-  {type:'region', target:'77', mult:1.20, title:'77-й регион дорожает', desc:'Москва — традиционный лидер спроса.', kind:'bull'},
-  {type:'region', target:'77', mult:0.85, title:'Перенасыщение рынка 77 региона', desc:'Слишком много предложений — цены падают.', kind:'bear'},
-  {type:'region', target:'199', mult:1.22, title:'199-й регион интересует коллекционеров', desc:'Редкий регион набирает цену.', kind:'bull'},
+  {type:'region', target:'97', mult:1.55, title:'Ажиотаж вокруг 97-го региона', desc:'Московские блатные серии 97 резко выросли.', kind:'bull'},
+  {type:'region', target:'99', mult:1.6, title:'99-й регион снова в топе', desc:'Премиальные московские номера дорожают.', kind:'bull'},
+  {type:'region', target:'77', mult:1.45, title:'77-й регион дорожает', desc:'Москва — традиционный лидер спроса.', kind:'bull'},
+  {type:'region', target:'77', mult:0.72, title:'Перенасыщение рынка 77 региона', desc:'Слишком много предложений — цены падают.', kind:'bear'},
+  {type:'region', target:'199', mult:1.5, title:'199-й регион интересует коллекционеров', desc:'Редкий регион набирает цену.', kind:'bull'},
   {type:'rarity', target:'epic', mult:1.20, title:'Мода на эпические серии', desc:'Эпические номера растут в цене.', kind:'bull'},
   {type:'rarity', target:'legendary', mult:1.30, title:'Охота за легендарками', desc:'Легендарные номера разлетаются с наценкой.', kind:'bull'},
   {type:'rarity', target:'mythic', mult:1.25, title:'Мифические лоты в дефиците', desc:'Мифы уходят по завышенным ценам.', kind:'bull'},
@@ -43,10 +43,10 @@ export const NEWS_TEMPLATES = [
   {type:'country', target:'cn', mult:1.36, title:'Шанхай платит премию за восьмёрки', desc:'Китайский спрос тянет цену и скорость продажи.', kind:'bull'},
   {type:'country', target:'us', mult:1.26, title:'Калифорния: vanity снова в моде', desc:'Американские номера берут быстрее обычного.', kind:'bull'},
   {type:'country', target:'us', mult:0.84, title:'США: аукционы пустые', desc:'Американские лоты почти не смотрят.', kind:'bear'},
-  {type:'region', target:'777', mult:1.4, title:'777-й регион в ленте коллекционеров', desc:'Редкие российские регионы берут с наценкой.', kind:'bull'},
-  {type:'region', target:'199', mult:1.22, title:'199-й регион ищут в чатах', desc:'Спрос точечный, но живой.', kind:'bull'},
-  {type:'region', target:'01', mult:1.18, title:'Адыгея: серия 01 подорожала', desc:'Региональный спрос поднял ликвидность.', kind:'bull'},
-  {type:'region', target:'02', mult:0.86, title:'02 регион переполнен', desc:'Лишние предложения давят на цену.', kind:'bear'},
+  {type:'region', target:'777', mult:1.7, title:'777-й регион в ленте коллекционеров', desc:'Редкие российские регионы берут с наценкой.', kind:'bull'},
+  {type:'region', target:'199', mult:1.48, title:'199-й регион ищут в чатах', desc:'Спрос точечный, но живой.', kind:'bull'},
+  {type:'region', target:'01', mult:1.42, title:'Адыгея: серия 01 подорожала', desc:'Региональный спрос поднял ликвидность.', kind:'bull'},
+  {type:'region', target:'02', mult:0.7, title:'02 регион переполнен', desc:'Лишние предложения давят на цену.', kind:'bear'},
   {type:'rarity', target:'rare', mult:1.2, title:'Редкие серии в дефиците', desc:'Редкие номера продаются заметно легче.', kind:'bull'},
   {type:'rarity', target:'uncommon', mult:0.84, title:'Необычные серии надоели рынку', desc:'Их берут только со скидкой.', kind:'bear'},
   {type:'global', target:'all', mult:1.16, title:'Выходные: все смотрят биржу', desc:'Общий спрос выше, дорогие лоты тоже смотрят.', kind:'bull'}
@@ -78,7 +78,8 @@ export function renderTape(){
     return;
   }
   el.innerHTML = items.map(n => {
-    const pct = Math.round((n.mult - 1) * 100);
+    const shown = n.type === 'region' ? 1 + (n.mult - 1) * 1.8 : n.mult;
+    const pct = Math.round((shown - 1) * 100);
     const sign = pct >= 0 ? '+' : '';
     return '<span class="tape-item '+(pct >= 0 ? 'up' : 'down')+'">'+targetLabel(n)+' '+sign+pct+'% спрос</span>';
   }).join('');

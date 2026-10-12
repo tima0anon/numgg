@@ -1,4 +1,5 @@
 import { SPIN_COST_ALL } from '../../config/constants.js';
+import { WEALTH_TIERS, wealthTierIdx } from '../../config/wealth.js';
 import { rnd } from '../../domain/random.js';
 import { updateBalances } from '../hud/balance.js';
 import { updateAchievements } from '../hud/stats.js';
@@ -21,24 +22,38 @@ export function earnReward(){
   return SPIN_COST_ALL * level.mult;
 }
 
+function roll(lo, hi){
+  return lo + ~~(Math.random() * (hi - lo + 1));
+}
+
+function band(lo, hi, rank){
+  const grow = 1 + rank * 0.85;
+  const a = Math.max(2, Math.round(lo * grow));
+  const b = Math.max(a + 2, Math.round(hi * grow));
+  return roll(a, b);
+}
+
 export function genMathProblem(){
+  const rank = wealthTierIdx(S.rub);
   const tier = Math.max(0, Math.min(3, S.earnLevel || 0));
   let a,b,c,answer,text;
   const r = Math.random();
   if(tier === 0){
-    if(r<0.5){ a=2+~~(Math.random()*18); b=2+~~(Math.random()*18); answer=a+b; text=a+' + '+b; }
-    else { a=10+~~(Math.random()*30); b=1+~~(Math.random()*9); answer=a-b; text=a+' − '+b; }
+    if(r < 0.5){ a = band(2, 9, rank); b = band(2, 9, rank); answer = a + b; text = a+' + '+b; }
+    else { a = band(8, 20, rank); b = band(1, 7, rank); if(b >= a) b = Math.max(1, a - 1); answer = a - b; text = a+' − '+b; }
   } else if(tier === 1){
-    if(r<0.5){ a=2+~~(Math.random()*8); b=2+~~(Math.random()*8); answer=a*b; text=a+' × '+b; }
-    else { a=20+~~(Math.random()*80); b=20+~~(Math.random()*80); answer=a+b; text=a+' + '+b; }
+    if(r < 0.5){ a = band(2, 6, rank); b = band(2, 6, rank); answer = a * b; text = a+' × '+b; }
+    else { a = band(12, 40, rank); b = band(6, 24, rank); answer = a + b; text = a+' + '+b; }
   } else if(tier === 2){
-    if(r<0.34){ a=rnd([10,20,25,40,50]); b=10*(2+~~(Math.random()*20)); answer=Math.round(a*b/100); text=a+'% от '+b; }
-    else if(r<0.67){ a=2+~~(Math.random()*9); b=2+~~(Math.random()*9); c=5+~~(Math.random()*15); answer=a*b+c; text=a+' × '+b+' + '+c; }
-    else { b=2+~~(Math.random()*8); answer=3+~~(Math.random()*12); a=b*answer; text=a+' ÷ '+b; }
+    if(r < 0.34){ a = rnd([10, 20, 25, 40, 50]); b = band(20, 80, rank); answer = Math.round(a * b / 100); text = a+'% от '+b; }
+    else if(r < 0.67){ a = band(2, 8, rank); b = band(2, 7, rank); c = band(4, 16, rank); answer = a * b + c; text = a+' × '+b+' + '+c; }
+    else { b = band(2, 8, rank); answer = band(3, 12, rank); a = b * answer; text = a+' ÷ '+b; }
+  } else if(r < 0.34){
+    a = band(4, 12, rank); b = band(2, 18, rank); if(b >= a * a) b = a * a - 1; answer = a * a - b; text = a+'² − '+b;
+  } else if(r < 0.67){
+    a = band(3, 9, rank); b = band(2, 8, rank); c = band(2, 6, rank); answer = (a + b) * c; text = '('+a+' + '+b+') × '+c;
   } else {
-    if(r<0.34){ a=6+~~(Math.random()*14); b=2+~~(Math.random()*15); answer=a*a-b; text=a+'² − '+b; }
-    else if(r<0.67){ a=4+~~(Math.random()*8); b=3+~~(Math.random()*8); c=2+~~(Math.random()*6); answer=(a+b)*c; text='('+a+' + '+b+') × '+c; }
-    else { a=12+~~(Math.random()*20); b=3+~~(Math.random()*8); c=2+~~(Math.random()*6); answer=a*b-c*c; text=a+' × '+b+' − '+c+'²'; }
+    a = band(6, 16, rank); b = band(2, 8, rank); c = band(2, 7, rank); answer = a * b - c * c; text = a+' × '+b+' − '+c+'²';
   }
   return { text, answer };
 }
@@ -62,6 +77,8 @@ export function updateEarnStats(){
   const rewardNow = earnReward();
   const r = document.getElementById('earnReward'); if(r) r.textContent = rewardNow.toLocaleString('ru-RU')+' ₽';
   document.querySelectorAll('#earnLevel button').forEach(b => b.classList.toggle('active', Number(b.dataset.level) === (S.earnLevel || 0)));
+  const rank = document.getElementById('earnRank');
+  if(rank) rank.textContent = WEALTH_TIERS[wealthTierIdx(S.rub)].label;
   const so = document.getElementById('earnSolved'); if(so) so.textContent = S.earnSolved||0;
   const wr = document.getElementById('earnWrong'); if(wr) wr.textContent = S.earnWrong||0;
   const st = document.getElementById('earnStreak'); if(st) st.textContent = S.earnStreak||0;

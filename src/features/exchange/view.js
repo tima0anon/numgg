@@ -11,7 +11,6 @@ import {
   doFulfillOrder,
   findMatchingNumbers,
 } from './session.js';
-import { addAcctLog } from '../accountant/session.js';
 import { renderCollection } from '../garage/view.js';
 import { updateBalances } from '../hud/balance.js';
 import {
@@ -67,59 +66,6 @@ function refreshAfterBatch(){
   updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements(); save();
 }
 
-export function buyUnderpriced(){
-  const picks = [];
-  let rub = S.rub;
-  const deals = sortedOffers()
-    .filter(o => o.price < o.hypo * 0.98)
-    .sort((a, b) => ((a.price - a.hypo) / a.hypo) - ((b.price - b.hypo) / b.hypo));
-  for(const o of deals){
-    if(rub < o.price) continue;
-    rub -= o.price;
-    picks.push(o);
-  }
-  if(!picks.length){ notify('Нет лотов ниже рынка, которые можно купить'); Sound.error(); return; }
-  const sum = picks.reduce((s, o) => s + o.price, 0);
-  if(!confirm('Скупить ' + picks.length + ' лотов ниже рынка за ' + sum.toLocaleString('ru-RU') + ' ₽?')) return;
-  let bought = 0;
-  let spent = 0;
-  for(const o of picks){
-    const price = o.price;
-    if(doBuyOffer(o, true, true)){ bought++; spent += price; }
-  }
-  Sound.buy(); haptic(15);
-  notify('Куплено ' + bought + ' лотов за ' + spent.toLocaleString('ru-RU') + ' ₽');
-  addAcctLog('🛒 Скупка · ' + bought + ' шт · ' + spent.toLocaleString('ru-RU') + ' ₽', 'ok');
-  refreshAfterBatch();
-}
-
-export function fulfillProfitable(){
-  const jobs = [];
-  const used = new Set();
-  for(const o of sortedOrders()){
-    const matches = findMatchingNumbers(o.mask).filter(n => !n.favorite && !used.has(n.id));
-    if(!matches.length) continue;
-    matches.sort((a,b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate, a.flag)) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate, b.flag)));
-    const best = matches[0];
-    const hypo = hypoPrice(best.rarity, best.flag, extractRegion(best.plate, best.flag));
-    if(o.reward < hypo) continue;
-    used.add(best.id);
-    jobs.push({ order: o, num: best });
-  }
-  if(!jobs.length){ notify('Нет выгодных заказов без избранного'); Sound.error(); return; }
-  const sum = jobs.reduce((s, j) => s + j.order.reward, 0);
-  if(!confirm('Закрыть ' + jobs.length + ' заказов и получить ' + sum.toLocaleString('ru-RU') + ' ₽?\nИзбранное не отдаётся. Берётся самый дешёвый подходящий номер.')) return;
-  let done = 0;
-  let gained = 0;
-  for(const job of jobs){
-    if(doFulfillOrder(job.order.id, job.num.id, true, true)){ done++; gained += job.order.reward; }
-  }
-  Sound.coin_big(); haptic([20,20,40]);
-  notify('🎯 Закрыто заказов: ' + done + ' · +' + gained.toLocaleString('ru-RU') + ' ₽');
-  addAcctLog('🎯 Закрыто заказов: ' + done + ' · +' + gained.toLocaleString('ru-RU') + ' ₽', 'ok');
-  refreshAfterBatch();
-}
-
 export function unlistAll(){
   if(!market.listings.length){ notify('На бирже нет твоих лотов'); Sound.error(); return; }
   if(!confirm('Снять ' + market.listings.length + ' лотов с продажи?')) return;
@@ -157,6 +103,7 @@ export function renderOffers(){
       '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
       '<div class="card-price">'+rub(o.price)+'<span>цена покупки</span></div>'+
       marketLine(o.price, o.hypo)+
+      '<div class="lot-life" data-until="'+(o.until || 0)+'">'+Math.max(0, Math.ceil(((o.until || 0) - Date.now()) / 1000))+' с</div>'+
       '<button class="buy-btn" data-id="'+o.id+'"'+(canBuy?'':' disabled')+'>'+(canBuy?'Купить':'Не хватает '+rub(o.price-S.rub))+'</button>'+
       '</div>';
   }).join('');
