@@ -1,11 +1,11 @@
 export const RARITY = [
-  {id:'common', name:'Мусор', price:20, w:75},
-  {id:'uncommon', name:'Необычный', price:80, w:18},
-  {id:'rare', name:'Редкий', price:400, w:6},
-  {id:'epic', name:'Эпический', price:1250, w:1},
-  {id:'legendary', name:'Легендарный', price:50000, w:0.01},
-  {id:'mythic', name:'Мифический', price:500000, w:0.001},
-  {id:'divine', name:'Божественный', price:10000000, w:0.0001}
+  {id:'common', name:'Мусор', price:40, w:64},
+  {id:'uncommon', name:'Необычный', price:160, w:22},
+  {id:'rare', name:'Редкий', price:520, w:9},
+  {id:'epic', name:'Эпический', price:1800, w:4},
+  {id:'legendary', name:'Легендарный', price:22000, w:0.85},
+  {id:'mythic', name:'Мифический', price:180000, w:0.13},
+  {id:'divine', name:'Божественный', price:3500000, w:0.02}
 ];
 
 export const RMAP = Object.fromEntries(RARITY.map(r => [r.id, r]));

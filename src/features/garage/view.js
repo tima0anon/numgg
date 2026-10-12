@@ -14,6 +14,7 @@ import {
   sellLow,
   sellMid,
 } from './sell.js';
+import { sendPlate, readSession } from '../../services/remote.js';
 import { Sound } from '../../services/audio.js';
 import { copyText } from '../../services/clipboard.js';
 import { notify } from '../../services/notify.js';
@@ -32,6 +33,13 @@ export function renderCountries(){
 
 function livePrice(n){
   return hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag));
+}
+
+function deltaHtml(ask, bought){
+  if(typeof bought !== 'number') return '';
+  const d = Math.round(ask - bought);
+  const up = d >= 0;
+  return '<span class="pnl '+(up?'up':'down')+'">'+(up?'+':'−')+Math.abs(d).toLocaleString('ru-RU')+'</span>';
 }
 
 export function getFiltered(){
@@ -71,6 +79,24 @@ function syncListed(){
   for(const n of S.col) n.listed = ids.has(Number(n.id));
 }
 
+async function givePlate(id){
+  if(!readSession()){ notify('Чтобы передать номер, войди на вкладке «Рейтинг»'); Sound.error(); return; }
+  const num = S.col.find(n => n.id === id);
+  if(!num || num.listed){ notify('Сначала сними номер с продажи'); return; }
+  const to = prompt('Ник, кому отдать ' + num.plate);
+  if(!to) return;
+  try {
+    await sendPlate(to.trim(), { plate: num.plate, flag: num.flag, country: num.country, rarity: num.rarity, price: livePrice(num), bought: num.bought || 0, region: num.region || extractRegion(num.plate, num.flag) });
+    const idx = S.col.findIndex(n => n.id === id);
+    if(idx >= 0) S.col.splice(idx, 1);
+    save(); renderCollection();
+    notify('Номер отправлен игроку ' + to.trim());
+  } catch(error){
+    notify(error.message || 'Не удалось передать номер');
+    Sound.error();
+  }
+}
+
 export function renderCollection(){
   syncListed();
   renderCountries();
@@ -97,7 +123,7 @@ export function renderCollection(){
   if(!items.length){ grid.innerHTML = '<div class="empty">По этому фильтру ничего нет.</div>'; return; }
   const MAX = 500;
   const slice = items.length > MAX ? items.slice(0, MAX) : items;
-  const coefLow = Math.max(1, Math.min(90, S.coefLow)) / 100;
+  const coefLow = Math.max(10, Math.min(90, S.coefLow)) / 100;
   const coefHigh = Math.max(1, Math.min(200, S.coefHigh)) / 100;
   grid.innerHTML = slice.map(n => {
     const R = RMAP[n.rarity];
@@ -107,6 +133,11 @@ export function renderCollection(){
     const highP = Math.max(1, Math.round(hypo * (1 + coefHigh)));
     const listing = market.listings.find(l => Number(l.numId) === Number(n.id));
     const listed = !!listing;
+    const bought = typeof n.bought === 'number' ? n.bought : null;
+    const boughtLine = bought == null
+      ? '<div class="bought-line">Цена покупки не записана</div>'
+      : '<div class="bought-line">Купил за '+bought.toLocaleString('ru-RU')+' ₽ · '+(hypo-bought>=0?'+':'−')+Math.abs(hypo-bought).toLocaleString('ru-RU')+' к рынку</div>';
+    const corner = bought != null ? deltaHtml(listed ? listing.price : midP, bought) : '';
     const region = extractRegion(n.plate, n.flag);
     const mood = marketMood(n.flag, region, n.rarity);
     const chance = listing ? saleChance(listing.price, hypo, mood, RARITY_ORDER.indexOf(n.rarity)) : 0;
@@ -116,22 +147,25 @@ export function renderCollection(){
       ? '<div class="lot-state"><b>На продаже · '+listing.price.toLocaleString('ru-RU')+' ₽</b><span class="demand '+mood.cls+'">'+mood.label+' · шанс '+Math.round(chance*100)+'%</span><span class="lot-why">'+saleHint(chance, listing.price, hypo, mood)+'</span></div>'
       : '';
     return '<div class="ncard '+n.rarity+favClass+(listed?' listed':'')+'">'+
+      corner+
       '<div class="plate-stage copy-plate" data-plate="'+n.plate+'" title="Нажми, чтобы скопировать">'+renderRealPlate(n.plate, n.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+n.country+'</span><span class="row-right">'+
       '<span class="rar '+n.rarity+'">'+R.name+'</span>'+
       '<button class="fav-btn'+(n.favorite?' active':'')+'" data-fav="'+n.id+'">'+star+'</button></span></div>'+
       '<div class="card-price">'+hypo.toLocaleString('ru-RU')+' ₽<span>рыночная цена</span></div>'+
+      boughtLine+
       lot+
       (listed
         ? '<button class="sell-btn" style="background:var(--red);color:#fff;border:none;border-radius:100px;padding:10px;cursor:pointer;font-weight:700;font-family:var(--font)" data-unlist="'+n.id+'">Снять с продажи</button>'
         : '<div class="sell-trio">'+
-          '<button class="sell-low" data-low="'+n.id+'"><span class="lb">Сразу</span><span class="pr">'+lowP.toLocaleString('ru-RU')+'</span></button>'+
-          '<button class="sell-mid" data-mid="'+n.id+'"><span class="lb">По рынку</span><span class="pr">'+midP.toLocaleString('ru-RU')+'</span></button>'+
-          '<button class="sell-high" data-high="'+n.id+'"><span class="lb">Дороже</span><span class="pr">'+highP.toLocaleString('ru-RU')+'</span></button>'+
-          '</div>'
+          '<button class="sell-low" data-low="'+n.id+'"><span class="lb">Сразу</span><span class="pr">'+lowP.toLocaleString('ru-RU')+'</span>'+deltaHtml(lowP, bought)+'</button>'+
+          '<button class="sell-mid" data-mid="'+n.id+'"><span class="lb">По рынку</span><span class="pr">'+midP.toLocaleString('ru-RU')+'</span>'+deltaHtml(midP, bought)+'</button>'+
+          '<button class="sell-high" data-high="'+n.id+'"><span class="lb">Дороже</span><span class="pr">'+highP.toLocaleString('ru-RU')+'</span>'+deltaHtml(highP, bought)+'</button>'+
+          '</div><button type="button" class="ios-btn gray give-btn" data-give="'+n.id+'">Передать по нику</button>'
       )+
       '</div>';
   }).join('') + (items.length > MAX ? '<div class="empty">Показаны первые '+MAX+' из '+items.length+'. Сузь фильтр, чтобы увидеть остальные.</div>' : '');
+  grid.querySelectorAll('[data-give]').forEach(b => b.addEventListener('click', e => givePlate(parseInt(e.currentTarget.dataset.give,10))));
   grid.querySelectorAll('[data-low]').forEach(b => b.addEventListener('click', e => sellLow(parseInt(e.currentTarget.dataset.low,10))));
   grid.querySelectorAll('[data-mid]').forEach(b => b.addEventListener('click', e => sellMid(parseInt(e.currentTarget.dataset.mid,10))));
   grid.querySelectorAll('[data-high]').forEach(b => b.addEventListener('click', e => sellHigh(parseInt(e.currentTarget.dataset.high,10))));

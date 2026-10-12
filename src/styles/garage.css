@@ -17,6 +17,11 @@
 .grid::-webkit-scrollbar{width:6px}
 .grid::-webkit-scrollbar-thumb{background:var(--label-3);border-radius:3px}
 .ncard{background:var(--bg-elev);border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--sep);box-shadow:var(--shadow-sm);position:relative}
+.bought-line{font-size:.75rem;font-weight:700;color:var(--label-2)}
+.pnl{font-size:.68rem;font-weight:800;padding:2px 6px;border-radius:999px;font-variant-numeric:tabular-nums}
+.ncard>.pnl{position:absolute;top:10px;right:10px}
+.pnl.up{background:rgba(52,199,89,.16);color:var(--green)}
+.pnl.down{background:rgba(255,59,48,.14);color:var(--red)}
 .ncard.favorite{box-shadow:0 0 0 2px var(--yellow)}
 .ncard.listed{box-shadow:0 0 0 2px var(--orange),var(--shadow-md)}
 .lot-state{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:rgba(255,149,0,.12);border:1px solid rgba(255,149,0,.35)}

@@ -37,8 +37,9 @@ export function saleChance(price, hypo, mood, rarityIdx){
   const heat = mood.heat;
   if(dev > 0.02 && !mood.bull) return 0;
   let chance;
-  if(dev <= -0.05) chance = 0.5 + heat * 0.45;
-  else if(dev <= 0.02) chance = 0.05 + heat * 0.6;
+  if(dev <= -0.10) chance = 0.28 + heat * 0.32;
+  else if(dev < -0.02) chance = 0.06 + heat * 0.2;
+  else if(dev <= 0.02) chance = 0.03 + heat * 0.22;
   else chance = Math.max(0, (heat - 0.22) * 1.35 - dev * 1.15);
   chance *= Math.max(0.4, 1 - (rarityIdx || 0) * 0.07);
   return Math.max(0, Math.min(0.92, chance));

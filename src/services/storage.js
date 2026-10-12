@@ -4,6 +4,7 @@ import {
   MAX_CUSTOM_SPIN,
   START_RUB,
 } from '../config/constants.js';
+import { queueScore } from './remote.js';
 import { market } from '../state/market.js';
 import { S } from '../state/player.js';
 
@@ -17,10 +18,12 @@ export function save(){
       history: S.history, rarityCount: S.rarityCount, customSpinN: S.customSpinN,
       earnSolved: S.earnSolved, earnWrong: S.earnWrong, earnStreak: S.earnStreak, earnBest: S.earnBest,
       coefLow: S.coefLow, coefHigh: S.coefHigh, news: S.news, acct: S.acct,
+      earnLevel: S.earnLevel, usedCashCode: S.usedCashCode,
       playerName: S.playerName, peakRub: S.peakRub, rivals: S.rivals,
       myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind }))
     };
     localStorage.setItem(KEY, JSON.stringify(data));
+    queueScore(Math.max(S.rub, S.peakRub || 0));
   } catch(e){}
 }
 
@@ -42,7 +45,9 @@ export function load(){
     S.rarityCount = Object.assign({common:0,uncommon:0,rare:0,epic:0,legendary:0,mythic:0,divine:0}, p.rarityCount || {});
     S.customSpinN = (typeof p.customSpinN==='number' && p.customSpinN>=1 && p.customSpinN<=MAX_CUSTOM_SPIN) ? p.customSpinN : 25;
     S.earnSolved = p.earnSolved||0; S.earnWrong = p.earnWrong||0; S.earnStreak = p.earnStreak||0; S.earnBest = p.earnBest||0;
-    S.coefLow = (typeof p.coefLow==='number' && p.coefLow>=1 && p.coefLow<=90) ? p.coefLow : 20;
+    S.earnLevel = [0,1,2,3].includes(p.earnLevel) ? p.earnLevel : 0;
+    S.usedCashCode = !!p.usedCashCode;
+    S.coefLow = (typeof p.coefLow==='number' && p.coefLow>=10 && p.coefLow<=90) ? p.coefLow : 20;
     S.coefHigh = (typeof p.coefHigh==='number' && p.coefHigh>=1 && p.coefHigh<=200) ? p.coefHigh : 20;
     S.news = Array.isArray(p.news) ? p.news.filter(n => n.until > Date.now()) : [];
     if(p.acct && typeof p.acct==='object'){ Object.assign(S.acct, p.acct); if(!Array.isArray(S.acct.log)) S.acct.log = []; }

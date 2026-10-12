@@ -3,7 +3,7 @@ const SESSION_KEY = 'numdrop_session_v1';
 export function apiBase(){
   const host = location.hostname;
   if(host === '127.0.0.1' || host === 'localhost') return 'http://127.0.0.1:8787';
-  return 'https://numgg-api.certain-chip.workers.dev';
+  return 'https://numgg-api.wind-whippoorwill.workers.dev';
 }
 
 export function readSession(){
@@ -39,6 +39,7 @@ async function call(path, { method, body, auth } = {}){
       method: method || (body ? 'POST' : 'GET'),
       headers,
       body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(4000),
     });
   } catch {
     const error = new Error('Нет связи с сервером рейтинга');
@@ -68,6 +69,22 @@ export function fetchMe(){
 
 export function fetchTop(){
   return call('/top', { auth: true });
+}
+
+export function redeemCashCode(){
+  return call('/redeem', { body: { code: '525262' }, auth: true });
+}
+
+export function sendPlate(to, plate){
+  return call('/gift', { body: { to, plate }, auth: true });
+}
+
+export function fetchInbox(){
+  return call('/inbox', { auth: true });
+}
+
+export function takeGift(id){
+  return call('/inbox/take', { body: { id }, auth: true });
 }
 
 export function logoutAccount(){

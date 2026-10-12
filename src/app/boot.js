@@ -2,6 +2,9 @@ import {
   MAX_CUSTOM_SPIN,
   NEWS_CHECK_INTERVAL,
   PAGE_KEY,
+  ACCT_AUTO_COST,
+  ACCT_HIRE_COST,
+  SECRET_CASH_CODE,
   SECRET_CODE,
   SECRET_FULL_CODE,
   TICK_MS,
@@ -53,6 +56,7 @@ import {
 } from '../features/exchange/view.js';
 import { sellBulk } from '../features/garage/sell.js';
 import { renderCollection } from '../features/garage/view.js';
+import { bindRankAccount } from '../features/rank/account.js';
 import { renderRank } from '../features/rank/board.js';
 import { updateBalances } from '../features/hud/balance.js';
 import {
@@ -88,6 +92,7 @@ import {
 } from '../features/shell/chrome.js';
 import { resetProgress } from '../features/shell/reset.js';
 import {
+  triggerCashCode,
   triggerCustomSpin,
   triggerEasterEgg,
   triggerFullCollection,
@@ -124,12 +129,14 @@ export async function init(){
       const raw = parseInt(cs.value, 10);
       if(raw === SECRET_CODE){ triggerEasterEgg(); return; }
       if(raw === SECRET_FULL_CODE){ triggerFullCollection(); return; }
+      if(raw === SECRET_CASH_CODE){ triggerCashCode(); return; }
       updateDropCostsUI();
     });
     cs.addEventListener('change', () => {
       let n = parseInt(cs.value, 10);
       if(n === SECRET_CODE){ triggerEasterEgg(); return; }
       if(n === SECRET_FULL_CODE){ triggerFullCollection(); return; }
+      if(n === SECRET_CASH_CODE){ triggerCashCode(); return; }
       if(!isFinite(n) || n < 1) n = 1;
       if(n > MAX_CUSTOM_SPIN) n = MAX_CUSTOM_SPIN;
       cs.value = n; S.customSpinN = n; save(); updateDropCostsUI();
@@ -149,11 +156,15 @@ export async function init(){
   document.getElementById('earnSubmit').addEventListener('click', submitEarnAnswer);
   document.getElementById('earnInput').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitEarnAnswer(); } });
   document.getElementById('earnSkip').addEventListener('click', () => { if(flags.earnLocked) return; S.earnStreak = 0; Sound.click(); updateEarnStats(); save(); renderEarnProblem(); });
+  document.querySelectorAll('#earnLevel button').forEach(b => b.addEventListener('click', () => {
+    S.earnLevel = Number(b.dataset.level) || 0;
+    Sound.click(); save(); renderEarnProblem();
+  }));
 
   const cl = document.getElementById('coefLow');
   const ch = document.getElementById('coefHigh');
   cl.value = S.coefLow; ch.value = S.coefHigh;
-  cl.addEventListener('change', () => { let v = parseInt(cl.value,10); if(!isFinite(v)) v = 20; v = Math.max(1, Math.min(90, v)); S.coefLow = v; cl.value = v; save(); renderCollection(); });
+  cl.addEventListener('change', () => { let v = parseInt(cl.value,10); if(!isFinite(v)) v = 20; v = Math.max(10, Math.min(90, v)); S.coefLow = v; cl.value = v; save(); renderCollection(); });
   ch.addEventListener('change', () => { let v = parseInt(ch.value,10); if(!isFinite(v)) v = 20; v = Math.max(1, Math.min(200, v)); S.coefHigh = v; ch.value = v; save(); renderCollection(); });
 
   ['fCountry','fRarity','fSort','fPrice','fSearch'].forEach(id => {
@@ -217,10 +228,25 @@ export async function init(){
   document.getElementById('unlistAll').addEventListener('click', unlistAll);
 
   document.querySelectorAll('#acctMode button').forEach(b => b.addEventListener('click', () => {
-    S.acct.mode = b.dataset.mode;
+    const mode = b.dataset.mode;
+    if(mode === 'notify' && !S.acct.hired){
+      if(S.rub < ACCT_HIRE_COST){ notify('Чтобы нанять бухгалтера, нужно 5 000 ₽'); Sound.error(); return; }
+      S.rub -= ACCT_HIRE_COST; S.totalSpent += ACCT_HIRE_COST; S.acct.hired = true;
+      notify('Бухгалтер нанят за 5 000 ₽');
+    }
+    if(mode === 'auto' && !S.acct.autoPaid){
+      if(!S.acct.hired){
+        if(S.rub < ACCT_HIRE_COST + ACCT_AUTO_COST){ notify('Сначала найм за 5 000 ₽, автоторговля ещё 25 000 ₽'); Sound.error(); return; }
+        S.rub -= ACCT_HIRE_COST; S.totalSpent += ACCT_HIRE_COST; S.acct.hired = true;
+      } else if(S.rub < ACCT_AUTO_COST){ notify('Автоторговля стоит 25 000 ₽'); Sound.error(); return; }
+      S.rub -= ACCT_AUTO_COST; S.totalSpent += ACCT_AUTO_COST; S.acct.autoPaid = true;
+      notify('Автоторговля открыта за 25 000 ₽');
+    }
+    S.acct.mode = mode;
     Sound.click();
+    updateBalances();
     updateAcctUI(); save();
-    notify('Бухгалтер: '+({off:'выключен',notify:'подсказки',auto:'сам торгует'})[b.dataset.mode]);
+    if(mode === 'off' || S.acct.hired) notify('Бухгалтер: '+({off:'выключен',notify:'подсказки',auto:'сам торгует'})[mode]);
     if(S.acct.mode !== 'off') runAccountantSession();
     renderExchange();
   }));
@@ -245,6 +271,7 @@ export async function init(){
     if(t.dataset.tab === 'wealth') renderWealthTable();
   }));
 
+  bindRankAccount();
   setInterval(() => {
     if(document.getElementById('page-rank')?.classList.contains('active')) renderRank();
   }, 20000);

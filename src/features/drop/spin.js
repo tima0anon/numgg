@@ -176,8 +176,10 @@ export function doDrop(count){
     const results = [];
     let autoSoldSum = 0, autoSoldCount = 0;
     const newHistory = [];
+    const paidEach = Math.max(1, Math.round(totalCost / count));
     for(let i=0;i<count;i++){
       const num = generateNumber(false);
+      num.bought = paidEach;
       S.rarityCount[num.rarity] = (S.rarityCount[num.rarity]||0) + 1;
       newHistory.push({ plate:num.plate, flag:num.flag, rarity:num.rarity, price:num.price, id:num.id, country:num.country });
       if(shouldAutoSell(num.rarity)){

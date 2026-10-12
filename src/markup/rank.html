@@ -7,4 +7,23 @@
     </div>
     <div class="rank-list" id="rankList"></div>
   </div>
+  <div class="group">
+    <div class="group-header">Аккаунт</div>
+    <div class="rank-form" id="rankGuest">
+      <p class="rank-hint">Ник и пароль нужны для общего топа по максимальному балансу и для передачи номера. Без входа играть можно.</p>
+      <div class="auth-tabs">
+        <button type="button" id="rankTabLogin" class="active">Вход</button>
+        <button type="button" id="rankTabReg">Регистрация</button>
+      </div>
+      <label>Ник<input id="rankNick" maxlength="16" autocomplete="username"></label>
+      <label>Пароль<input id="rankPass" type="password" maxlength="72" autocomplete="current-password"></label>
+      <button type="button" class="ios-btn" id="rankAuth">Войти</button>
+      <p class="auth-error" id="rankAuthError"></p>
+    </div>
+    <div class="rank-form" id="rankUser" hidden>
+      <p class="rank-hint" id="rankAccount"></p>
+      <button type="button" class="ios-btn" id="rankInbox">Забрать номера</button>
+      <button type="button" class="ios-btn gray" id="rankLogout">Выйти</button>
+    </div>
+  </div>
 </section>

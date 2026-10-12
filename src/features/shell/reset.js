@@ -41,10 +41,11 @@ export function resetProgress(){
   S.totalSpun = 0; S.totalSpent = 0; S.totalEarned = 0;
   S.bestNum = null; S.selectedCountry = 'all'; S.autoSpin = false; S.autoSell = 'off';
   S.history = []; S.rarityCount = {common:0,uncommon:0,rare:0,epic:0,legendary:0,mythic:0,divine:0};
-  S.customSpinN = 25; S.earnSolved = 0; S.earnWrong = 0; S.earnStreak = 0; S.earnBest = 0;
+  S.customSpinN = 25; S.earnSolved = 0; S.earnWrong = 0; S.earnStreak = 0; S.earnBest = 0; S.earnLevel = 0;
+  S.usedCashCode = false;
   S.coefLow = 20; S.coefHigh = 20; S.news = [];
   S.peakRub = START_RUB;
-  S.acct = { mode:'off', speed:0, accuracy:0, risk:0, threshold:15, autoBuy:false, autoSell:false, analyzed:0, found:0, deals:0, profit:0, log:[] };
+  S.acct = { mode:'off', hired:false, autoPaid:false, speed:0, accuracy:0, risk:0, threshold:15, autoBuy:false, autoSell:false, analyzed:0, found:0, deals:0, profit:0, log:[] };
   flags.lastWealthIdx = -1; flags.lastShownRub = null; recentPlates.length = 0;
   market.offers = []; market.orders = []; market.listings = [];
   if(flags.autoTimer) clearInterval(flags.autoTimer);

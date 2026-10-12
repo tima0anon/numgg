@@ -1,3 +1,4 @@
+import { ACCT_AUTO_COST, ACCT_HIRE_COST } from '../../config/constants.js';
 import { Sound } from '../../services/audio.js';
 import { notify } from '../../services/notify.js';
 import { save } from '../../services/storage.js';
@@ -26,7 +27,11 @@ function paintButton(id, kind){
 }
 
 export function updateAcctUI(){
-  document.querySelectorAll('#acctMode button').forEach(b => b.classList.toggle('active', b.dataset.mode === S.acct.mode));
+  document.querySelectorAll('#acctMode button').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === S.acct.mode);
+    if(b.dataset.mode === 'notify') b.textContent = S.acct.hired ? 'Подсказки' : 'Подсказки · '+ACCT_HIRE_COST.toLocaleString('ru-RU')+' ₽';
+    if(b.dataset.mode === 'auto') b.textContent = S.acct.autoPaid ? 'Сам торгует' : 'Сам торгует · '+ACCT_AUTO_COST.toLocaleString('ru-RU')+' ₽';
+  });
   document.getElementById('acctAnalyzed').textContent = S.acct.analyzed.toLocaleString('ru-RU');
   document.getElementById('acctFound').textContent = S.acct.found.toLocaleString('ru-RU');
   document.getElementById('acctDeals').textContent = S.acct.deals.toLocaleString('ru-RU');

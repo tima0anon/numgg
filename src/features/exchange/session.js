@@ -37,13 +37,19 @@ import { S } from '../../state/player.js';
 
 export function weightedRarityForOffers(){
   const r = Math.random();
-  if(r < 0.42) return 'common';
-  if(r < 0.72) return 'uncommon';
-  if(r < 0.87) return 'rare';
-  if(r < 0.95) return 'epic';
-  if(r < 0.985) return 'legendary';
-  if(r < 0.997) return 'mythic';
+  if(r < 0.16) return 'common';
+  if(r < 0.36) return 'uncommon';
+  if(r < 0.58) return 'rare';
+  if(r < 0.76) return 'epic';
+  if(r < 0.88) return 'legendary';
+  if(r < 0.96) return 'mythic';
   return 'divine';
+}
+
+function offerSpread(hypo){
+  if(hypo >= 80000) return 0.04;
+  if(hypo >= 8000) return 0.08;
+  return 0.16;
 }
 
 export function makeOffer(){
@@ -54,9 +60,10 @@ export function makeOffer(){
   rememberPlate(res.plate, cd.flag);
   const region = extractRegion(res.plate, cd.flag);
   const hypo = hypoPrice(rid, cd.flag, region);
-  let dev = randGauss() * 0.18;
-  if(dev > 0.9) dev = 0.9;
-  if(dev < -0.7) dev = -0.7;
+  const spread = offerSpread(hypo);
+  let dev = randGauss() * spread;
+  if(dev > spread) dev = spread;
+  if(dev < -spread) dev = -spread;
   return {
     id: 'o' + (S.nextId++) + '_' + (Math.random()*1e6|0),
     plate: res.plate, flag: cd.flag, country: cd.name, rarity: rid, region,
@@ -68,25 +75,22 @@ export function makeOffer(){
 export function makeOrder(){
   let rid;
   const r = Math.random();
-  if(r < 0.35) rid = 'common';
-  else if(r < 0.60) rid = 'uncommon';
-  else if(r < 0.80) rid = 'rare';
-  else if(r < 0.92) rid = 'epic';
-  else if(r < 0.975) rid = 'legendary';
-  else if(r < 0.995) rid = 'mythic';
+  if(r < 0.2) rid = 'common';
+  else if(r < 0.42) rid = 'uncommon';
+  else if(r < 0.64) rid = 'rare';
+  else if(r < 0.82) rid = 'epic';
+  else if(r < 0.93) rid = 'legendary';
+  else if(r < 0.98) rid = 'mythic';
   else rid = 'divine';
   const cd = rnd(COUNTRIES);
   const res = cd.gen(rid);
   const region = extractRegion(res.plate, cd.flag);
   let wildcardRatio;
-  if(rid === 'divine' || rid === 'mythic') wildcardRatio = 0.08;
-  else if(rid === 'legendary') wildcardRatio = 0.1;
-  else if(rid === 'epic') wildcardRatio = 0.12;
-  else wildcardRatio = 0.18;
+  wildcardRatio = 0.08;
   const mask = maskPlate(res.plate, wildcardRatio);
   const spec = specificity(mask);
   const hypo = hypoPrice(rid, cd.flag, region);
-  const reward = Math.max(1, Math.round(hypo * orderMultiplier(spec) * (0.9 + Math.random()*0.25)));
+  const reward = Math.max(1, Math.round(hypo * (1.28 + spec * 0.45)));
   const now = Date.now();
   let lifetime = SESSION_MS;
   if(spec >= 0.85) lifetime = 120000 + ~~(Math.random()*60000);
@@ -107,7 +111,7 @@ export function maskPlate(plate, ratio){
     if(chars[i] === ' ') continue;
     if(Math.random() < ratio){ chars[i] = '*'; hidden.push(i); }
   }
-  while(hidden.length > 2){
+  while(hidden.length > 1){
     const at = hidden.splice(~~(Math.random()*hidden.length), 1)[0];
     chars[at] = plate[at];
   }
@@ -147,13 +151,13 @@ export function generateExchangeSession(){
   market.orders = market.orders.filter(o => !o._removed && o.until > now);
 
   const targetOffers = 32;
-  const targetOrders = 18;
+  const targetOrders = 8;
 
   market.offers = market.offers.slice(-14);
   while(market.offers.length < targetOffers) market.offers.push(makeOffer());
   if(market.offers.length > targetOffers) market.offers = market.offers.slice(-targetOffers);
 
-  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 10);
+  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 4);
   let longOrders = market.orders.filter(o => (o.until - o.createdAt) > 60000).length;
   while(market.orders.length < targetOrders){
     const o = makeOrder();
@@ -250,7 +254,7 @@ export function doBuyOffer(o, silent, batch){
   if(!o || !market.offers.some(x => x.id === o.id)) return false;
   if(S.rub < o.price){ if(!silent && !batch) notify('Недостаточно денег'); return false; }
   S.rub -= o.price; S.totalSpent += o.price;
-  const item = { id: S.nextId++, country: o.country, flag: o.flag, plate: o.plate, rarity: o.rarity, price: o.hypo, favorite: false };
+  const item = { id: S.nextId++, country: o.country, flag: o.flag, plate: o.plate, rarity: o.rarity, price: o.hypo, bought: o.price, favorite: false, region: o.region };
   S.col.push(item);
   if(!S.bestNum || item.price > S.bestNum.price) S.bestNum = item;
   const idx = market.offers.findIndex(x => x.id === o.id);

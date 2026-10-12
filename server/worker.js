@@ -161,15 +161,67 @@ export default {
         if(!Number.isFinite(balance) || balance < 0 || balance > 1e15) return reply(request, { error: 'Некорректный баланс' }, 400);
         const user = await readJson(env, 'u:' + nick, null);
         if(!user) return reply(request, { error: 'Аккаунт не найден' }, 401);
-        user.balance = balance;
+        user.balance = Math.max(user.balance || 0, balance);
         user.at = Date.now();
         await env.DATA.put('u:' + nick, JSON.stringify(user));
         const board = await readJson(env, 'board', []);
         const next = board.filter(row => row.nickKey !== nick);
-        next.push({ nickKey: nick, nick: user.nick, balance, at: user.at });
+        next.push({ nickKey: nick, nick: user.nick, balance: user.balance, at: user.at });
         next.sort((a, b) => b.balance - a.balance || a.nick.localeCompare(b.nick, 'ru'));
         await env.DATA.put('board', JSON.stringify(next.slice(0, 2000)));
-        return reply(request, { nick: user.nick, balance, place: placeOf(next, nick) });
+        return reply(request, { nick: user.nick, balance: user.balance, place: placeOf(next, nick) });
+      }
+      if(request.method === 'POST' && path === '/redeem'){
+        const nick = await sessionNick(request, env);
+        if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
+        const body = await readBody(request);
+        if(String(body.code) !== '525262') return reply(request, { error: 'Нет такого кода' }, 400);
+        const user = await readJson(env, 'u:' + nick, null);
+        if(!user) return reply(request, { error: 'Аккаунт не найден' }, 401);
+        if(user.cashCode) return reply(request, { error: 'Код уже использован на этом аккаунте', used: true }, 409);
+        user.cashCode = true;
+        await env.DATA.put('u:' + nick, JSON.stringify(user));
+        return reply(request, { ok: true });
+      }
+      if(request.method === 'POST' && path === '/gift'){
+        const nick = await sessionNick(request, env);
+        if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
+        const body = await readBody(request);
+        const to = nickKey(cleanNick(body.to));
+        if(!NICK.test(cleanNick(body.to))) return reply(request, { error: 'Ник: 3–16 букв, цифр или _' }, 400);
+        if(to === nick) return reply(request, { error: 'Нельзя передать номер самому себе' }, 400);
+        const receiver = await readJson(env, 'u:' + to, null);
+        if(!receiver) return reply(request, { error: 'Такого ника нет' }, 404);
+        const plate = body.plate;
+        if(!plate || typeof plate.plate !== 'string' || typeof plate.flag !== 'string' || typeof plate.rarity !== 'string') return reply(request, { error: 'Не понял номер' }, 400);
+        const id = crypto.randomUUID();
+        const sender = await readJson(env, 'u:' + nick, null);
+        const gift = { id, to, from: nick, fromNick: sender ? sender.nick : nick, plate: { plate: String(plate.plate).slice(0, 24), flag: String(plate.flag).slice(0, 8), country: String(plate.country || '').slice(0, 24), rarity: String(plate.rarity).slice(0, 16), price: Math.max(0, Math.floor(Number(plate.price) || 0)), bought: Math.max(0, Math.floor(Number(plate.bought) || 0)), region: plate.region ? String(plate.region).slice(0, 8) : null }, at: Date.now() };
+        await env.DATA.put('g:' + to + ':' + id, JSON.stringify(gift), { expirationTtl: 30 * 86400 });
+        return reply(request, { ok: true, id });
+      }
+      if(request.method === 'GET' && path === '/inbox'){
+        const nick = await sessionNick(request, env);
+        if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
+        const listed = await env.DATA.list({ prefix: 'g:' + nick + ':' });
+        const gifts = [];
+        for(const key of listed.keys){
+          const row = await readJson(env, key.name, null);
+          if(row) gifts.push(row);
+        }
+        return reply(request, { gifts });
+      }
+      if(request.method === 'POST' && path === '/inbox/take'){
+        const nick = await sessionNick(request, env);
+        if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
+        const body = await readBody(request);
+        const id = String(body.id || '');
+        if(!id || id.length > 80) return reply(request, { error: 'Не понял посылку' }, 400);
+        const key = 'g:' + nick + ':' + id;
+        const gift = await readJson(env, key, null);
+        if(!gift) return reply(request, { error: 'Посылки уже нет' }, 404);
+        await env.DATA.delete(key);
+        return reply(request, { plate: gift.plate, fromNick: gift.fromNick });
       }
       if(request.method === 'POST' && path === '/logout'){
         const header = request.headers.get('authorization') || '';

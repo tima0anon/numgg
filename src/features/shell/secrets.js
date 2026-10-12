@@ -1,5 +1,7 @@
 import {
   MAX_CUSTOM_SPIN,
+  SECRET_CASH,
+  SECRET_CASH_CODE,
   SECRET_CODE,
   SECRET_FULL_CODE,
   SECRET_REWARD,
@@ -28,6 +30,7 @@ import {
 } from '../../services/fx.js';
 import { haptic } from '../../services/haptic.js';
 import { notify } from '../../services/notify.js';
+import { readSession, redeemCashCode } from '../../services/remote.js';
 import { save } from '../../services/storage.js';
 import { S } from '../../state/player.js';
 
@@ -64,11 +67,28 @@ export function triggerFullCollection(){
   notify('🎁 Полная коллекция! +'+added+' номеров');
 }
 
+export async function triggerCashCode(){
+  if(S.usedCashCode){ notify('Этот код уже использован'); Sound.error(); return; }
+  S.usedCashCode = true;
+  save();
+  if(readSession()){
+    try { await redeemCashCode(); }
+    catch(error){
+      if(error.status === 409){ notify('Код уже использован на этом аккаунте'); Sound.error(); return; }
+    }
+  }
+  S.rub += SECRET_CASH; S.totalEarned += SECRET_CASH;
+  Sound.coin_big(); haptic([30,20,40]);
+  updateBalances(); save();
+  notify('💵 +'+SECRET_CASH.toLocaleString('ru-RU')+' ₽');
+}
+
 export function triggerCustomSpin(){
   const inp = document.getElementById('customSpinCount'); if(!inp) return;
   let n = parseInt(inp.value, 10);
   if(n === SECRET_CODE){ triggerEasterEgg(); return; }
   if(n === SECRET_FULL_CODE){ triggerFullCollection(); return; }
+  if(n === SECRET_CASH_CODE){ triggerCashCode(); return; }
   if(!isFinite(n) || n < 1) n = 1;
   if(n > MAX_CUSTOM_SPIN) n = MAX_CUSTOM_SPIN;
   inp.value = n; S.customSpinN = n; save();

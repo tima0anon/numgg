@@ -186,6 +186,7 @@ export function renderOrders(){
       '<div class="plate-stage" title="Звёздочка — любой символ">'+renderRealPlate(o.mask, o.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
       '<div class="card-price">'+rub(o.reward)+'<span>заплатят тебе</span></div>'+
+      '<div class="deal good">Плюс '+rub(Math.max(0, o.reward - o.hypo))+' к рынку такого номера</div>'+
       '<div class="deal">'+(canFulfill ? fit : 'В гараже нет такого номера')+'</div>'+
       pick+
       '<button class="fulfill-btn" data-id="'+o.id+'"'+(canFulfill?'':' disabled')+'>'+(canFulfill?'Продать этот номер':'Нет подходящего')+'</button>'+

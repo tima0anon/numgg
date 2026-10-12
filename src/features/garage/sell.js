@@ -26,7 +26,7 @@ export function sellLow(numId){
   if(!num || num.listed) return;
   if(!confirmFavorite(num, 'Мгновенно продать')) return;
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
-  const coef = Math.max(1, Math.min(90, S.coefLow)) / 100;
+  const coef = Math.max(10, Math.min(90, S.coefLow)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 - coef)));
   S.rub += price; S.totalEarned += price;
   const idx = S.col.findIndex(n => n.id === numId);
@@ -67,7 +67,7 @@ export function sellHigh(numId){
 function unitPrice(num, kind){
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
   if(kind === 'low'){
-    const coef = Math.max(1, Math.min(90, S.coefLow)) / 100;
+    const coef = Math.max(10, Math.min(90, S.coefLow)) / 100;
     return Math.max(1, Math.round(hypo * (1 - coef)));
   }
   if(kind === 'high'){

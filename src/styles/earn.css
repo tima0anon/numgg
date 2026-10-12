@@ -1,4 +1,7 @@
 /* EARN */
+.earn-level{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.earn-level button{border:none;border-radius:100px;padding:8px 12px;font-family:var(--font);font-weight:700;font-size:.78rem;cursor:pointer;background:var(--bg-secondary);color:var(--label-2)}
+.earn-level button.active{background:var(--blue);color:#fff}
 .earn-area{display:flex;flex-direction:column;align-items:center;padding:28px 22px 32px;gap:16px}
 .earn-info{font-size:.9rem;color:var(--label-2);text-align:center;line-height:1.55;max-width:560px}
 .earn-info b{color:var(--green);font-weight:800;font-family:'SF Mono',monospace;font-size:1.05rem}
