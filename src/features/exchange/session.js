@@ -43,37 +43,47 @@ export function weightedRarityForOffers(){
   return 'divine';
 }
 
-function offerAsk(hypo){
+function desiredBargain(){
   const roll = Math.random();
-  let edge;
-  if(roll < 0.78) edge = 6 + Math.random() * 74;
-  else if(roll < 0.93) edge = 80 + Math.random() * 140;
-  else if(roll < 0.98) edge = -(8 + Math.random() * 60);
-  else edge = 220 + Math.random() * 160;
-  return Math.max(1, Math.round(hypo - edge));
+  if(roll < 0.52) return { edge: 20 + Math.random() * 180, fat: false };
+  if(roll < 0.72) return { edge: 800 + Math.random() * 700, fat: true };
+  if(roll < 0.86) return { edge: 2800 + Math.random() * 2400, fat: true };
+  if(roll < 0.95) return { edge: 11000 + Math.random() * 8000, fat: true };
+  return { edge: 80000 + Math.random() * 70000, fat: true };
+}
+
+function rarityForBargain(edge){
+  if(edge >= 60000) return Math.random() < 0.4 ? 'divine' : 'mythic';
+  if(edge >= 10000) return Math.random() < 0.45 ? 'mythic' : 'legendary';
+  if(edge >= 2500) return Math.random() < 0.5 ? 'legendary' : 'epic';
+  if(edge >= 700) return Math.random() < 0.45 ? 'epic' : 'rare';
+  return weightedRarityForOffers();
 }
 
 function botSnatch(edge){
-  if(edge < 40) return 0.004;
-  if(edge < 120) return 0.02;
-  if(edge < 220) return 0.07;
-  return 0.2;
+  if(edge >= 700) return 0.04;
+  if(edge < 80) return 0.003;
+  return 0.012;
 }
 
 export function makeOffer(){
-  const rid = weightedRarityForOffers();
+  const bargain = desiredBargain();
+  const rid = rarityForBargain(bargain.edge);
   const cd = rnd(COUNTRIES);
   let res, attempts=0;
   do { res = cd.gen(rid); attempts++; } while(isRecentPlate(res.plate, cd.flag) && attempts < 20);
   rememberPlate(res.plate, cd.flag);
   const region = extractRegion(res.plate, cd.flag);
   const hypo = hypoPrice(rid, cd.flag, region);
+  let edge = bargain.edge;
+  if(edge > hypo * 0.82) edge = Math.round(hypo * (0.35 + Math.random() * 0.4));
   const listedAt = Date.now();
+  const life = edge >= 700 ? 3000 + Math.random() * 1000 : OFFER_TTL_MS;
   return {
     id: 'o' + (S.nextId++) + '_' + (Math.random()*1e6|0),
     plate: res.plate, flag: cd.flag, country: cd.name, rarity: rid, region,
-    hypo, price: offerAsk(hypo),
-    listedAt, until: listedAt + OFFER_TTL_MS, accountantFound: false
+    hypo, price: Math.max(1, Math.round(hypo - edge)),
+    listedAt, until: listedAt + life, accountantFound: false
   };
 }
 
@@ -95,8 +105,8 @@ export function makeOrder(){
   const mask = maskPlate(res.plate, wildcardRatio);
   const spec = specificity(mask);
   const hypo = hypoPrice(rid, cd.flag, region);
-  const bonus = Math.min(Math.round(hypo * (0.03 + spec * 0.05)), Math.round(40 + spec * 160));
-  const reward = Math.max(1, hypo + bonus);
+  const markup = 0.5 + Math.random() * 1.5;
+  const reward = Math.max(1, Math.round(hypo * (1 + markup)));
   const now = Date.now();
   let lifetime = SESSION_MS;
   if(spec >= 0.85) lifetime = 120000 + ~~(Math.random()*60000);
@@ -153,8 +163,8 @@ export function generateExchangeSession(){
   market.sessionNum++;
   market.sessionNextAt = Date.now() + SESSION_MS;
   const now = Date.now();
-  market.offers = market.offers.filter(o => !o._removed);
-  market.orders = market.orders.filter(o => !o._removed && o.until > now);
+  market.offers = [];
+  market.orders = [];
 
   const targetOrders = 12;
   refillOffers(now);

@@ -18,7 +18,7 @@ export const HISTORY_MAX = 25;
 
 export const MAX_CUSTOM_SPIN = 1000;
 
-export const SESSION_MS = 15000;
+export const SESSION_MS = 60000;
 export const OFFER_TTL_MS = 30000;
 
 export const TICK_MS = 500;
