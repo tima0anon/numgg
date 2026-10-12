@@ -2,6 +2,7 @@ import {
   RARITY_ORDER,
   RMAP,
 } from '../../config/rarity.js';
+import { SOCIAL_PAUSED } from '../../config/constants.js';
 import { extractRegion } from '../../domain/plates/countries.js';
 import { describePlate } from '../../domain/plates/market.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
@@ -163,7 +164,7 @@ export function renderCollection(){
           '<button class="sell-low" data-low="'+n.id+'"><span class="lb">Сразу</span><span class="pr">'+lowP.toLocaleString('ru-RU')+'</span>'+deltaHtml(lowP, bought)+'</button>'+
           '<button class="sell-mid" data-mid="'+n.id+'"><span class="lb">По рынку</span><span class="pr">'+midP.toLocaleString('ru-RU')+'</span>'+deltaHtml(midP, bought)+'</button>'+
           '<button class="sell-high" data-high="'+n.id+'"><span class="lb">Дороже</span><span class="pr">'+highP.toLocaleString('ru-RU')+'</span>'+deltaHtml(highP, bought)+'</button>'+
-          '</div><button type="button" class="ios-btn gray give-btn" data-give="'+n.id+'">Передать по нику</button>'
+          '</div>' + (SOCIAL_PAUSED ? '' : '<button type="button" class="ios-btn gray give-btn" data-give="'+n.id+'">Передать по нику</button>')
       )+
       '</div>';
   }).join('') + (items.length > MAX ? '<div class="empty">Показаны первые '+MAX+' из '+items.length+'. Сузь фильтр, чтобы увидеть остальные.</div>' : '');

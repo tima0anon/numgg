@@ -1,9 +1,11 @@
+import { SOCIAL_PAUSED } from '../config/constants.js';
 const SESSION_KEY = 'numdrop_session_v1';
 
 export function apiBase(){
   const host = location.hostname;
   if(host === '127.0.0.1' || host === 'localhost') return 'http://127.0.0.1:8787';
-  return 'https://numgg-api.faithful-postage.workers.dev';
+  if(host.endsWith('castledev.ru')) return location.origin + '/api';
+  return 'https://pw902.castledev.ru/api';
 }
 
 export function readSession(){
@@ -116,7 +118,7 @@ function emitProfile(data){
 
 let scoreTimer = 0;
 export function queueScore(balance, epoch, forceId){
-  if(!readSession()) return;
+  if(SOCIAL_PAUSED || !readSession()) return;
   clearTimeout(scoreTimer);
   scoreTimer = setTimeout(() => {
     call('/score', { body: { balance: Math.floor(balance), epoch: epoch || 0, forceId: forceId || '' }, auth: true }).then(row => {

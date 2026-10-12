@@ -15,6 +15,8 @@ export const EARN_BASE = 3000;
 
 export const KEY = 'numdrop_save_v13';
 
+export const SOCIAL_PAUSED = true;
+
 export const THEME_KEY = 'numdrop_theme';
 
 export const PAGE_KEY = 'numdrop_page_v13';

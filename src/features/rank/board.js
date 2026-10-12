@@ -1,3 +1,4 @@
+import { SOCIAL_PAUSED } from '../../config/constants.js';
 import { WEALTH_TIERS, wealthTierIdx } from '../../config/wealth.js';
 import { fetchTop } from '../../services/remote.js';
 import { S } from '../../state/player.js';
@@ -14,6 +15,10 @@ export async function renderRank(){
   rememberPeak();
   const list = document.getElementById('rankList');
   if(!list) return;
+  if(SOCIAL_PAUSED){
+    list.innerHTML = '<div class="empty">Топ на паузе.</div>';
+    return;
+  }
   const tier = WEALTH_TIERS[wealthTierIdx(S.rub)];
   const peak = Math.max(Math.floor(S.rub), Math.floor(S.peakRub || 0));
   const place = document.getElementById('rankPlace');

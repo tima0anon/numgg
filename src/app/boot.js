@@ -7,6 +7,7 @@ import {
   SECRET_CASH_CODE,
   SECRET_CODE,
   SECRET_FULL_CODE,
+  SOCIAL_PAUSED,
   TICK_MS,
 } from '../config/constants.js';
 import { COUNTRIES } from '../domain/plates/countries.js';
@@ -111,19 +112,27 @@ import { market } from '../state/market.js';
 import { S } from '../state/player.js';
 
 export async function init(){
-  const me = await ensureSession();
-  dropSaveForSeason(me.epoch || 0);
+  let me = null;
+  if(!SOCIAL_PAUSED){
+    me = await ensureSession();
+    dropSaveForSeason(me.epoch || 0);
+  }
+  const gate = document.getElementById('authGate');
+  if(SOCIAL_PAUSED && gate) gate.hidden = true;
   load();
-  if((me.epoch || 0) > (S.epoch || 0)) S.epoch = me.epoch;
-  if(me.nick) S.playerName = me.nick;
-  startProfileSync();
+  if(me && (me.epoch || 0) > (S.epoch || 0)) S.epoch = me.epoch;
+  if(me && me.nick) S.playerName = me.nick;
+  if(!SOCIAL_PAUSED) startProfileSync();
   const adminNav = document.getElementById('adminNav');
-  if(adminNav) adminNav.hidden = me.role !== 'admin';
+  if(adminNav) adminNav.hidden = SOCIAL_PAUSED || !me || me.role !== 'admin';
+  const rankNav = document.querySelector('.topnav-btn[data-page="rank"]');
+  if(rankNav) rankNav.hidden = SOCIAL_PAUSED;
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
   if(!['drop','earn','exchange','garage','accountant','news','rank','info','admin'].includes(savedPage)) savedPage = 'drop';
-  if(savedPage === 'admin' && me.role !== 'admin') savedPage = 'drop';
+  if(savedPage === 'admin' && (SOCIAL_PAUSED || !me || me.role !== 'admin')) savedPage = 'drop';
+  if(savedPage === 'rank' && SOCIAL_PAUSED) savedPage = 'drop';
   switchPage(savedPage);
 
   document.querySelectorAll('#countryPicker .cpill').forEach(b => b.addEventListener('click', () => selectCountry(b.dataset.country)));
@@ -274,7 +283,7 @@ export async function init(){
     if(t.dataset.tab === 'wealth') renderWealthTable();
   }));
 
-  bindRankAccount();
+  if(!SOCIAL_PAUSED) bindRankAccount();
   bindAdmin();
   setInterval(() => {
     if(document.getElementById('page-rank')?.classList.contains('active')) renderRank();
@@ -331,7 +340,7 @@ export async function init(){
   setInterval(updateSessionCountdown, 200);
   // News: only timer updates every 1s (no rebuild, no blink)
   setInterval(() => { if(document.getElementById('page-news').classList.contains('active')) updateNewsTimers(); }, 1000);
-  applyServer(me);
+  if(!SOCIAL_PAUSED && me) applyServer(me);
   save();
   // News generation: every 40s check (slow, max 3 active)
   setInterval(generateNews, NEWS_CHECK_INTERVAL);
