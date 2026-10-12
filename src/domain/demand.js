@@ -58,9 +58,9 @@ export function saleChance(price, hypo, mood, rarity){
 export function saleHint(chance, price, hypo, mood){
   const dev = (price - hypo) / Math.max(1, hypo);
   if(mood?.sentiment < -0.05) return 'Новость уронила спрос: рулетка крутится реже, шанс на карточке уже ниже';
-  if(mood?.bull && chance >= 0.3) return 'Новость подняла спрос: рулетка каждые 15 секунд крутится с этим шансом';
+  if(mood?.bull && chance >= 0.3) return 'Новость подняла спрос: рулетка каждые 25 секунд крутится с этим шансом';
   if(dev > 0.05) return 'Цена выше рынка, шанс меньше, но круг всё равно есть';
   if(chance >= 0.3) return 'Спрос живой: часто хватает одного или двух кругов';
   if(chance >= 0.18) return 'Обычный спрос. Несколько кругов, и номер обычно забирают';
-  return 'Рынок холодный, но рулетка крутится каждые 15 секунд';
+  return 'Рынок холодный, но рулетка крутится каждые 25 секунд';
 }

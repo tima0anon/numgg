@@ -31,7 +31,7 @@ export const SESSION_MS = 60000;
 export const OFFER_TTL_MS = 30000;
 
 export const TICK_MS = 500;
-export const SALE_ROLL_MS = 15000;
+export const SALE_ROLL_MS = 25000;
 
 export const SECRET_CODE = 525242;
 
