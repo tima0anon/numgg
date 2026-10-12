@@ -2,7 +2,7 @@ import {
   HISTORY_MAX,
   MAX_CUSTOM_SPIN,
   SPIN_COST_ALL,
-  SPIN_COST_SINGLE,
+  SPIN_COST_BY_COUNTRY,
 } from '../../config/constants.js';
 import {
   RARITY,
@@ -45,7 +45,7 @@ import { flags } from '../../state/flags.js';
 import { S } from '../../state/player.js';
 
 // DROP
-export function baseSpinCost(){ return S.selectedCountry==='all' ? SPIN_COST_ALL : SPIN_COST_SINGLE; }
+export function baseSpinCost(){ return SPIN_COST_BY_COUNTRY[S.selectedCountry] || SPIN_COST_ALL; }
 
 export function currentSpinCost(){ return baseSpinCost(); }
 
@@ -128,7 +128,7 @@ export function updateDropCostsUI(){
   document.getElementById('dropCostLabel').textContent = bulkCost(1).toLocaleString('ru-RU')+' ₽';
   const hint = document.getElementById('dropCostHint');
   if(S.selectedCountry==='all') hint.textContent = 'за дроп · все страны';
-  else { const c = COUNTRIES.find(x=>x.id===S.selectedCountry); hint.textContent = '+33% · '+(c?c.name:''); }
+  else { const c = COUNTRIES.find(x=>x.id===S.selectedCountry); hint.textContent = 'за дроп · '+(c?c.name:''); }
   updateWealthBadgeUI();
   updateDropButtons();
 }

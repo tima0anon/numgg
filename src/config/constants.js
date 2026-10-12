@@ -1,6 +1,13 @@
 export const SPIN_COST_ALL = 66000;
 
-export const SPIN_COST_SINGLE = 86000;
+export const SPIN_COST_BY_COUNTRY = {
+  all: 66000,
+  ru: 84000,
+  by: 25000,
+  ua: 26000,
+  us: 43000,
+  cn: 158000
+};
 
 export const START_RUB = 250000;
 
