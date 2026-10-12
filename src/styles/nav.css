@@ -7,6 +7,7 @@
 .topnav{position:sticky;top:8px;z-index:50;display:flex;gap:4px;padding:6px;background:var(--bg-elev);border-radius:100px;box-shadow:var(--shadow-md);margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
 .topnav::-webkit-scrollbar{display:none}
 .topnav-btn{flex:1;min-width:68px;padding:11px 12px;border:none;background:transparent;border-radius:100px;font-family:var(--font);font-size:.88rem;font-weight:600;color:var(--label-2);cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s}
+.topnav-btn[hidden]{display:none !important}
 .topnav-btn:hover{color:var(--label)}
 .topnav-btn.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(0,122,255,.35)}
 .topnav-btn .badge{background:var(--red);color:#fff;font-size:.62rem;font-weight:800;border-radius:100px;padding:1px 6px;min-width:16px;text-align:center}

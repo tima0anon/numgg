@@ -1,4 +1,4 @@
-import { HISTORY_MAX, KEY, MAX_CUSTOM_SPIN, SALE_ROLL_MS, START_RUB } from '../config/constants.js';
+import { DAILY_KEY, HISTORY_MAX, KEY, MAX_CUSTOM_SPIN, SALE_ROLL_MS, START_RUB } from '../config/constants.js';
 import { queueScore } from './remote.js';
 import { market } from '../state/market.js';
 import { S } from '../state/player.js';
@@ -14,12 +14,30 @@ export function save(){
       earnSolved: S.earnSolved, earnWrong: S.earnWrong, earnStreak: S.earnStreak, earnBest: S.earnBest,
       coefLow: S.coefLow, coefHigh: S.coefHigh, news: S.news, acct: S.acct,
       earnLevel: S.earnLevel, usedCashCode: S.usedCashCode,
-      playerName: S.playerName, peakRub: S.peakRub, rivals: S.rivals,
+      playerName: S.playerName, peakRub: S.peakRub, rivals: S.rivals, epoch: S.epoch || 0, forceId: S.forceId || '',
       myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind, listedAt: l.listedAt, nextRollAt: l.nextRollAt }))
     };
     localStorage.setItem(KEY, JSON.stringify(data));
-    queueScore(Math.max(S.rub, S.peakRub || 0));
+    queueScore(Math.max(S.rub, S.peakRub || 0), S.epoch || 0, S.forceId || '');
   } catch(e){}
+}
+
+export function storedEpoch(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return 0;
+    const epoch = JSON.parse(raw).epoch;
+    return typeof epoch === 'number' && epoch >= 0 ? epoch : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function dropSaveForSeason(epoch){
+  if((epoch || 0) > storedEpoch()){
+    localStorage.removeItem(KEY);
+    localStorage.removeItem(DAILY_KEY);
+  }
 }
 
 export function load(){
@@ -48,6 +66,8 @@ export function load(){
     if(p.acct && typeof p.acct==='object'){ Object.assign(S.acct, p.acct); if(!Array.isArray(S.acct.log)) S.acct.log = []; }
     S.playerName = typeof p.playerName === 'string' ? p.playerName.slice(0, 16) : '';
     S.peakRub = (typeof p.peakRub === 'number' && p.peakRub >= 0) ? Math.max(p.peakRub, S.rub) : S.rub;
+    S.epoch = (typeof p.epoch === 'number' && p.epoch >= 0) ? p.epoch : 0;
+    S.forceId = typeof p.forceId === 'string' ? p.forceId : '';
     S.rivals = Array.isArray(p.rivals) ? p.rivals.filter(r => r && typeof r.name === 'string' && typeof r.rub === 'number' && r.rub >= 0).slice(0, 40) : [];
     // Restore myListings
     if(Array.isArray(p.myListings)){

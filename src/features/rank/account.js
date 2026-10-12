@@ -1,10 +1,9 @@
-import { fetchInbox, loginAccount, logoutAccount, queueScore, readSession, registerAccount, takeGift, writeSession } from '../../services/remote.js';
+import { fetchInbox, loginAccount, logoutAccount, readSession, registerAccount, takeGift, writeSession } from '../../services/remote.js';
 import { Sound } from '../../services/audio.js';
 import { notify } from '../../services/notify.js';
 import { save } from '../../services/storage.js';
 import { S } from '../../state/player.js';
 import { renderCollection } from '../garage/view.js';
-import { renderRank } from './board.js';
 import { updateBalances } from '../hud/balance.js';
 
 let mode = 'login';
@@ -36,18 +35,13 @@ export function bindRankAccount(){
     try {
       const data = mode === 'login' ? await loginAccount(nick, password) : await registerAccount(nick, password);
       writeSession(data);
-      document.getElementById('rankPass').value = '';
-      Sound.click();
-      paint();
-      queueScore(Math.max(S.rub, S.peakRub || 0));
-      renderRank();
-      notify(mode === 'login' ? 'Вход выполнен' : 'Аккаунт создан');
+      location.reload();
     } catch(error){
       err.textContent = error.message || 'Не вышло';
       Sound.error();
     }
   });
-  document.getElementById('rankLogout').addEventListener('click', () => { logoutAccount(); paint(); notify('Вы вышли'); });
+  document.getElementById('rankLogout').addEventListener('click', () => { logoutAccount().finally(() => location.reload()); });
   document.getElementById('rankInbox').addEventListener('click', claimInbox);
 }
 

@@ -5,7 +5,6 @@ import {
   fetchMe,
   loginAccount,
   logoutAccount,
-  queueScore,
   readSession,
   registerAccount,
   writeSession,
@@ -33,9 +32,9 @@ function setMode(next){
 
 function showNick(nick){
   const chip = document.getElementById('accountChip');
-  if(chip) chip.textContent = nick;
+  if(chip){ chip.hidden = false; chip.textContent = nick; }
   const account = document.getElementById('rankAccount');
-  if(account) account.textContent = nick + ' · в таблице баланс этого браузера';
+  if(account) account.textContent = nick + ' · место в топе по максимальному балансу';
   S.playerName = nick;
 }
 
@@ -70,13 +69,13 @@ function bind(){
       const result = mode === 'register' ? await registerAccount(nick, password) : await loginAccount(nick, password);
       writeSession(result);
       document.getElementById('authPass').value = '';
-      showNick(result.nick);
+      const me = typeof result.epoch === 'number' ? result : await fetchMe();
+      showNick(me.nick);
       Sound.click();
       hideGate();
-      queueScore(S.rub);
-      if(pending){ const done = pending; pending = null; done(); }
+      if(pending){ const done = pending; pending = null; done(me); }
     } catch(error){
-      showError(error.message || 'Не получилось');
+      showError(error.payload?.banned ? 'Аккаунт заблокирован' : (error.message || 'Не получилось'));
       Sound.error();
     } finally {
       button.disabled = false;
@@ -87,25 +86,29 @@ function bind(){
 export function ensureSession(){
   bind();
   setMode('login');
+  showGate();
   return new Promise(resolve => {
     const saved = readSession();
-    if(!saved){ showGate(); pending = resolve; return; }
+    if(!saved){ pending = resolve; return; }
     showNick(saved.nick);
     fetchMe().then(me => {
-      showNick(me.nick);
-      hideGate();
-      resolve();
-    }).catch(error => {
-      if(error.status === 401){
+      if(me.banned){
         clearSession();
-        showGate();
-        showError('Сессия истекла, войди снова');
+        showError('Аккаунт заблокирован');
         pending = resolve;
         return;
       }
+      showNick(me.nick);
       hideGate();
-      notify('Рейтинг сейчас недоступен, игра открыта по сохранённому входу');
-      resolve();
+      resolve(me);
+    }).catch(error => {
+      if(error.status === 401 || error.payload?.banned){
+        clearSession();
+        showError(error.payload?.banned ? 'Аккаунт заблокирован' : 'Сессия истекла, войди снова');
+      } else {
+        showError('Сервер недоступен. Без входа игра не откроется');
+      }
+      pending = resolve;
     });
   });
 }

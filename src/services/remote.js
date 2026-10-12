@@ -50,6 +50,7 @@ async function call(path, { method, body, auth } = {}){
   if(!response.ok){
     const error = new Error(data.error || 'Сервер отклонил запрос');
     error.status = response.status;
+    error.payload = data;
     throw error;
   }
   return data;
@@ -65,6 +66,18 @@ export function loginAccount(nick, password){
 
 export function fetchMe(){
   return call('/me', { auth: true });
+}
+
+export function fetchPlayers(){
+  return call('/admin/players', { auth: true });
+}
+
+export function adminAct(body){
+  return call('/admin/player', { body, auth: true });
+}
+
+export function adminWipe(){
+  return call('/admin/wipe', { body: {}, auth: true });
 }
 
 export function fetchTop(){
@@ -94,12 +107,20 @@ export function logoutAccount(){
   return fetch(apiBase() + '/logout', { method: 'POST', headers: { authorization: 'Bearer ' + session.token } }).catch(() => {});
 }
 
+let profileListener = () => {};
+export function watchProfile(fn){ profileListener = fn; }
+
+function emitProfile(data){
+  if(data) profileListener(data);
+}
+
 let scoreTimer = 0;
-export function queueScore(balance){
+export function queueScore(balance, epoch, forceId){
   if(!readSession()) return;
   clearTimeout(scoreTimer);
   scoreTimer = setTimeout(() => {
-    call('/score', { body: { balance: Math.floor(balance) }, auth: true }).then(row => {
+    call('/score', { body: { balance: Math.floor(balance), epoch: epoch || 0, forceId: forceId || '' }, auth: true }).then(row => {
+      emitProfile(row);
       const page = document.getElementById('page-rank');
       if(page && page.classList.contains('active')){
         const place = document.getElementById('rankPlace');
@@ -107,6 +128,7 @@ export function queueScore(balance){
       }
     }).catch(error => {
       if(error.status === 401) clearSession();
+      if(error.payload) emitProfile(error.payload);
     });
   }, 2500);
 }

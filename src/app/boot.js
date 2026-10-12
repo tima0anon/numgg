@@ -54,6 +54,9 @@ import {
 } from '../features/exchange/view.js';
 import { sellBulk } from '../features/garage/sell.js';
 import { renderCollection } from '../features/garage/view.js';
+import { bindAdmin } from '../features/admin/panel.js';
+import { ensureSession } from '../features/auth/gate.js';
+import { applyServer, startProfileSync } from '../features/auth/live.js';
 import { bindRankAccount } from '../features/rank/account.js';
 import { renderRank } from '../features/rank/board.js';
 import { updateBalances } from '../features/hud/balance.js';
@@ -99,6 +102,7 @@ import {
 import { Sound } from '../services/audio.js';
 import { notify } from '../services/notify.js';
 import {
+  dropSaveForSeason,
   load,
   save,
 } from '../services/storage.js';
@@ -107,11 +111,19 @@ import { market } from '../state/market.js';
 import { S } from '../state/player.js';
 
 export async function init(){
+  const me = await ensureSession();
+  dropSaveForSeason(me.epoch || 0);
   load();
+  if((me.epoch || 0) > (S.epoch || 0)) S.epoch = me.epoch;
+  if(me.nick) S.playerName = me.nick;
+  startProfileSync();
+  const adminNav = document.getElementById('adminNav');
+  if(adminNav) adminNav.hidden = me.role !== 'admin';
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
-  if(!['drop','earn','exchange','garage','accountant','news','rank','info'].includes(savedPage)) savedPage = 'drop';
+  if(!['drop','earn','exchange','garage','accountant','news','rank','info','admin'].includes(savedPage)) savedPage = 'drop';
+  if(savedPage === 'admin' && me.role !== 'admin') savedPage = 'drop';
   switchPage(savedPage);
 
   document.querySelectorAll('#countryPicker .cpill').forEach(b => b.addEventListener('click', () => selectCountry(b.dataset.country)));
@@ -263,6 +275,7 @@ export async function init(){
   }));
 
   bindRankAccount();
+  bindAdmin();
   setInterval(() => {
     if(document.getElementById('page-rank')?.classList.contains('active')) renderRank();
   }, 20000);
@@ -318,6 +331,8 @@ export async function init(){
   setInterval(updateSessionCountdown, 200);
   // News: only timer updates every 1s (no rebuild, no blink)
   setInterval(() => { if(document.getElementById('page-news').classList.contains('active')) updateNewsTimers(); }, 1000);
+  applyServer(me);
+  save();
   // News generation: every 40s check (slow, max 3 active)
   setInterval(generateNews, NEWS_CHECK_INTERVAL);
   // New news items get added only via generateNews; renderNews is incremental

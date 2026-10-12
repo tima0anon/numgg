@@ -6,8 +6,9 @@ import accountant from '../markup/accountant.html?raw';
 import news from '../markup/news.html?raw';
 import rank from '../markup/rank.html?raw';
 import info from '../markup/info.html?raw';
+import admin from '../markup/admin.html?raw';
 
-const pages = [drop, earn, exchange, garage, accountant, news, rank, info];
+const pages = [drop, earn, exchange, garage, accountant, news, rank, info, admin];
 
 export function mountPages() {
   const host = document.getElementById('pages');

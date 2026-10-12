@@ -76,7 +76,7 @@ function nickKey(nick){
 
 async function readBody(request){
   const text = await request.text();
-  if(text.length > 2000) return { error: 'Слишком большой запрос' };
+  if(text.length > 8000) return { error: 'Слишком большой запрос' };
   if(!text) return {};
   try { return JSON.parse(text); } catch { return { error: 'Не понял запрос' }; }
 }
@@ -98,16 +98,93 @@ async function issueSession(env, nick){
   return token;
 }
 
+const ADMINS = new Set(['мирон', 'тимур']);
+
 function placeOf(board, nick){
   const index = board.findIndex(row => row.nickKey === nick);
   return index >= 0 ? index + 1 : null;
 }
 
-async function publicMe(env, nick){
+function grantRole(user){
+  if(user && ADMINS.has(nickKey(user.nick))) user.role = 'admin';
+  return user;
+}
+
+async function loadUser(env, nick){
   const user = await readJson(env, 'u:' + nick, null);
+  if(!user) return null;
+  const before = user.role || '';
+  grantRole(user);
+  if((user.role || '') !== before) await env.DATA.put('u:' + nick, JSON.stringify(user));
+  return user;
+}
+
+async function eachKey(env, prefix, fn){
+  let cursor = undefined;
+  do {
+    const page = await env.DATA.list({ prefix, cursor, limit: 100 });
+    for(const key of page.keys) await fn(key.name);
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while(cursor);
+}
+
+async function wipeProgress(env){
+  await env.DATA.put('board', '[]');
+  await eachKey(env, 'u:', async name => {
+    const user = await readJson(env, name, null);
+    if(!user) return;
+    user.balance = 0;
+    user.cashCode = false;
+    user.force = null;
+    await env.DATA.put(name, JSON.stringify(user));
+  });
+  await eachKey(env, 'g:', async name => { await env.DATA.delete(name); });
+}
+
+async function world(env){
+  let meta = await readJson(env, 'meta', null);
+  if(!meta || !meta.epoch){
+    await wipeProgress(env);
+    meta = { epoch: 1 };
+    await env.DATA.put('meta', JSON.stringify(meta));
+  }
+  return meta;
+}
+
+function profileOf(user, board, nick, meta){
+  return {
+    nick: user.nick,
+    balance: user.balance || 0,
+    place: placeOf(board, nick),
+    role: user.role || '',
+    epoch: meta.epoch,
+    banned: !!user.banned,
+    force: user.force || null
+  };
+}
+
+async function publicMe(env, nick){
+  const meta = await world(env);
+  const user = await loadUser(env, nick);
   const board = await readJson(env, 'board', []);
   if(!user) return null;
-  return { nick: user.nick, balance: user.balance || 0, place: placeOf(board, nick) };
+  return profileOf(user, board, nick, meta);
+}
+
+async function requireAdmin(request, env){
+  const nick = await sessionNick(request, env);
+  if(!nick) return { error: reply(request, { error: 'Нужно войти' }, 401) };
+  const user = await loadUser(env, nick);
+  if(!user || user.role !== 'admin') return { error: reply(request, { error: 'Нет прав администратора' }, 403) };
+  if(user.banned) return { error: reply(request, { error: 'Аккаунт заблокирован' }, 403) };
+  return { nick, user };
+}
+
+function pushBoard(board, user, nick){
+  const next = board.filter(row => row.nickKey !== nick && !row.banned);
+  if(!user.banned) next.push({ nickKey: nick, nick: user.nick, balance: user.balance || 0, at: user.at || Date.now() });
+  next.sort((a, b) => b.balance - a.balance || a.nick.localeCompare(b.nick, 'ru'));
+  return next.slice(0, 2000);
 }
 
 export default {
@@ -120,9 +197,13 @@ export default {
       if(request.method === 'GET' && path === '/me'){
         const nick = await sessionNick(request, env);
         if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
-        return reply(request, await publicMe(env, nick));
+        const me = await publicMe(env, nick);
+        if(!me) return reply(request, { error: 'Аккаунт не найден' }, 401);
+        if(me.banned) return reply(request, { error: 'Аккаунт заблокирован', banned: true }, 403);
+        return reply(request, me);
       }
       if(request.method === 'GET' && path === '/top'){
+        await world(env);
         const board = await readJson(env, 'board', []);
         const top = board.slice(0, 100).map((row, index) => ({ nick: row.nick, balance: row.balance, place: index + 1 }));
         const nick = await sessionNick(request, env);
@@ -144,15 +225,20 @@ export default {
           if(existing) return reply(request, { error: 'Такой ник уже занят' }, 409);
           const freshSalt = crypto.getRandomValues(new Uint8Array(16));
           const realHash = await pbkdf2(password, freshSalt);
-          const user = { nick, salt: b64(freshSalt), hash: realHash, balance: 0, at: Date.now() };
+          const meta = await world(env);
+          const user = { nick, salt: b64(freshSalt), hash: realHash, balance: 0, at: Date.now(), role: ADMINS.has(key) ? 'admin' : '' };
           await env.DATA.put('u:' + key, JSON.stringify(user));
           const token = await issueSession(env, key);
-          return reply(request, { token, nick, balance: 0, place: null });
+          return reply(request, { token, ...profileOf(user, [], key, meta) });
         }
         if(!existing || !safeEqual(hash, existing.hash)) return reply(request, { error: 'Неверный ник или пароль' }, 401);
+        grantRole(existing);
+        if(existing.banned) return reply(request, { error: 'Аккаунт заблокирован', banned: true }, 403);
+        await env.DATA.put('u:' + key, JSON.stringify(existing));
         const token = await issueSession(env, key);
+        const meta = await world(env);
         const board = await readJson(env, 'board', []);
-        return reply(request, { token, nick: existing.nick, balance: existing.balance || 0, place: placeOf(board, key) });
+        return reply(request, { token, ...profileOf(existing, board, key, meta) });
       }
       if(request.method === 'POST' && path === '/score'){
         const nick = await sessionNick(request, env);
@@ -161,25 +247,37 @@ export default {
         if(body.error) return reply(request, { error: body.error }, 400);
         const balance = Math.floor(Number(body.balance));
         if(!Number.isFinite(balance) || balance < 0 || balance > 1e15) return reply(request, { error: 'Некорректный баланс' }, 400);
-        const user = await readJson(env, 'u:' + nick, null);
+        const meta = await world(env);
+        const user = await loadUser(env, nick);
         if(!user) return reply(request, { error: 'Аккаунт не найден' }, 401);
-        user.balance = Math.max(user.balance || 0, balance);
+        if(user.banned) return reply(request, { error: 'Аккаунт заблокирован', banned: true }, 403);
+        if(Math.floor(Number(body.epoch)) !== meta.epoch){
+          return reply(request, { error: 'Сезон обнулён', reset: true, epoch: meta.epoch, role: user.role || '' }, 409);
+        }
+        if(user.force && body.forceId !== user.force.id){
+          const board = await readJson(env, 'board', []);
+          return reply(request, profileOf(user, board, nick, meta));
+        }
+        if(user.force && body.forceId === user.force.id){
+          user.balance = user.force.kind === 'balance' ? user.force.rub : balance;
+          user.force = null;
+        } else {
+          user.balance = Math.max(user.balance || 0, balance);
+        }
         user.at = Date.now();
         await env.DATA.put('u:' + nick, JSON.stringify(user));
-        const board = await readJson(env, 'board', []);
-        const next = board.filter(row => row.nickKey !== nick);
-        next.push({ nickKey: nick, nick: user.nick, balance: user.balance, at: user.at });
-        next.sort((a, b) => b.balance - a.balance || a.nick.localeCompare(b.nick, 'ru'));
-        await env.DATA.put('board', JSON.stringify(next.slice(0, 2000)));
-        return reply(request, { nick: user.nick, balance: user.balance, place: placeOf(next, nick) });
+        const board = pushBoard(await readJson(env, 'board', []), user, nick);
+        await env.DATA.put('board', JSON.stringify(board));
+        return reply(request, profileOf(user, board, nick, meta));
       }
       if(request.method === 'POST' && path === '/redeem'){
         const nick = await sessionNick(request, env);
         if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
         const body = await readBody(request);
         if(String(body.code) !== '525262') return reply(request, { error: 'Нет такого кода' }, 400);
-        const user = await readJson(env, 'u:' + nick, null);
+        const user = await loadUser(env, nick);
         if(!user) return reply(request, { error: 'Аккаунт не найден' }, 401);
+        if(user.banned) return reply(request, { error: 'Аккаунт заблокирован', banned: true }, 403);
         if(user.cashCode) return reply(request, { error: 'Код уже использован на этом аккаунте', used: true }, 409);
         user.cashCode = true;
         await env.DATA.put('u:' + nick, JSON.stringify(user));
@@ -188,6 +286,9 @@ export default {
       if(request.method === 'POST' && path === '/gift'){
         const nick = await sessionNick(request, env);
         if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
+        const senderUser = await loadUser(env, nick);
+        if(!senderUser) return reply(request, { error: 'Аккаунт не найден' }, 401);
+        if(senderUser.banned) return reply(request, { error: 'Аккаунт заблокирован', banned: true }, 403);
         const body = await readBody(request);
         const to = nickKey(cleanNick(body.to));
         if(!NICK.test(cleanNick(body.to))) return reply(request, { error: 'Ник: 3–16 букв, цифр или _' }, 400);
@@ -197,8 +298,7 @@ export default {
         const plate = body.plate;
         if(!plate || typeof plate.plate !== 'string' || typeof plate.flag !== 'string' || typeof plate.rarity !== 'string') return reply(request, { error: 'Не понял номер' }, 400);
         const id = crypto.randomUUID();
-        const sender = await readJson(env, 'u:' + nick, null);
-        const gift = { id, to, from: nick, fromNick: sender ? sender.nick : nick, plate: { plate: String(plate.plate).slice(0, 24), flag: String(plate.flag).slice(0, 8), country: String(plate.country || '').slice(0, 24), rarity: String(plate.rarity).slice(0, 16), price: Math.max(0, Math.floor(Number(plate.price) || 0)), bought: Math.max(0, Math.floor(Number(plate.bought) || 0)), region: plate.region ? String(plate.region).slice(0, 8) : null }, at: Date.now() };
+        const gift = { id, to, from: nick, fromNick: senderUser.nick, plate: { plate: String(plate.plate).slice(0, 24), flag: String(plate.flag).slice(0, 8), country: String(plate.country || '').slice(0, 24), rarity: String(plate.rarity).slice(0, 16), price: Math.max(0, Math.floor(Number(plate.price) || 0)), bought: Math.max(0, Math.floor(Number(plate.bought) || 0)), region: plate.region ? String(plate.region).slice(0, 8) : null }, at: Date.now() };
         await env.DATA.put('g:' + to + ':' + id, JSON.stringify(gift), { expirationTtl: 30 * 86400 });
         return reply(request, { ok: true, id });
       }
@@ -224,6 +324,57 @@ export default {
         if(!gift) return reply(request, { error: 'Посылки уже нет' }, 404);
         await env.DATA.delete(key);
         return reply(request, { plate: gift.plate, fromNick: gift.fromNick });
+      }
+      if(request.method === 'GET' && path === '/admin/players'){
+        const admin = await requireAdmin(request, env);
+        if(admin.error) return admin.error;
+        const players = [];
+        await eachKey(env, 'u:', async name => {
+          const user = await readJson(env, name, null);
+          if(!user) return;
+          players.push({ nick: user.nick, balance: user.balance || 0, banned: !!user.banned, at: user.at || 0, role: user.role || '' });
+        });
+        players.sort((a, b) => b.balance - a.balance || a.nick.localeCompare(b.nick, 'ru'));
+        return reply(request, { players: players.slice(0, 500) });
+      }
+      if(request.method === 'POST' && path === '/admin/player'){
+        const admin = await requireAdmin(request, env);
+        if(admin.error) return admin.error;
+        const body = await readBody(request);
+        if(body.error) return reply(request, { error: body.error }, 400);
+        const key = nickKey(cleanNick(body.nick));
+        if(!NICK.test(cleanNick(body.nick))) return reply(request, { error: 'Ник: 3–16 букв, цифр или _' }, 400);
+        const user = await loadUser(env, key);
+        if(!user) return reply(request, { error: 'Такого игрока нет' }, 404);
+        const action = String(body.action || '');
+        if(action === 'balance'){
+          const rub = Math.floor(Number(body.balance));
+          if(!Number.isFinite(rub) || rub < 0 || rub > 1e15) return reply(request, { error: 'Некорректный баланс' }, 400);
+          user.force = { id: crypto.randomUUID(), kind: 'balance', rub };
+          user.balance = rub;
+        } else if(action === 'reset'){
+          user.force = { id: crypto.randomUUID(), kind: 'reset' };
+          user.balance = 0;
+          user.cashCode = false;
+        } else if(action === 'ban' || action === 'unban'){
+          if(key === admin.nick) return reply(request, { error: 'Себя заблокировать нельзя' }, 400);
+          user.banned = action === 'ban';
+          if(user.banned) user.balance = 0;
+        } else return reply(request, { error: 'Не понял действие' }, 400);
+        user.at = Date.now();
+        await env.DATA.put('u:' + key, JSON.stringify(user));
+        const board = pushBoard(await readJson(env, 'board', []), user, key);
+        await env.DATA.put('board', JSON.stringify(board));
+        return reply(request, { ok: true, nick: user.nick, balance: user.balance || 0, banned: !!user.banned });
+      }
+      if(request.method === 'POST' && path === '/admin/wipe'){
+        const admin = await requireAdmin(request, env);
+        if(admin.error) return admin.error;
+        const meta = await world(env);
+        meta.epoch += 1;
+        await wipeProgress(env);
+        await env.DATA.put('meta', JSON.stringify(meta));
+        return reply(request, { ok: true, epoch: meta.epoch });
       }
       if(request.method === 'POST' && path === '/logout'){
         const header = request.headers.get('authorization') || '';

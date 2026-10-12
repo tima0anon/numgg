@@ -32,8 +32,8 @@ import { flags } from '../../state/flags.js';
 import { market } from '../../state/market.js';
 import { S } from '../../state/player.js';
 
-export function resetProgress(){
-  if(!confirm('Сбросить весь прогресс?')) return;
+export function resetProgress(silent){
+  if(!silent && !confirm('Сбросить весь прогресс?')) return;
   localStorage.removeItem(KEY); localStorage.removeItem(DAILY_KEY);
   S.rub = START_RUB; S.col = [];
   S.cdLvl = 0; S.luckLvl = 0; S.autoLvl = 0;
