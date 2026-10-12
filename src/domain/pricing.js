@@ -1,8 +1,4 @@
-import {
-  countryMult,
-  regionMult,
-} from '../config/economy.js';
-import { RMAP } from '../config/rarity.js';
+import { appraisePlate } from './plates/market.js';
 import { S } from '../state/player.js';
 
 // PRICES
@@ -19,7 +15,7 @@ export function newsMult(flag, region, rarity){
   return m;
 }
 
-export function hypoPrice(rarity, flag, region){
-  const base = RMAP[rarity].price;
-  return Math.max(1, Math.round(base * countryMult(flag) * regionMult(region) * newsMult(flag, region, rarity)));
+export function hypoPrice(rarity, flag, region, plate){
+  const quote = appraisePlate(plate, flag, region, rarity);
+  return Math.max(1, Math.round(quote.price * newsMult(flag, region, rarity)));
 }

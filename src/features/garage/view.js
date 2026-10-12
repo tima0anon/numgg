@@ -3,6 +3,7 @@ import {
   RMAP,
 } from '../../config/rarity.js';
 import { extractRegion } from '../../domain/plates/countries.js';
+import { describePlate } from '../../domain/plates/market.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
 import { marketMood, saleChance, saleHint } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
@@ -32,7 +33,7 @@ export function renderCountries(){
 }
 
 function livePrice(n){
-  return hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag));
+  return hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag), n.plate);
 }
 
 function deltaHtml(ask, bought){
@@ -70,7 +71,7 @@ export function getFiltered(){
 export function updateGarageSummary(){
   const el = document.getElementById('garageSummary'); if(!el) return;
   if(!S.col.length){ el.innerHTML = ''; return; }
-  const totalHypo = S.col.reduce((s,n) => s + hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag)), 0);
+  const totalHypo = S.col.reduce((s,n) => s + hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag), n.plate), 0);
   el.innerHTML = '💼 Оценка: <b>' + totalHypo.toLocaleString('ru-RU') + ' ₽</b> · уникальных: <b>' + new Set(S.col.map(n=>n.plate+'|'+n.flag)).size + '</b> · на бирже: <b>' + market.listings.length + '</b>';
 }
 
@@ -127,7 +128,7 @@ export function renderCollection(){
   const coefHigh = Math.max(1, Math.min(200, S.coefHigh)) / 100;
   grid.innerHTML = slice.map(n => {
     const R = RMAP[n.rarity];
-    const hypo = hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag));
+    const hypo = hypoPrice(n.rarity, n.flag, extractRegion(n.plate, n.flag), n.plate);
     const lowP = Math.max(1, Math.round(hypo * (1 - coefLow)));
     const midP = Math.max(1, Math.round(hypo));
     const highP = Math.max(1, Math.round(hypo * (1 + coefHigh)));
@@ -140,7 +141,7 @@ export function renderCollection(){
     const corner = bought != null ? deltaHtml(listed ? listing.price : midP, bought) : '';
     const region = extractRegion(n.plate, n.flag);
     const mood = marketMood(n.flag, region, n.rarity);
-    const chance = listing ? saleChance(listing.price, hypo, mood) : 0;
+    const chance = listing ? saleChance(listing.price, hypo, mood, n.rarity) : 0;
     const favClass = n.favorite ? ' favorite' : '';
     const star = n.favorite ? '⭐' : '☆';
     const lot = listing
@@ -153,6 +154,7 @@ export function renderCollection(){
       '<span class="rar '+n.rarity+'">'+R.name+'</span>'+
       '<button class="fav-btn'+(n.favorite?' active':'')+'" data-fav="'+n.id+'">'+star+'</button></span></div>'+
       '<div class="card-price">'+hypo.toLocaleString('ru-RU')+' ₽<span>рыночная цена</span></div>'+
+      '<div class="bought-line">'+describePlate(n.plate, n.flag, region, n.rarity)+'</div>'+
       boughtLine+
       lot+
       (listed

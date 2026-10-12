@@ -23,31 +23,44 @@ export function marketMood(flag, region, rarity){
     if(delta >= 0.08) bull = true;
     titles.push(news.title);
   }
+  const sentiment = heat - 0.2;
   heat = Math.max(0.05, Math.min(1.7, heat));
+  if(sentiment < -0.05) bull = false;
   let label = 'Спрос слабый';
   let cls = 'cool';
-  if(heat >= 0.85){ label = 'Ажиотаж'; cls = 'hot'; }
+  if(sentiment < -0.05){ label = 'Спрос упал'; cls = 'cold'; }
+  else if(heat >= 0.85){ label = 'Ажиотаж'; cls = 'hot'; }
   else if(heat >= 0.5 || bull){ label = 'Спрос есть'; cls = 'warm'; }
   else if(heat <= 0.28){ label = 'Почти нет спроса'; cls = 'cold'; }
-  return { heat, bull, label, cls, titles };
+  return { heat, bull, sentiment, label, cls, titles };
 }
 
-export function saleChance(price, hypo, mood){
+const RARITY_DEMAND = { common:0, uncommon:0.015, rare:0.03, epic:0.05, legendary:0.07, mythic:0.09, divine:0.11 };
+
+export function saleChance(price, hypo, mood, rarity){
   const fair = Math.max(1, hypo);
   const dev = (price - fair) / fair;
-  const heat = mood?.heat ?? 0.2;
-  let chance = 0.46 + (heat - 0.2) * 0.55;
-  if(dev < 0) chance += Math.min(0.22, -dev * 1.05);
-  else chance -= Math.min(0.4, dev * 0.5);
-  if(mood?.bull) chance += 0.12;
-  return Math.max(0.16, Math.min(0.88, chance));
+  const heatUp = Math.max(0, (mood?.heat ?? 0.2) - 0.2);
+  let chance = 0.23 + heatUp * 0.275;
+  if(dev < 0) chance += Math.min(0.11, -dev * 0.52);
+  else chance -= Math.min(0.2, dev * 0.25);
+  if(mood?.bull) chance += 0.06;
+  const sentiment = mood?.sentiment || 0;
+  if(sentiment < -0.05){
+    const cut = Math.min(0.7, -sentiment * 1.35);
+    chance *= (1 - cut);
+  }
+  chance = Math.max(0.08, Math.min(0.33, chance));
+  chance += RARITY_DEMAND[rarity] || 0;
+  return Math.max(0.08, Math.min(0.44, chance));
 }
 
 export function saleHint(chance, price, hypo, mood){
   const dev = (price - hypo) / Math.max(1, hypo);
-  if(mood?.bull && chance >= 0.62) return 'Новость подняла спрос: рулетка каждые 15 секунд крутится с этим шансом';
+  if(mood?.sentiment < -0.05) return 'Новость уронила спрос: рулетка крутится реже, шанс на карточке уже ниже';
+  if(mood?.bull && chance >= 0.3) return 'Новость подняла спрос: рулетка каждые 15 секунд крутится с этим шансом';
   if(dev > 0.05) return 'Цена выше рынка, шанс меньше, но круг всё равно есть';
-  if(chance >= 0.62) return 'Спрос живой: часто хватает одного или двух кругов';
-  if(chance >= 0.38) return 'Обычный спрос. Несколько кругов, и номер обычно забирают';
+  if(chance >= 0.3) return 'Спрос живой: часто хватает одного или двух кругов';
+  if(chance >= 0.18) return 'Обычный спрос. Несколько кругов, и номер обычно забирают';
   return 'Рынок холодный, но рулетка крутится каждые 15 секунд';
 }

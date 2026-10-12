@@ -44,45 +44,47 @@ export function weightedRarityForOffers(){
 
 function desiredBargain(){
   const roll = Math.random();
-  let edge;
-  if(roll < 0.52) edge = 20 + Math.random() * 180;
-  else if(roll < 0.72) edge = 800 + Math.random() * 700;
-  else if(roll < 0.86) edge = 2800 + Math.random() * 2400;
-  else if(roll < 0.95) edge = 11000 + Math.random() * 8000;
-  else edge = 80000 + Math.random() * 70000;
-  if(Math.random() < 0.5) edge = -edge;
-  return { edge };
+  let frac;
+  if(roll < 0.52) frac = 0.04 + Math.random() * 0.08;
+  else if(roll < 0.72) frac = 0.12 + Math.random() * 0.10;
+  else if(roll < 0.86) frac = 0.22 + Math.random() * 0.12;
+  else if(roll < 0.95) frac = 0.34 + Math.random() * 0.16;
+  else frac = 0.50 + Math.random() * 0.25;
+  if(Math.random() < 0.5) frac = -frac;
+  return { frac };
 }
 
-function rarityForBargain(edge){
-  const size = Math.abs(edge);
-  if(size >= 60000) return Math.random() < 0.4 ? 'divine' : 'mythic';
-  if(size >= 10000) return Math.random() < 0.45 ? 'mythic' : 'legendary';
-  if(size >= 2500) return Math.random() < 0.5 ? 'legendary' : 'epic';
-  if(size >= 700) return Math.random() < 0.45 ? 'epic' : 'rare';
+function rarityForBargain(frac){
+  const size = Math.abs(frac);
+  if(size >= 0.5) return Math.random() < 0.4 ? 'divine' : 'mythic';
+  if(size >= 0.34) return Math.random() < 0.45 ? 'mythic' : 'legendary';
+  if(size >= 0.22) return Math.random() < 0.5 ? 'legendary' : 'epic';
+  if(size >= 0.12) return Math.random() < 0.45 ? 'epic' : 'rare';
   return weightedRarityForOffers();
 }
 
-function botSnatch(edge){
-  if(edge < 80) return 0;
-  if(edge >= 700) return 0.04;
+function botSnatch(edge, hypo){
+  if(edge <= 0) return 0;
+  const frac = edge / Math.max(1, hypo);
+  if(frac >= 0.18) return 0.04;
+  if(frac < 0.05) return 0;
   return 0.012;
 }
 
 export function makeOffer(){
   const bargain = desiredBargain();
-  const rid = rarityForBargain(bargain.edge);
+  const rid = rarityForBargain(bargain.frac);
   const cd = rnd(COUNTRIES);
   let res, attempts=0;
   do { res = cd.gen(rid); attempts++; } while(isRecentPlate(res.plate, cd.flag) && attempts < 20);
   rememberPlate(res.plate, cd.flag);
   const region = extractRegion(res.plate, cd.flag);
-  const hypo = hypoPrice(rid, cd.flag, region);
-  let edge = bargain.edge;
+  const hypo = hypoPrice(rid, cd.flag, region, res.plate);
+  let edge = Math.round(hypo * bargain.frac);
   const cap = hypo * 0.82;
   if(Math.abs(edge) > cap) edge = Math.sign(edge || 1) * Math.round(hypo * (0.35 + Math.random() * 0.4));
   const listedAt = Date.now();
-  const life = Math.abs(edge) >= 700 ? 3000 + Math.random() * 1000 : OFFER_TTL_MS;
+  const life = Math.abs(edge) / Math.max(1, hypo) >= 0.12 ? 3000 + Math.random() * 1000 : OFFER_TTL_MS;
   return {
     id: 'o' + (S.nextId++) + '_' + (Math.random()*1e6|0),
     plate: res.plate, flag: cd.flag, country: cd.name, rarity: rid, region,
@@ -108,7 +110,7 @@ export function makeOrder(){
   wildcardRatio = 0.08;
   const mask = maskPlate(res.plate, wildcardRatio);
   const spec = specificity(mask);
-  const hypo = hypoPrice(rid, cd.flag, region);
+  const hypo = hypoPrice(rid, cd.flag, region, res.plate);
   const markup = 0.5 + Math.random() * 1.5;
   const reward = Math.max(1, Math.round(hypo * (1 + markup)));
   const now = Date.now();
@@ -208,7 +210,7 @@ export function tickExchange(){
     const until = o.until || (o.listedAt + OFFER_TTL_MS);
     if(now >= until){ market.offers.splice(i, 1); removed++; continue; }
     const edge = o.hypo - o.price;
-    if(Math.random() < botSnatch(edge)){ market.offers.splice(i, 1); removed++; }
+    if(Math.random() < botSnatch(edge, o.hypo)){ market.offers.splice(i, 1); removed++; }
   }
   refillOffers(now);
   for(let i=market.orders.length-1;i>=0;i--){
@@ -257,9 +259,9 @@ export function rollListings(now = Date.now()){
     spun = true;
     l.nextRollAt = now + SALE_ROLL_MS;
     const region = extractRegion(num.plate, num.flag);
-    const hypo = hypoPrice(num.rarity, num.flag, region);
+    const hypo = hypoPrice(num.rarity, num.flag, region, num.plate);
     const mood = marketMood(num.flag, region, num.rarity);
-    const chance = saleChance(l.price, hypo, mood);
+    const chance = saleChance(l.price, hypo, mood, num.rarity);
     if(Math.random() < chance){
       S.rub += l.price; S.totalEarned += l.price;
       const idx = S.col.findIndex(n => Number(n.id) === Number(l.numId));
@@ -334,7 +336,7 @@ export function doFulfillOrder(orderId, numId, silent, batch){
   if(silent && num.favorite) return false;
   if(!plateMatchesMask(num.plate, o.mask)){ if(!silent && !batch) notify('Не подходит под маску'); return false; }
   const reward = o.reward;
-  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
+  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
   S.rub += reward; S.totalEarned += reward;
   const idx = S.col.findIndex(n => n.id === numId);
   if(idx >= 0) S.col.splice(idx, 1);

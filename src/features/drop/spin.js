@@ -81,7 +81,7 @@ export function generateNumber(forceAll){
   do { res = cd.gen(rid); attempts++; } while(isRecentPlate(res.plate, cd.flag) && attempts < 40);
   rememberPlate(res.plate, cd.flag);
   const region = extractRegion(res.plate, cd.flag);
-  return { id: S.nextId++, country: cd.name, flag: cd.flag, plate: res.plate, rarity: rid, price: hypoPrice(rid, cd.flag, region), favorite: false, region };
+  return { id: S.nextId++, country: cd.name, flag: cd.flag, plate: res.plate, rarity: rid, price: hypoPrice(rid, cd.flag, region, res.plate), favorite: false, region };
 }
 
 export function cooldownMs(){ return Math.max(500, 3000 - Math.min(S.cdLvl*300, 2500)); }
@@ -156,7 +156,7 @@ export const AUTOSELL_ORDER = {off:-1, common:0, upToUncommon:1, upToRare:2};
 
 export function shouldAutoSell(rarity){ const lvl = AUTOSELL_ORDER[S.autoSell]; if(lvl < 0) return false; return RARITY_ORDER.indexOf(rarity) <= lvl; }
 
-export function calcAutoSellPrice(num){ return Math.max(1, Math.round(hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag)) * 0.85)); }
+export function calcAutoSellPrice(num){ return Math.max(1, Math.round(hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate) * 0.85)); }
 
 export function doDrop(count){
   if(flags.spinning) return;

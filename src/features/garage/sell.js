@@ -38,7 +38,7 @@ export function sellLow(numId){
   const num = S.col.find(n => n.id === numId);
   if(!num || num.listed) return;
   if(!confirmFavorite(num, 'Мгновенно продать')) return;
-  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
+  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
   const coef = Math.max(10, Math.min(90, S.coefLow)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 - coef)));
   S.rub += price; S.totalEarned += price;
@@ -54,7 +54,7 @@ export function sellMid(numId){
   const num = S.col.find(n => n.id === numId);
   if(!num || num.listed) return;
   if(!confirmFavorite(num, 'Выставить')) return;
-  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
+  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
   const price = Math.max(1, Math.round(hypo));
   num.listed = true;
       pushListing(num, price, 'mid');
@@ -67,7 +67,7 @@ export function sellHigh(numId){
   const num = S.col.find(n => n.id === numId);
   if(!num || num.listed) return;
   if(!confirmFavorite(num, 'Выставить выше рынка')) return;
-  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
+  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
   const coef = Math.max(1, Math.min(200, S.coefHigh)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 + coef)));
   num.listed = true;
@@ -78,7 +78,7 @@ export function sellHigh(numId){
 }
 
 function unitPrice(num, kind){
-  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag));
+  const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
   if(kind === 'low'){
     const coef = Math.max(10, Math.min(90, S.coefLow)) / 100;
     return Math.max(1, Math.round(hypo * (1 - coef)));

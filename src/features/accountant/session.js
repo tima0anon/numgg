@@ -92,9 +92,9 @@ export function runAccountantSession(){
     const all = findMatchingNumbers(order.mask);
     const matches = all.filter(n => !n.favorite);
     if(!matches.length){ if(all.length) skippedFav++; continue; }
-    matches.sort((a, b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate, a.flag)) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate, b.flag)));
+    matches.sort((a, b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate, a.flag), a.plate) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate, b.flag), b.plate));
     const best = matches[0];
-    const marketPrice = hypoPrice(best.rarity, best.flag, extractRegion(best.plate, best.flag));
+    const marketPrice = hypoPrice(best.rarity, best.flag, extractRegion(best.plate, best.flag), best.plate);
     const edge = (order.reward - marketPrice) / Math.max(1, marketPrice);
     const good = edge >= threshold;
     if(good && Math.random() < notice){

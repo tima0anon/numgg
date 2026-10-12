@@ -1,8 +1,8 @@
-export const SPIN_COST_ALL = 150;
+export const SPIN_COST_ALL = 66000;
 
-export const SPIN_COST_SINGLE = 200;
+export const SPIN_COST_SINGLE = 86000;
 
-export const START_RUB = 1000;
+export const START_RUB = 250000;
 
 export const KEY = 'numdrop_save_v13';
 
@@ -32,11 +32,11 @@ export const SECRET_FULL_CODE = 525252;
 
 export const SECRET_CASH_CODE = 525262;
 
-export const SECRET_CASH = 60000;
+export const SECRET_CASH = 2000000;
 
-export const ACCT_HIRE_COST = 5000;
+export const ACCT_HIRE_COST = 2200000;
 
-export const ACCT_AUTO_COST = 25000;
+export const ACCT_AUTO_COST = 11000000;
 
 export const NEWS_MAX_ACTIVE = 6;
 

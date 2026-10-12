@@ -1,5 +1,6 @@
 import {
   CN_LETTERS,
+  CN_LUCKY_5,
   CN_PROVINCES,
 } from './lexicon.js';
 import {
@@ -12,8 +13,8 @@ export function genCN(rid){
   const prestige=['京','沪','粤','津','渝','苏','浙']; const all=CN_PROVINCES;
   if(rid==='common'){ let d,a=0; do{ d=rndDigits(5); a++; } while((/^(\d)\1\1\1\1$/.test(d)||d==='00001')&&a<20); return { plate: rnd(all)+rndLetter(CN_LETTERS)+' '+d }; }
   if(rid==='uncommon'){ const d=Math.random()<0.5?rnd(['11000','22000','33000','44000','55000','66000','77000','88000','99000','10100','20200','30300','40400','50500','60600','70700','80800','90900']):rndDigits(5); return { plate: rnd(all)+rndLetter(CN_LETTERS)+' '+d }; }
-  if(rid==='rare'){ const d=rnd(['11111','22222','33333','44444','55555','66666','77777','88888','99999','10000','20000','30000','40000','50000','60000','70000','80000','90000','12321','12345','54321','23456','65432','34567','76543','45678','87654','98765','56789','67890','10101','20202','30303','40404','50505','60606','70707','80808','90909']); return { plate: rnd(prestige.concat(all))+rndLetter(CN_LETTERS)+' '+d }; }
-  if(rid==='epic'){ const d=rnd(['88888','66666','99999','00001','77777','55555','11111','22222','33333','10001','12345','54321','88880','08888','16888','18888','88818','88881','66888','88668','99900','99009','00007','00008','00009','70000','80000','90000','10000','20000']); return { plate: rnd(['京','沪','粤','川','苏','浙'])+rndLetter(CN_LETTERS)+' '+d }; }
-  const d=rnd(['00001','88888','66666','99999','00007','77777','55555']);
+  if(rid==='rare'){ const d=rnd(CN_LUCKY_5); return { plate: rnd(prestige.concat(all))+rndLetter(CN_LETTERS)+' '+d }; }
+  if(rid==='epic' || rid==='legendary'){ const d=rnd(CN_LUCKY_5); return { plate: rnd(['京','沪','粤','川','苏','浙'])+rndLetter(CN_LETTERS)+' '+d }; }
+  const d=rnd(['00001','88888','66666','99999','16888','18888','88888']);
   return { plate: rnd(['京','沪','粤'])+rndLetter('ABCDEFGH')+' '+d };
 }

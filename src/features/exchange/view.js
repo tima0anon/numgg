@@ -1,5 +1,6 @@
 import { RMAP } from '../../config/rarity.js';
 import { extractRegion } from '../../domain/plates/countries.js';
+import { describePlate } from '../../domain/plates/market.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
 import { marketMood, saleChance, saleHint } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
@@ -85,6 +86,7 @@ export function renderOffers(){
     return '<div class="excard '+o.rarity+cls+'">'+
       '<div class="plate-stage">'+renderRealPlate(o.plate, o.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
+      '<div class="bought-line">'+describePlate(o.plate, o.flag, o.region, o.rarity)+'</div>'+
       '<div class="card-price">'+rub(o.price)+'<span>цена покупки</span></div>'+
       marketLine(o.price, o.hypo)+
       '<div class="lot-life" data-until="'+(o.until || 0)+'">'+Math.max(0, Math.ceil(((o.until || 0) - Date.now()) / 1000))+' с</div>'+
@@ -104,7 +106,7 @@ export function renderOrders(){
   if(!list.length){ grid.innerHTML = '<div class="empty">Заказов нет. Новые появятся со следующим обновлением.</div>'; return; }
   grid.innerHTML = list.map(o => {
     const R = RMAP[o.rarity];
-    const matches = findMatchingNumbers(o.mask).slice().sort((a,b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate, a.flag)) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate, b.flag)));
+    const matches = findMatchingNumbers(o.mask).slice().sort((a,b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate, a.flag), a.plate) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate, b.flag), b.plate));
     const shown = matches.slice(0, 3);
     const matchCount = matches.length;
     const canFulfill = matchCount > 0;
@@ -128,7 +130,7 @@ export function renderOrders(){
     if(!o) return;
     const matches = findMatchingNumbers(o.mask);
     if(!matches.length) return;
-    matches.sort((a,b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate,a.flag)) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate,b.flag)));
+    matches.sort((a,b) => hypoPrice(a.rarity, a.flag, extractRegion(a.plate,a.flag), a.plate) - hypoPrice(b.rarity, b.flag, extractRegion(b.plate,b.flag), b.plate));
     let target = matches[0];
     const sel = e.currentTarget.parentElement.querySelector('.order-pick');
     if(sel){
@@ -151,13 +153,14 @@ export function renderMyListings(){
     if(!num) return '';
     const R = RMAP[num.rarity];
     const region = extractRegion(num.plate, num.flag);
-    const hypo = hypoPrice(num.rarity, num.flag, region);
+    const hypo = hypoPrice(num.rarity, num.flag, region, num.plate);
     const mood = marketMood(num.flag, region, num.rarity);
-    const chance = saleChance(l.price, hypo, mood);
+    const chance = saleChance(l.price, hypo, mood, num.rarity);
     return '<div class="excard '+num.rarity+'">'+
       '<div class="plate-stage">'+renderRealPlate(num.plate, num.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+num.country+'</span><span class="rar '+num.rarity+'">'+R.name+'</span></div>'+
       '<div class="card-price">'+rub(l.price)+'<span>твоя цена</span></div>'+
+      '<div class="bought-line">'+describePlate(num.plate, num.flag, region, num.rarity)+'</div>'+
       '<div class="deal '+mood.cls+'"><span class="roulette">⟳</span> шанс '+Math.round(chance*100)+'%'+(l.missUntil && Date.now() < l.missUntil ? ' · мимо' : '')+' · ещё <span class="roll-wait" data-until="'+(l.nextRollAt || 0)+'">'+Math.max(0, Math.ceil(((l.nextRollAt || 0) - Date.now()) / 1000))+'</span> с</div>'+
       '<div class="deal">'+saleHint(chance, l.price, hypo, mood)+'</div>'+
       '<button class="buy-btn" style="background:var(--red)" data-id="'+l.numId+'">Снять с продажи</button>'+

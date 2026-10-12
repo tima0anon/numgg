@@ -220,17 +220,17 @@ export async function init(){
   document.querySelectorAll('#acctMode button').forEach(b => b.addEventListener('click', () => {
     const mode = b.dataset.mode;
     if(mode === 'notify' && !S.acct.hired){
-      if(S.rub < ACCT_HIRE_COST){ notify('Чтобы нанять бухгалтера, нужно 5 000 ₽'); Sound.error(); return; }
+      if(S.rub < ACCT_HIRE_COST){ notify('Чтобы нанять бухгалтера, нужно '+ACCT_HIRE_COST.toLocaleString('ru-RU')+' ₽'); Sound.error(); return; }
       S.rub -= ACCT_HIRE_COST; S.totalSpent += ACCT_HIRE_COST; S.acct.hired = true;
-      notify('Бухгалтер нанят за 5 000 ₽');
+      notify('Бухгалтер нанят за '+ACCT_HIRE_COST.toLocaleString('ru-RU')+' ₽');
     }
     if(mode === 'auto' && !S.acct.autoPaid){
       if(!S.acct.hired){
-        if(S.rub < ACCT_HIRE_COST + ACCT_AUTO_COST){ notify('Сначала найм за 5 000 ₽, автоторговля ещё 25 000 ₽'); Sound.error(); return; }
+        if(S.rub < ACCT_HIRE_COST + ACCT_AUTO_COST){ notify('Сначала найм за '+ACCT_HIRE_COST.toLocaleString('ru-RU')+' ₽, автоторговля ещё '+ACCT_AUTO_COST.toLocaleString('ru-RU')+' ₽'); Sound.error(); return; }
         S.rub -= ACCT_HIRE_COST; S.totalSpent += ACCT_HIRE_COST; S.acct.hired = true;
-      } else if(S.rub < ACCT_AUTO_COST){ notify('Автоторговля стоит 25 000 ₽'); Sound.error(); return; }
+      } else if(S.rub < ACCT_AUTO_COST){ notify('Автоторговля стоит '+ACCT_AUTO_COST.toLocaleString('ru-RU')+' ₽'); Sound.error(); return; }
       S.rub -= ACCT_AUTO_COST; S.totalSpent += ACCT_AUTO_COST; S.acct.autoPaid = true;
-      notify('Автоторговля открыта за 25 000 ₽');
+      notify('Автоторговля открыта за '+ACCT_AUTO_COST.toLocaleString('ru-RU')+' ₽');
     }
     S.acct.mode = mode;
     Sound.click();

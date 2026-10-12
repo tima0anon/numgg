@@ -54,7 +54,7 @@ export function triggerFullCollection(){
       do { res = c.gen(rid); a++; } while(isRecentPlate(res.plate, c.flag) && a < 40);
       rememberPlate(res.plate, c.flag);
       const region = extractRegion(res.plate, c.flag);
-      const price = hypoPrice(rid, c.flag, region);
+      const price = hypoPrice(rid, c.flag, region, res.plate);
       const item = { id: S.nextId++, country: c.name, flag: c.flag, plate: res.plate, rarity: rid, price, region, favorite: true };
       S.col.push(item);
       S.rarityCount[rid] = (S.rarityCount[rid]||0)+1;
