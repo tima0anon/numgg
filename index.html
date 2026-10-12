@@ -9,7 +9,7 @@
 <script>
 (function(){try{var t=localStorage.getItem('numdrop_theme');if(t!=='dark'&&t!=='light')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
 </script>
-  <script type="module" crossorigin src="/numgg/assets/index-B2eKvSq6.js"></script>
+  <script type="module" crossorigin src="/numgg/assets/index-DaLBctPH.js"></script>
   <link rel="stylesheet" crossorigin href="/numgg/assets/index-BPAyP-yv.css">
 </head>
 <body>
@@ -45,14 +45,14 @@
     <button class="topnav-btn" data-page="garage"><span class="nav-ico">📋</span><span class="nav-label">Гараж</span></button>
     <button class="topnav-btn" data-page="accountant"><span class="nav-ico">📒</span><span class="nav-label">Бухгалтер</span></button>
     <button class="topnav-btn" data-page="news"><span class="nav-ico">📰</span><span class="nav-label">Новости</span></button>
-    <button class="topnav-btn" data-page="rank"><span class="nav-ico">🏆</span><span class="nav-label">Рейтинг</span></button>
+    <button class="topnav-btn" data-page="rank" hidden><span class="nav-ico">🏆</span><span class="nav-label">Рейтинг</span></button>
     <button class="topnav-btn" data-page="info"><span class="nav-ico">📊</span><span class="nav-label">Инфо</span></button>
     <button class="topnav-btn" data-page="admin" id="adminNav" hidden><span class="nav-ico">🛠️</span><span class="nav-label">Админ</span></button>
   </nav>
   <div class="tape" id="marketTape"></div>
   <div id="pages"></div>
 </div>
-<div class="auth-gate" id="authGate">
+<div class="auth-gate" id="authGate" hidden>
   <form class="auth-card" id="authForm">
     <h1>NumDrop</h1>
     <p class="auth-lead">Сначала войди или создай аккаунт. Без этого биржа закрыта.</p>
