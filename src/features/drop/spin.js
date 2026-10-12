@@ -3,6 +3,7 @@ import {
   MAX_CUSTOM_SPIN,
   SPIN_COST_ALL,
   SPIN_COST_BY_COUNTRY,
+  luckBump,
 } from '../../config/constants.js';
 import {
   RARITY,
@@ -62,14 +63,17 @@ export function discountFor(n){
 export function bulkCost(n){ return Math.floor(currentSpinCost() * n * discountFor(n)); }
 
 export function pickRarity(){
-  const ll = S.luckLvl;
-  const commonMul = Math.max(0.6, 1 - ll*0.04);
-  const otherMul = 1 + ll*0.04;
-  const ws = RARITY.map(r => ({ id:r.id, w: r.id==='common' ? r.w*commonMul : r.w*otherMul }));
+  const ws = RARITY.map(r => ({ id:r.id, w:r.w }));
   const total = ws.reduce((a,b)=>a+b.w, 0);
-  let r = Math.random()*total;
-  for(const x of ws){ if(r < x.w) return x.id; r -= x.w; }
-  return 'common';
+  let roll = Math.random()*total;
+  let id = 'common';
+  for(const x of ws){ if(roll < x.w){ id = x.id; break; } roll -= x.w; }
+  const bump = luckBump(S.luckLvl);
+  if(bump > 0 && Math.random() < bump){
+    const idx = ws.findIndex(x => x.id === id);
+    if(idx >= 0 && idx < ws.length - 1) id = ws[idx + 1].id;
+  }
+  return id;
 }
 
 export function generateNumber(forceAll){

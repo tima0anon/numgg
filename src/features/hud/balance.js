@@ -1,3 +1,4 @@
+import { autoCost, autoPerSec, luckBump, luckCost, UPGRADE_MAX } from '../config/constants.js';
 import { updateAcctUI } from '../accountant/view.js';
 import { rememberPeak } from '../rank/board.js';
 import { updateStats } from './stats.js';
@@ -38,17 +39,17 @@ export function updateBalances(){
   const cdBtn = document.getElementById('buyCd');
   cdBtn.textContent = cdCost.toLocaleString('ru-RU')+' ₽';
   cdBtn.disabled = S.rub < cdCost || S.cdLvl >= 8;
-  document.getElementById('luckVal').textContent = S.luckLvl*4;
+  document.getElementById('luckVal').textContent = Math.round(luckBump(S.luckLvl) * 100);
   document.getElementById('luckLvl').textContent = S.luckLvl;
-  const luckCost = Math.floor(220000 * Math.pow(2.3, S.luckLvl));
+  const luckPrice = luckCost(S.luckLvl);
   const luckBtn = document.getElementById('buyLuck');
-  luckBtn.textContent = luckCost.toLocaleString('ru-RU')+' ₽';
-  luckBtn.disabled = S.rub < luckCost || S.luckLvl >= 8;
-  document.getElementById('autoVal').textContent = S.autoLvl*2;
+  luckBtn.textContent = luckPrice.toLocaleString('ru-RU')+' ₽';
+  luckBtn.disabled = S.rub < luckPrice || S.luckLvl >= UPGRADE_MAX;
+  document.getElementById('autoVal').textContent = autoPerSec(S.autoLvl).toLocaleString('ru-RU');
   document.getElementById('autoLvl').textContent = S.autoLvl;
-  const autoCost = 440000 * Math.pow(2, S.autoLvl);
+  const autoPrice = autoCost(S.autoLvl);
   const autoBtn = document.getElementById('buyAuto');
-  autoBtn.textContent = autoCost.toLocaleString('ru-RU')+' ₽';
-  autoBtn.disabled = S.rub < autoCost || S.autoLvl >= 8;
+  autoBtn.textContent = autoPrice.toLocaleString('ru-RU')+' ₽';
+  autoBtn.disabled = S.rub < autoPrice || S.autoLvl >= UPGRADE_MAX;
   updateDropCostsUI(); updateCd(); updateEarnStats(); updateDailyUI(); updateAcctUI(); updateStats();
 }

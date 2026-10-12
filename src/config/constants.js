@@ -49,6 +49,24 @@ export const ACCT_HIRE_COST = 2200000;
 
 export const ACCT_AUTO_COST = 11000000;
 
+export const UPGRADE_MAX = 8;
+
+export function luckCost(level){
+  return Math.round(150000 * Math.pow(1.75, level));
+}
+
+export function luckBump(level){
+  return Math.min(0.32, level * 0.04);
+}
+
+export function autoCost(level){
+  return Math.round(80000 * Math.pow(1.7, level));
+}
+
+export function autoPerSec(level){
+  return level * 60;
+}
+
 export const NEWS_MAX_ACTIVE = 6;
 
 export const NEWS_MIN_LIFE = 180000;
