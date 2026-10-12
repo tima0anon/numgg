@@ -1,4 +1,4 @@
-import { autoCost, autoPerSec, luckBump, luckCost, UPGRADE_MAX } from '../config/constants.js';
+import { autoCost, autoPerSec, luckBump, luckCost, UPGRADE_MAX } from '../../config/constants.js';
 import { updateAcctUI } from '../accountant/view.js';
 import { rememberPeak } from '../rank/board.js';
 import { updateStats } from './stats.js';
