@@ -4,6 +4,7 @@ import { notify } from '../../services/notify.js';
 import { save } from '../../services/storage.js';
 import { S } from '../../state/player.js';
 import { renderCollection } from '../garage/view.js';
+import { renderRank } from './board.js';
 import { updateBalances } from '../hud/balance.js';
 
 let mode = 'login';
@@ -39,6 +40,7 @@ export function bindRankAccount(){
       Sound.click();
       paint();
       queueScore(Math.max(S.rub, S.peakRub || 0));
+      renderRank();
       notify(mode === 'login' ? 'Вход выполнен' : 'Аккаунт создан');
     } catch(error){
       err.textContent = error.message || 'Не вышло';

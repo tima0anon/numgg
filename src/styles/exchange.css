@@ -19,7 +19,7 @@
 .ex-filters select{cursor:pointer;padding-right:30px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
 .ex-filters input:focus,.ex-filters select:focus,.order-pick:focus{border-color:var(--blue)}
 .order-pick{width:100%;background:var(--bg-elev);border:1px solid var(--sep);color:var(--label);padding:8px 28px 8px 12px;border-radius:100px;font-size:.75rem;font-family:var(--font);font-weight:700;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
-.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:4px 16px 22px}
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;padding:4px 16px 22px;max-height:min(78vh,920px);overflow-y:auto;align-content:start}
 .ex-grid::-webkit-scrollbar{width:6px}
 .ex-grid::-webkit-scrollbar-thumb{background:var(--label-3);border-radius:3px}
 @media (max-width:700px){.ex-grid{grid-template-columns:1fr}}

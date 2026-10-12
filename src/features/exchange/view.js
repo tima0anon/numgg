@@ -56,10 +56,10 @@ function sortedOrders(){
 function rub(n){ return Math.round(n).toLocaleString('ru-RU') + ' ₽'; }
 
 function marketLine(price, hypo){
-  const gap = hypo - price;
-  const edge = Math.max(1, Math.round(Math.abs(gap)));
-  if(gap > hypo * 0.02) return '<div class="deal good">На '+edge.toLocaleString('ru-RU')+' ₽ дешевле рынка</div>';
-  if(-gap > hypo * 0.02) return '<div class="deal bad">На '+edge.toLocaleString('ru-RU')+' ₽ дороже рынка</div>';
+  const gap = Math.round(hypo - price);
+  const edge = Math.abs(gap).toLocaleString('ru-RU');
+  if(gap >= 1) return '<div class="deal good">+'+edge+' ₽ к рынку</div>';
+  if(gap <= -1) return '<div class="deal bad">−'+edge+' ₽ к рынку</div>';
   return '<div class="deal">Цена как на рынке</div>';
 }
 

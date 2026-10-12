@@ -10,10 +10,7 @@ import {
 } from '../../domain/plates/countries.js';
 import { marketMood, saleChance } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
-import {
-  randGauss,
-  rnd,
-} from '../../domain/random.js';
+import { rnd } from '../../domain/random.js';
 import {
   addAcctLog,
   runAccountantSession,
@@ -46,10 +43,30 @@ export function weightedRarityForOffers(){
   return 'divine';
 }
 
-function offerSpread(hypo){
-  if(hypo >= 80000) return 0.04;
-  if(hypo >= 8000) return 0.08;
-  return 0.16;
+function offerAsk(hypo){
+  const roll = Math.random();
+  let share;
+  if(roll < 0.42) share = 0.01 + Math.random() * 0.05;
+  else if(roll < 0.72) share = 0.06 + Math.random() * 0.10;
+  else if(roll < 0.90) share = 0.16 + Math.random() * 0.14;
+  else share = 0.30 + Math.random() * 0.25;
+  const mag = Math.max(20, hypo * share);
+  const cheaper = Math.random() < 0.58;
+  let price = Math.round(hypo + (cheaper ? -mag : mag));
+  const floor = Math.max(1, Math.round(hypo * 0.42));
+  const ceil = Math.max(floor, Math.round(hypo * 1.7));
+  if(price < floor) price = floor;
+  if(price > ceil) price = ceil;
+  return price;
+}
+
+function botSnatch(edge){
+  if(edge < 20) return 0.001;
+  if(edge < 150) return 0.008;
+  if(edge < 900) return 0.035;
+  if(edge < 6000) return 0.14;
+  if(edge < 40000) return 0.38;
+  return 0.72;
 }
 
 export function makeOffer(){
@@ -60,14 +77,10 @@ export function makeOffer(){
   rememberPlate(res.plate, cd.flag);
   const region = extractRegion(res.plate, cd.flag);
   const hypo = hypoPrice(rid, cd.flag, region);
-  const spread = offerSpread(hypo);
-  let dev = randGauss() * spread;
-  if(dev > spread) dev = spread;
-  if(dev < -spread) dev = -spread;
   return {
     id: 'o' + (S.nextId++) + '_' + (Math.random()*1e6|0),
     plate: res.plate, flag: cd.flag, country: cd.name, rarity: rid, region,
-    hypo, price: Math.max(1, Math.round(hypo * (1 + dev))),
+    hypo, price: offerAsk(hypo),
     listedAt: Date.now(), accountantFound: false
   };
 }
@@ -150,19 +163,19 @@ export function generateExchangeSession(){
   market.offers = market.offers.filter(o => !o._removed);
   market.orders = market.orders.filter(o => !o._removed && o.until > now);
 
-  const targetOffers = 32;
-  const targetOrders = 8;
+  const targetOffers = 140;
+  const targetOrders = 18;
 
-  market.offers = market.offers.slice(-14);
+  market.offers = market.offers.slice(-90);
   while(market.offers.length < targetOffers) market.offers.push(makeOffer());
   if(market.offers.length > targetOffers) market.offers = market.offers.slice(-targetOffers);
 
-  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 4);
+  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 10);
   let longOrders = market.orders.filter(o => (o.until - o.createdAt) > 60000).length;
   while(market.orders.length < targetOrders){
     const o = makeOrder();
     const isLong = (o.until - o.createdAt) > 60000;
-    if(isLong && longOrders >= 8) o.until = Date.now() + SESSION_MS;
+    if(isLong && longOrders >= 10) o.until = Date.now() + SESSION_MS;
     else if(isLong) longOrders++;
     market.orders.push(o);
   }
@@ -182,11 +195,8 @@ export function tickExchange(){
   let removed = 0;
   for(let i=market.offers.length-1;i>=0;i--){
     const o = market.offers[i];
-    const dev = (o.hypo - o.price) / o.hypo;
-    const rarityBonus = RARITY_ORDER.indexOf(o.rarity) * 0.06;
-    let p = 0.0003 + Math.max(0, dev) * 0.1 + rarityBonus * 0.006;
-    if(dev > 0.2) p += 0.018;
-    if(Math.random() < p){ market.offers.splice(i, 1); removed++; }
+    const edge = o.hypo - o.price;
+    if(Math.random() < botSnatch(edge)){ market.offers.splice(i, 1); removed++; }
   }
   for(let i=market.orders.length-1;i>=0;i--){
     const o = market.orders[i];

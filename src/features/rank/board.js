@@ -15,16 +15,17 @@ export async function renderRank(){
   const list = document.getElementById('rankList');
   if(!list) return;
   const tier = WEALTH_TIERS[wealthTierIdx(S.rub)];
+  const peak = Math.max(Math.floor(S.rub), Math.floor(S.peakRub || 0));
   const place = document.getElementById('rankPlace');
   const sub = document.getElementById('rankSub');
-  if(place) place.textContent = tier.emoji + ' ' + Math.floor(S.rub).toLocaleString('ru-RU') + ' ₽';
-  if(sub) sub.textContent = tier.label + ' · баланс в этом браузере';
+  if(place) place.textContent = tier.emoji + ' ' + peak.toLocaleString('ru-RU') + ' ₽';
+  if(sub) sub.textContent = tier.label + ' · твой максимальный баланс';
   list.innerHTML = '<div class="empty">Загружаю топ…</div>';
   try {
     const data = await fetchTop();
     const me = data.me;
     if(me && me.place){
-      sub.textContent = tier.label + ' · ' + me.place + ' место в общем топе';
+      sub.textContent = tier.label + ' · ' + me.place + ' место в топе по максимальному балансу';
     }
     if(!data.top.length){
       list.innerHTML = '<div class="empty">Общая таблица пока пустая.</div>';
@@ -33,7 +34,8 @@ export async function renderRank(){
     const myNick = me && me.nick;
     list.innerHTML = data.top.map(row => {
       const mine = myNick && row.nick === myNick;
-      return '<div class="rank-row'+(mine ? ' me' : '')+(row.place <= 3 ? ' top' : '')+'">'+
+      const medal = row.place === 1 ? ' gold' : row.place === 2 ? ' silver' : row.place === 3 ? ' bronze' : '';
+      return '<div class="rank-row'+(mine ? ' me' : '')+(row.place <= 3 ? ' top' : '')+medal+'">'+
         '<span class="pos">'+row.place+'</span>'+
         '<span class="who">'+(mine ? 'Ты · ' : '')+esc(row.nick)+'</span>'+
         '<span class="money">'+Math.floor(row.balance).toLocaleString('ru-RU')+' ₽</span>'+
