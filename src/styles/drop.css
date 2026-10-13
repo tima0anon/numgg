@@ -30,6 +30,7 @@
 .autospin-btn .as-dot{width:9px;height:9px;border-radius:50%;background:var(--label-3)}
 .autospin-btn.on .as-dot{background:#fff}
 .autosell-select{flex:1;background:var(--bg-secondary);border:2px solid var(--sep);color:var(--label);border-radius:100px;padding:12px 32px 12px 14px;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.spin-start{margin-top:12px;text-align:center;font-size:.82rem;font-weight:650;color:var(--label-2);line-height:1.4}
 .spin-hint{font-size:.82rem;color:var(--label-2);margin-top:14px;text-align:center;line-height:1.6}
 .spin-hint b{color:var(--label)}
 .spin-hint .small{font-size:.72rem;color:var(--label-3)}

@@ -11,6 +11,7 @@ export const market = {
     oCountry: 'all',
     oRarity: 'all',
     oSearch: '',
+    oBelow: false,
     ordSort: 'reward-desc',
     ordCountry: 'all',
   },

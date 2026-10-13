@@ -32,7 +32,7 @@ function knownCode(code){
 
 function syncAdminNav(){
   const nav = document.getElementById('adminNav');
-  if(nav) nav.hidden = false;
+  if(nav) nav.hidden = !S.testAdmin;
 }
 
 export function enableTestAdmin(){
@@ -41,17 +41,16 @@ export function enableTestAdmin(){
   syncAdminNav();
   switchPage('admin');
   Sound.coin_big();
-  notify('Тестовая админка открыта');
+  notify('Открыто');
 }
 
 export function disableTestAdmin(){
   S.testAdmin = false;
   save();
   syncAdminNav();
-  const onAdmin = document.getElementById('page-admin')?.classList.contains('active');
-  if(onAdmin) switchPage('admin');
+  if(document.getElementById('page-admin')?.classList.contains('active')) switchPage('drop');
   Sound.click();
-  notify('Тестовая админка закрыта');
+  notify('Закрыто');
 }
 
 function redeemPromo(code){

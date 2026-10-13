@@ -1,5 +1,4 @@
-import { DAILY_KEY } from '../../config/constants.js';
-import { currentSpinCost } from '../drop/spin.js';
+import { DAILY_BONUS, DAILY_KEY } from '../../config/constants.js';
 import { updateBalances } from '../hud/balance.js';
 import { Sound } from '../../services/audio.js';
 import { spawnConfetti } from '../../services/fx.js';
@@ -27,7 +26,7 @@ export function updateDailyUI(){
 
 export function claimDaily(){
   if(msToNextDaily() > 0){ notify('Бонус ещё не готов'); Sound.error(); return; }
-  const bonus = currentSpinCost();
+  const bonus = DAILY_BONUS;
   S.rub += bonus; S.totalEarned += bonus;
   setDailyLast(Date.now());
   Sound.coin_big(); haptic([25,25,50]); spawnConfetti(50, ['#ffcc00','#ff9500','#ffd60a']);

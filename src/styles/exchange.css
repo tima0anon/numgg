@@ -45,6 +45,8 @@
 .excard .fulfill-btn{background:var(--green)}
 .excard .buy-btn:hover:not(:disabled),.excard .fulfill-btn:hover:not(:disabled){filter:brightness(1.06)}
 .excard .buy-btn:disabled,.excard .fulfill-btn:disabled{background:var(--bg-tertiary);color:var(--label-3);cursor:not-allowed}
+#exOfferBelow.on{background:var(--green);color:#fff}
+.excard.hotlot{box-shadow:0 0 0 2px rgba(52,199,89,.7),var(--shadow-sm)}
 .excard.accountant-found{box-shadow:0 0 0 2px var(--purple),0 6px 20px rgba(175,82,222,.35)}
 .excard.accountant-found::after{content:'🧮 бухгалтер';position:absolute;top:-9px;right:8px;background:var(--purple);color:#fff;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:100px;letter-spacing:.3px;text-transform:uppercase}
 .ordermask{background:var(--bg-secondary);border-radius:14px;padding:14px 12px;font-family:'SF Mono',ui-monospace,monospace;font-weight:800;font-size:1.05rem;letter-spacing:.12em;text-align:center;color:var(--label);word-break:break-all}

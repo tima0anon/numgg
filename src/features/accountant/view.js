@@ -23,7 +23,7 @@ function paintButton(id, kind){
   const cost = acctUpgradeCost(kind);
   const maxed = S.acct[kind] >= 8;
   button.innerHTML = maxed ? 'Максимум' : 'Купить <span>'+cost.toLocaleString('ru-RU')+'</span> ₽';
-  button.disabled = maxed || S.rub < cost;
+  button.disabled = !S.acct.hired || maxed || S.rub < cost;
 }
 
 export function updateAcctUI(){
@@ -86,6 +86,7 @@ export function updateAcctUI(){
 export function buyAcctSkill(kind){
   const cost = acctUpgradeCost(kind);
   if(S.rub < cost || S.acct[kind] >= 8) return;
+  if(!S.acct.hired){ notify('Сначала найми бухгалтера'); Sound.error(); return; }
   S.rub -= cost;
   S.totalSpent += cost;
   S.acct[kind]++;

@@ -65,6 +65,35 @@ export function makeOffer(){
   };
 }
 
+export function makeReachableOrder(cd){
+  const rid = 'common';
+  const res = cd.gen(rid);
+  const region = extractRegion(res.plate, cd.flag);
+  const mask = String(res.plate).replace(/[^\s-]/g, '*');
+  const hypo = hypoPrice(rid, cd.flag, region, res.plate);
+  const now = Date.now();
+  return {
+    id: 'r' + (S.nextId++) + '_' + (Math.random()*1e6|0),
+    mask, flag: cd.flag, country: cd.name, rarity: rid, region,
+    hypo, reward: Math.max(1, Math.round(hypo * 1.1)),
+    specificity: 0, multiplier: 1.1, payFromPlate: true,
+    createdAt: now, until: now + SESSION_MS * 3, accountantFound: false
+  };
+}
+
+function ensureReachableOrders(){
+  const open = COUNTRIES.filter(c => (c.id === 'by' || c.id === 'ua') && !market.orders.some(o => o.payFromPlate && o.flag === c.flag));
+  for(const cd of open){
+    if(market.orders.filter(o => o.payFromPlate).length >= 2) break;
+    market.orders.push(makeReachableOrder(cd));
+  }
+  while(market.orders.length > 12){
+    const idx = market.orders.findIndex(o => !o.payFromPlate);
+    if(idx < 0) break;
+    market.orders.splice(idx, 1);
+  }
+}
+
 export function makeOrder(){
   let rid;
   const r = Math.random();
@@ -167,6 +196,7 @@ export function generateExchangeSession(){
     market.orders.push(o);
   }
   if(market.orders.length > targetOrders) market.orders = market.orders.slice(0, targetOrders);
+  ensureReachableOrders();
 
   bumpListingsSessions();
   runAccountantSession();
@@ -292,8 +322,10 @@ export function doBuyOffer(o, silent, batch){
   }
   if(silent && !batch) addAcctLog('Купил ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽, рынок ' + Math.round(o.hypo).toLocaleString('ru-RU') + ' ₽', 'ok');
   else if(!batch) notify('Куплено: ' + o.plate + ' за ' + o.price.toLocaleString('ru-RU') + ' ₽');
-  S.acct.deals++;
-  S.acct.profit += (o.hypo - o.price);
+  if(silent){
+    S.acct.deals++;
+    S.acct.profit += (o.hypo - o.price);
+  }
   if(!batch){
     updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements();
     save();
@@ -308,8 +340,10 @@ export function doFulfillOrder(orderId, numId, silent, batch){
   if(num.listed){ if(!silent && !batch) notify('Сначала сними номер с продажи'); return false; }
   if(silent && num.favorite) return false;
   if(!plateMatchesMask(num.plate, o.mask)){ if(!silent && !batch) notify('Не подходит под маску'); return false; }
-  const reward = o.reward;
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
+  const reward = o.payFromPlate
+    ? Math.max(1, Math.round(hypo * (o.multiplier || 1.1)))
+    : o.reward;
   S.rub += reward; S.totalEarned += reward;
   const idx = S.col.findIndex(n => n.id === numId);
   if(idx >= 0) S.col.splice(idx, 1);
@@ -318,8 +352,10 @@ export function doFulfillOrder(orderId, numId, silent, batch){
   const listIdx = market.listings.findIndex(l => l.numId === numId);
   if(listIdx >= 0) market.listings.splice(listIdx, 1);
   if(!batch){ Sound.coin_big(); haptic([20,20,40]); }
-  S.acct.deals++;
-  S.acct.profit += (reward - hypo);
+  if(silent){
+    S.acct.deals++;
+    S.acct.profit += (reward - hypo);
+  }
   if(silent && !batch) addAcctLog('Продал ' + num.plate + ' в заказ за ' + reward.toLocaleString('ru-RU') + ' ₽, рынок номера ' + Math.round(hypo).toLocaleString('ru-RU') + ' ₽', 'ok');
   else if(!batch) notify('🎯 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽');
   if(!batch){

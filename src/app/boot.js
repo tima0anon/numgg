@@ -211,9 +211,19 @@ export async function init(){
   oCountry.addEventListener('change', () => { market.filters.oCountry = oCountry.value; renderOffers(); });
   oRarity.addEventListener('change', () => { market.filters.oRarity = oRarity.value; renderOffers(); });
   oSearch.addEventListener('input', () => { market.filters.oSearch = oSearch.value; renderOffers(); });
+  const oBelow = document.getElementById('exOfferBelow');
+  const paintBelow = () => { if(oBelow) oBelow.classList.toggle('on', !!market.filters.oBelow); };
+  paintBelow();
+  oBelow?.addEventListener('click', () => {
+    market.filters.oBelow = !market.filters.oBelow;
+    paintBelow();
+    renderOffers();
+  });
   document.getElementById('exOfferReset').addEventListener('click', () => {
     market.filters.oCountry = 'all'; market.filters.oRarity = 'all'; market.filters.oSearch = '';
+    market.filters.oBelow = false;
     oCountry.value = 'all'; oRarity.value = 'all'; oSearch.value = '';
+    paintBelow();
     renderOffers();
   });
 

@@ -10,6 +10,7 @@ import { renderRank } from '../rank/board.js';
 import { Sound } from '../../services/audio.js';
 import { notify } from '../../services/notify.js';
 import { flags } from '../../state/flags.js';
+import { S } from '../../state/player.js';
 
 // THEME / SOUND / PAGE
 export function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); try { localStorage.setItem(THEME_KEY, t); } catch(e){} }
@@ -22,8 +23,9 @@ export function updateSoundUI(){ const b = document.getElementById('soundToggle'
 
 export function switchPage(page){
   const valid = ['drop','earn','exchange','garage','accountant','news','rank','info','admin'];
-  if(!valid.includes(page)) page = 'drop';
+  if(!valid.includes(page) || (page === 'admin' && !S.testAdmin)) page = 'drop';
   document.querySelectorAll('.topnav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  document.querySelector('.topnav-btn.active')?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-'+page));
   try { localStorage.setItem(PAGE_KEY, page); } catch(e){}
   if(page === 'earn'){ if(!flags.earnProblem) renderEarnProblem(); setTimeout(() => { const i = document.getElementById('earnInput'); if(i) i.focus(); }, 100); }

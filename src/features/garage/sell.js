@@ -63,6 +63,21 @@ export function sellMid(numId){
   updateBalances(); renderCollection(); renderExchange(); save();
 }
 
+export function relistAtMarket(numId){
+  const num = S.col.find(n => Number(n.id) === Number(numId));
+  const listing = market.listings.find(l => Number(l.numId) === Number(numId));
+  if(!num || !listing) return;
+  const hypo = Math.max(1, Math.round(hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate)));
+  if(listing.price === hypo) return;
+  listing.price = hypo;
+  listing.kind = 'mid';
+  notify('Перевыставлен по рынку за ' + hypo.toLocaleString('ru-RU') + ' ₽');
+  Sound.click();
+  renderCollection();
+  renderExchange();
+  save();
+}
+
 export function sellHigh(numId){
   const num = S.col.find(n => n.id === numId);
   if(!num || num.listed) return;

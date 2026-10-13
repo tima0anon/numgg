@@ -55,6 +55,11 @@ export function saleChance(price, hypo, mood, rarity){
   return Math.max(0.02, Math.min(0.16, chance));
 }
 
+export function minuteWait(chance){
+  const mins = Math.max(1, Math.round(1 / Math.max(0.02, chance)));
+  return 'примерно ' + mins + ' мин';
+}
+
 export function saleHint(chance, price, hypo, mood){
   const dev = (price - hypo) / Math.max(1, hypo);
   if(mood?.sentiment < -0.05) return 'Новость уронила спрос: шанс за эту минуту уже ниже';

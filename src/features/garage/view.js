@@ -6,7 +6,7 @@ import { SOCIAL_PAUSED } from '../../config/constants.js';
 import { extractRegion } from '../../domain/plates/countries.js';
 import { describePlate } from '../../domain/plates/market.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
-import { marketMood, saleChance, saleHint } from '../../domain/demand.js';
+import { marketMood, minuteWait, saleChance, saleHint } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
 import { bulkCost } from '../drop/spin.js';
 import { renderExchange } from '../exchange/view.js';
@@ -160,7 +160,10 @@ export function renderCollection(){
       lot+
       (listed
         ? '<button class="sell-btn" style="background:var(--red);color:#fff;border:none;border-radius:100px;padding:10px;cursor:pointer;font-weight:700;font-family:var(--font)" data-unlist="'+n.id+'">Снять с продажи</button>'
-        : '<div class="sell-trio">'+
+        ? (Math.abs(listing.price - midP) / Math.max(1, midP) >= 0.03
+            ? '<button type="button" class="ios-btn relist-btn" data-relist="'+n.id+'">Перевыставить · '+midP.toLocaleString('ru-RU')+' ₽</button>'
+            : '')+
+          '<button class="sell-btn" style="background:var(--red);color:#fff;border:none;border-radius:100px;padding:10px;cursor:pointer;font-weight:700;font-family:var(--font)" data-unlist="'+n.id+'">Снять с продажи</button>'
           '<button class="sell-low" data-low="'+n.id+'"><span class="lb">Сразу</span><span class="pr">'+lowP.toLocaleString('ru-RU')+'</span>'+deltaHtml(lowP, bought)+'</button>'+
           '<button class="sell-mid" data-mid="'+n.id+'"><span class="lb">По рынку</span><span class="pr">'+midP.toLocaleString('ru-RU')+'</span>'+deltaHtml(midP, bought)+'</button>'+
           '<button class="sell-high" data-high="'+n.id+'"><span class="lb">Дороже</span><span class="pr">'+highP.toLocaleString('ru-RU')+'</span>'+deltaHtml(highP, bought)+'</button>'+
@@ -173,6 +176,7 @@ export function renderCollection(){
   grid.querySelectorAll('[data-mid]').forEach(b => b.addEventListener('click', e => sellMid(parseInt(e.currentTarget.dataset.mid,10))));
   grid.querySelectorAll('[data-high]').forEach(b => b.addEventListener('click', e => sellHigh(parseInt(e.currentTarget.dataset.high,10))));
   grid.querySelectorAll('[data-unlist]').forEach(b => b.addEventListener('click', e => {
+  grid.querySelectorAll('[data-relist]').forEach(b => b.addEventListener('click', e => relistAtMarket(parseInt(e.currentTarget.dataset.relist, 10))));
     const id = parseInt(e.currentTarget.dataset.unlist,10);
     const num = S.col.find(n => n.id === id);
     if(num) num.listed = false;

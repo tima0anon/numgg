@@ -133,6 +133,8 @@ export function updateDropCostsUI(){
   const hint = document.getElementById('dropCostHint');
   if(S.selectedCountry==='all') hint.textContent = 'за дроп · все страны';
   else { const c = COUNTRIES.find(x=>x.id===S.selectedCountry); hint.textContent = 'за дроп · '+(c?c.name:''); }
+  const start = document.getElementById('dropStartLine');
+  if(start) start.textContent = 'Старт с Беларуси: крутка '+SPIN_COST_BY_COUNTRY.by.toLocaleString('ru-RU')+' ₽, обычный мусор около 2 000 ₽.';
   updateWealthBadgeUI();
   updateDropButtons();
 }
