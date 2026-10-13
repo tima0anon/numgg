@@ -19,7 +19,9 @@ export const EARN_LEVELS = [
 
 export function earnReward(){
   const level = EARN_LEVELS[S.earnLevel] || EARN_LEVELS[0];
-  return EARN_BASE * level.mult;
+  const rank = wealthTierIdx(S.rub);
+  const cut = Math.pow(0.78, rank);
+  return Math.max(400, Math.round(EARN_BASE * level.mult * cut));
 }
 
 function roll(lo, hi){

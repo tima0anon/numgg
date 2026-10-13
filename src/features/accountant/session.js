@@ -35,7 +35,7 @@ export function acctCoverage(){
 }
 
 export function noticeChance(){
-  return Math.min(0.98, 0.45 + (S.acct.accuracy || 0) * 0.066);
+  return Math.min(0.55, 0.18 + (S.acct.accuracy || 0) * 0.04);
 }
 
 export function falseAlarmChance(){
@@ -117,6 +117,7 @@ export function runAccountantSession(){
   let bought = 0;
   let sold = 0;
   let broke = false;
+  let skippedRich = 0;
   picks.forEach((item, index) => {
     if(index >= slots) return;
     if(item.kind === 'buy'){
@@ -124,6 +125,8 @@ export function runAccountantSession(){
       if(!offer) return;
       if(S.rub < offer.price){ broke = true; return; }
       if(doBuyOffer(offer, true)){ item.done = true; bought++; }
+    } else if(item.market >= 320000 && Math.random() < 0.9){
+      skippedRich++;
     } else if(doFulfillOrder(item.id, item.numId, true)){
       item.done = true;
       sold++;
@@ -138,6 +141,7 @@ export function runAccountantSession(){
   else if(slots && picks.length) parts.push('Сделки оставил кнопками.');
   if(broke) parts.push('На часть лотов не хватило денег.');
   if(skippedFav) parts.push('Избранное не продавал.');
+  if(skippedRich) parts.push('Дорогие заказы оставил тебе.');
   addAcctLog(parts.join(' '), picks.length ? 'ok' : 'n');
   if(suspects.length) addAcctLog('Сомнительных оценок: ' + suspects.length + '. Деньги на них не тратил.', 'n');
 

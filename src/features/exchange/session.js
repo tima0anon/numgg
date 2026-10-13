@@ -51,7 +51,10 @@ export function makeOffer(){
   rememberPlate(res.plate, cd.flag);
   const region = extractRegion(res.plate, cd.flag);
   const hypo = hypoPrice(rid, cd.flag, region, res.plate);
-  let dev = randGauss() * 0.18;
+  let dev = 0.06 + randGauss() * 0.08;
+  const rare = Math.random();
+  if(rare < 0.04) dev = -(0.25 + Math.random() * 0.45);
+  else if(rare < 0.07) dev = 0.45 + Math.random() * 0.45;
   if(dev > 0.9) dev = 0.9;
   if(dev < -0.7) dev = -0.7;
   return {
@@ -86,7 +89,7 @@ export function makeOrder(){
   const spec = specificity(mask);
   const mult = orderMultiplier(spec);
   const hypo = hypoPrice(rid, cd.flag, region, res.plate);
-  const reward = Math.max(1, Math.round(hypo * mult * (0.9 + Math.random()*0.25)));
+  const reward = Math.max(1, Math.round(hypo * mult * (0.96 + Math.random()*0.08)));
   const now = Date.now();
   let lifetime = SESSION_MS;
   if(spec >= 0.85) lifetime = 120000 + ~~(Math.random()*60000);
@@ -129,7 +132,7 @@ export function specificity(mask){
   return tot > 0 ? lit/tot : 0;
 }
 
-export function orderMultiplier(spec){ return 1.2 + 3.8 * Math.pow(spec, 1.6); }
+export function orderMultiplier(spec){ return 1.1 + 0.7 * Math.pow(spec, 1.6); }
 
 export function plateMatchesMask(plate, mask){
   if(plate.length !== mask.length) return false;

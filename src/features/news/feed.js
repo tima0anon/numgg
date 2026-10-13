@@ -163,7 +163,8 @@ export function updateNewsTimers(){
 }
 
 function pushNews(tpl, now){
-  const durMs = NEWS_MIN_LIFE + ~~(Math.random()*NEWS_LIFE_RANGE);
+  let durMs = NEWS_MIN_LIFE + ~~(Math.random()*NEWS_LIFE_RANGE);
+  if(tpl.kind === 'bear') durMs = Math.round(durMs * 1.75);
   S.news.push({
     id: 'n' + now + '_' + (Math.random()*1e6|0),
     type: tpl.type, target: tpl.target, mult: tpl.mult,
@@ -175,7 +176,10 @@ function pushNews(tpl, now){
 function pickFreshTemplate(){
   let tpl, attempts = 0, exists = true;
   while(exists && attempts < 24){
-    tpl = rnd(NEWS_TEMPLATES);
+    const bears = NEWS_TEMPLATES.filter(t => t.kind === 'bear');
+    const rest = NEWS_TEMPLATES.filter(t => t.kind !== 'bear');
+    const pool = Math.random() < 0.68 ? bears : rest;
+    tpl = rnd(pool.length ? pool : NEWS_TEMPLATES);
     exists = S.news.some(n => n.type===tpl.type && n.target===tpl.target);
     attempts++;
   }
