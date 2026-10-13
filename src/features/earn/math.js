@@ -55,8 +55,12 @@ export function genMathProblem(){
   } else if(r < 0.67){
     a = band(3, 9, rank); b = band(2, 8, rank); c = band(2, 6, rank); answer = (a + b) * c; text = '('+a+' + '+b+') × '+c;
   } else {
-    a = band(6, 16, rank); b = band(2, 8, rank); c = band(2, 7, rank); answer = a * b - c * c; text = a+' × '+b+' − '+c+'²';
+    a = band(6, 16, rank); b = band(2, 8, rank); c = band(2, 7, rank);
+    while(c * c >= a * b && c > 2) c--;
+    if(c * c >= a * b){ answer = a * b + c; text = a+' × '+b+' + '+c; }
+    else { answer = a * b - c * c; text = a+' × '+b+' − '+c+'²'; }
   }
+  if(answer < 0){ answer = a + b; text = a+' + '+b; }
   return { text, answer };
 }
 
