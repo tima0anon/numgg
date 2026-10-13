@@ -28,6 +28,7 @@ function sortedOffers(){
   if(market.filters.oCountry !== 'all') list = list.filter(o => o.flag === market.filters.oCountry);
   if(market.filters.oRarity !== 'all') list = list.filter(o => o.rarity === market.filters.oRarity);
   if(market.filters.oSearch){ const q = market.filters.oSearch.toLowerCase(); list = list.filter(o => o.plate.toLowerCase().includes(q)); }
+  if(market.filters.oBelow) list = list.filter(o => o.price < o.hypo);
   return list;
 }
 
@@ -42,7 +43,6 @@ function rub(n){ return Math.round(n).toLocaleString('ru-RU') + ' ₽'; }
 function marketLine(price, hypo){
   const gap = Math.round(hypo - price);
   const edge = Math.abs(gap).toLocaleString('ru-RU');
-  if(gap >= 1) return '<div class="deal good">+'+edge+' ₽ к рынку</div>';
   const hot = hypo > 0 && (hypo - price) / hypo >= 0.12;
   if(gap >= 1) return '<div class="deal good">+'+edge+' ₽ к рынку'+(hot?' · разберут':'')+'</div>';
   if(gap <= -1) return '<div class="deal bad">−'+edge+' ₽ к рынку</div>';
@@ -63,6 +63,7 @@ function nearGarage(mask){
   }
   if(!best || miss === 0 || miss > 2) return '';
   return 'Близко: '+best.plate+', не сходится '+(miss === 1 ? '1 знак' : '2 знака');
+}
 
 function refreshAfterBatch(){
   updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements(); save();
@@ -95,7 +96,6 @@ export function renderOffers(){
   const grid = document.getElementById('exOfferGrid');
   if(!grid) return;
   const list = sortedOffers();
-  if(!list.length){ grid.innerHTML = '<div class="empty">Сейчас продавать нечего. Новые номера появятся со следующим обновлением.</div>'; return; }
   if(!list.length){
     grid.innerHTML = '<div class="empty">'+(market.filters.oBelow ? 'Ниже рынка сейчас пусто. Скидка редкая.' : 'Сейчас продавать нечего. Новые номера появятся со следующим обновлением.')+'</div>';
     return;
@@ -106,6 +106,7 @@ export function renderOffers(){
     const canBuy = S.rub >= o.price && !cooling;
     const hot = o.hypo > 0 && (o.hypo - o.price) / o.hypo >= 0.12;
     const cls = (o.accountantFound?' accountant-found':'')+(hot?' hotlot':'');
+    return '<div class="excard '+o.rarity+cls+'">'+
       '<div class="plate-stage">'+renderRealPlate(o.plate, o.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
       '<div class="bought-line">'+describePlate(o.plate, o.flag, o.region, o.rarity)+'</div>'+
@@ -132,7 +133,6 @@ export function renderOrders(){
     const matchCount = matches.length;
     const canFulfill = matchCount > 0;
     const cls = (o.accountantFound?' accountant-found':'');
-    const fit = matchCount === 0 ? 'В гараже нет такого номера' : matchCount === 1 ? 'Подойдёт 1 номер из гаража' : 'Подойдёт '+matchCount+' из гаража';
     const near = matchCount === 0 ? nearGarage(o.mask) : '';
     const fit = matchCount === 0
       ? (near || 'В гараже нет близкого номера')
@@ -143,15 +143,16 @@ export function renderOrders(){
     const priceBlock = o.payFromPlate
       ? '<div class="card-price">×'+(o.multiplier || 1.1).toFixed(2)+'<span>к рынку номера</span></div>'
       : '<div class="card-price">'+rub(o.reward)+'<span>заплатят тебе</span></div>';
+    const pick = shown.length > 1
       ? '<select class="order-pick" aria-label="Какой номер отдать">'+shown.map(m => '<option value="'+m.id+'"'+(o.accountantBestId===m.id?' selected':'')+'>'+m.plate+(m.favorite?' ★':'')+'</option>').join('')+'</select>'
       : '';
     return '<div class="excard '+o.rarity+cls+'">'+
       '<div class="plate-stage" title="Звёздочка — любой символ">'+renderRealPlate(o.mask, o.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
-      '<div class="card-price">'+rub(o.reward)+'<span>заплатят тебе</span></div>'+
       priceBlock+
       payLine+
       '<div class="deal">'+fit+'</div>'+
+      pick+
       '<button class="fulfill-btn" data-id="'+o.id+'"'+(canFulfill?'':' disabled')+'>'+(canFulfill?'Продать этот номер':'Нет подходящего')+'</button>'+
       '</div>';
   }).join('');
@@ -191,16 +192,16 @@ export function renderMyListings(){
       '<div class="card-meta"><span class="who">'+num.country+'</span><span class="rar '+num.rarity+'">'+R.name+'</span></div>'+
       '<div class="card-price">'+rub(l.price)+'<span>твоя цена</span></div>'+
       '<div class="bought-line">'+describePlate(num.plate, num.flag, region, num.rarity)+'</div>'+
-      '<div class="deal '+mood.cls+'"><span class="roulette">⟳</span> шанс '+Math.round(chance*100)+'% за эту минуту</div>'+
       '<div class="deal '+mood.cls+'"><span class="roulette">⟳</span> шанс '+Math.round(chance*100)+'% за эту минуту · '+minuteWait(chance)+'</div>'+
       '<div class="deal">'+saleHint(chance, l.price, hypo, mood)+'</div>'+
       (Math.abs(l.price - hypo) / Math.max(1, hypo) >= 0.03 ? '<button type="button" class="ios-btn" data-relist="'+l.numId+'">Перевыставить · '+rub(hypo)+'</button>' : '')+
       '<button class="buy-btn" style="background:var(--red)" data-unlist="'+l.numId+'">Снять с продажи</button>'+
+      '</div>';
   }).join('');
-  grid.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', e => {
   grid.querySelectorAll('button[data-relist]').forEach(b => b.addEventListener('click', e => relistAtMarket(parseInt(e.currentTarget.dataset.relist, 10))));
   grid.querySelectorAll('button[data-unlist]').forEach(b => b.addEventListener('click', e => {
     const id = parseInt(e.currentTarget.dataset.unlist,10);
+    const idx = market.listings.findIndex(l => l.numId === id);
     if(idx >= 0){
       const num = S.col.find(n => n.id === id);
       if(num) num.listed = false;
