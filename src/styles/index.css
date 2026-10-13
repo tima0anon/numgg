@@ -7,6 +7,7 @@
 @import './exchange.css';
 @import './news.css';
 @import './garage.css';
+@import './upgrader.css';
 @import './accountant.css';
 @import './info.css';
 @import './earn.css';
@@ -14,4 +15,5 @@
 @import './admin.css';
 @import './overlays.css';
 @import './glass.css';
+@import './flourish.css';
 @import './phone.css';

@@ -1,0 +1,52 @@
+<section class="page" id="page-upgrader">
+  <div class="group up-shell">
+    <div class="group-header up-head">
+      <span>⬆️ Апргейдербета</span>
+      <span class="up-stats" id="upStats">Круток 0 · забрал 0</span>
+    </div>
+    <p class="up-lead">Ставишь номера из гаража. Круг крутится под стрелкой: зелёная доля — шанс забрать цель, красная — ставка сгорает. Шанс = цена ставки ÷ цена цели × 88%.</p>
+    <div class="up-stage" id="upStage">
+      <div class="up-col" id="upStakeCol">
+        <div class="up-kicker">Ставка</div>
+        <div class="up-sum" id="upSum">0 ₽</div>
+        <div class="up-picked" id="upPicked"><div class="up-empty">Нажми номера снизу. До шести, без избранного и без биржи.</div></div>
+        <button type="button" class="ios-btn gray" id="upClear">Снять выбор</button>
+      </div>
+      <div class="up-col up-roll">
+        <div class="up-chance" id="upChance">25%</div>
+        <div class="up-wheelbox" id="upReel">
+          <div class="up-bezel">
+            <div class="up-pointer" aria-hidden="true"></div>
+            <div class="up-studs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="up-wheel" id="upWheel">
+              <div class="up-edge"></div>
+              <div class="up-edge" id="upEdgeEnd"></div>
+              <span class="up-mark win" id="upMarkWin">заберёшь</span>
+              <span class="up-mark lose" id="upMarkLose">сгорит</span>
+            </div>
+            <div class="up-hub" aria-hidden="true"><i></i></div>
+          </div>
+          <div class="up-banner" id="upBanner" hidden></div>
+        </div>
+        <div class="up-legend"><span class="g">зелёное — заберёшь</span><span class="r">красное — сгорит</span></div>
+        <div class="up-slider-row">
+          <button type="button" class="ios-btn gray up-step" id="upChanceDown" aria-label="Меньше шанс">−</button>
+          <input type="range" id="upSlider" min="5" max="75" value="25" step="1" aria-label="Шанс выигрыша">
+          <button type="button" class="ios-btn gray up-step" id="upChanceUp" aria-label="Больше шанс">+</button>
+        </div>
+        <div class="up-mult" id="upMult">Поставь номер, и появится цель</div>
+        <button type="button" class="ios-btn up-go" id="upGo" disabled>Крутить</button>
+        <div class="up-why" id="upWhy"></div>
+      </div>
+      <div class="up-col" id="upTargetCol">
+        <div class="up-kicker">Цель</div>
+        <div id="upTarget"><div class="up-empty">Цель подбирается под шанс.</div></div>
+        <button type="button" class="ios-btn gray" id="upReroll">Другой номер</button>
+      </div>
+    </div>
+    <div class="up-kicker up-bag-title">Гараж для ставки</div>
+    <div class="up-bag" id="upBag"></div>
+    <div class="up-kicker up-bag-title">Последние крутки</div>
+    <div class="up-log" id="upLog"></div>
+  </div>
+</section>

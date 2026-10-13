@@ -23,6 +23,7 @@ export const Sound = (function(){
     setEnabled(v){ enabled = v; try{ localStorage.setItem(SOUND_KEY, v?'on':'off'); }catch(e){} },
     isEnabled(){ return enabled; },
     click(){ tone(520, 0.05, 'square', 0.035); },
+    tick(){ tone(760, 0.025, 'square', 0.018); },
     drop(){ tone(400, 0.06, 'triangle', 0.05); tone(700, 0.05, 'triangle', 0.04, 0.05); },
     coin(){ tone(880, 0.09, 'sine', 0.07); tone(1320, 0.11, 'sine', 0.06, 0.07); },
     sell(){ tone(660, 0.09, 'sine', 0.055); tone(990, 0.09, 'sine', 0.05, 0.07); },

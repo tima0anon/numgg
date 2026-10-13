@@ -52,6 +52,8 @@ import {
 } from '../features/exchange/view.js';
 import { sellBulk } from '../features/garage/sell.js';
 import { renderCollection } from '../features/garage/view.js';
+import { settleUpgrader } from '../features/upgrader/roll.js';
+import { bindUpgrader } from '../features/upgrader/view.js';
 import { bindTestBench } from '../features/admin/bench.js';
 import { bindAdmin } from '../features/admin/panel.js';
 import { ensureSession } from '../features/auth/gate.js';
@@ -118,6 +120,8 @@ export async function init(){
   const gate = document.getElementById('authGate');
   if(SOCIAL_PAUSED && gate) gate.hidden = true;
   load();
+  const settledUp = settleUpgrader();
+  if(settledUp) notify(settledUp.win ? 'Апргейдербета докрутила: ' + settledUp.target.plate : 'Апргейдербета докрутила мимо');
   if(me && (me.epoch || 0) > (S.epoch || 0)) S.epoch = me.epoch;
   if(me && me.nick) S.playerName = me.nick;
   if(!SOCIAL_PAUSED) startProfileSync();
@@ -127,7 +131,7 @@ export async function init(){
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
-  if(!['drop','earn','exchange','garage','accountant','news','rank','info','admin'].includes(savedPage)) savedPage = 'drop';
+  if(!['drop','earn','exchange','garage','upgrader','accountant','news','rank','info','admin'].includes(savedPage)) savedPage = 'drop';
   if(savedPage === 'rank' && SOCIAL_PAUSED) savedPage = 'drop';
   switchPage(savedPage);
 
@@ -285,6 +289,7 @@ export async function init(){
   if(!SOCIAL_PAUSED) bindRankAccount();
   bindAdmin();
   bindTestBench();
+  bindUpgrader();
   setInterval(() => {
     if(document.getElementById('page-rank')?.classList.contains('active')) renderRank();
   }, 20000);
@@ -301,6 +306,7 @@ export async function init(){
       const page = document.querySelector('.topnav-btn.active')?.dataset.page;
       if(page === 'drop' && !flags.spinning) doDrop(1);
     } else if(e.key === 'Escape'){ hideDropResults(); }
+    else if(e.key === '9'){ Sound.click(); switchPage('upgrader'); }
     else if(e.key >= '1' && e.key <= '8'){
       const pages = ['drop','earn','exchange','garage','accountant','news','rank','info'];
       const idx = parseInt(e.key,10) - 1;

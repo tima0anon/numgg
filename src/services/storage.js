@@ -14,6 +14,7 @@ export function save(){
       earnSolved: S.earnSolved, earnWrong: S.earnWrong, earnStreak: S.earnStreak, earnBest: S.earnBest,
       coefLow: S.coefLow, coefHigh: S.coefHigh, news: S.news, acct: S.acct,
       earnLevel: S.earnLevel, usedPromos: S.usedPromos, testAdmin: S.testAdmin,
+      upgraderPending: S.upgraderPending, upgraderLog: S.upgraderLog, upgraderStats: S.upgraderStats,
       playerName: S.playerName, peakRub: S.peakRub, rivals: S.rivals, epoch: S.epoch || 0, forceId: S.forceId || '',
       myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind, listedAt: l.listedAt, nextRollAt: l.nextRollAt }))
     };
@@ -61,6 +62,15 @@ export function load(){
     S.earnLevel = [0,1,2,3].includes(p.earnLevel) ? p.earnLevel : 0;
     S.usedPromos = Array.isArray(p.usedPromos) ? p.usedPromos.filter(code => typeof code === 'string').slice(0, 8) : [];
     S.testAdmin = !!p.testAdmin;
+    S.upgraderLog = Array.isArray(p.upgraderLog) ? p.upgraderLog.filter(row => row && typeof row.plate === 'string').slice(0, 12) : [];
+    S.upgraderStats = {
+      spins: p.upgraderStats && p.upgraderStats.spins > 0 ? Math.floor(p.upgraderStats.spins) : 0,
+      wins: p.upgraderStats && p.upgraderStats.wins > 0 ? Math.floor(p.upgraderStats.wins) : 0,
+    };
+    const pending = p.upgraderPending;
+    S.upgraderPending = pending && pending.target && typeof pending.target.plate === 'string' && typeof pending.chance === 'number'
+      ? pending
+      : null;
     S.coefLow = (typeof p.coefLow==='number' && p.coefLow>=10 && p.coefLow<=90) ? p.coefLow : 20;
     S.coefHigh = (typeof p.coefHigh==='number' && p.coefHigh>=1 && p.coefHigh<=200) ? p.coefHigh : 20;
     S.news = Array.isArray(p.news) ? p.news.filter(n => n.until > Date.now()) : [];

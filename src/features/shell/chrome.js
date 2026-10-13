@@ -6,6 +6,7 @@ import { renderEarnProblem } from '../earn/math.js';
 import { renderExchange } from '../exchange/view.js';
 import { renderNews } from '../news/feed.js';
 import { renderAdmin } from '../admin/panel.js';
+import { renderUpgrader } from '../upgrader/view.js';
 import { renderRank } from '../rank/board.js';
 import { Sound } from '../../services/audio.js';
 import { notify } from '../../services/notify.js';
@@ -22,7 +23,7 @@ export function toggleSound(){ const n = !Sound.isEnabled(); Sound.setEnabled(n)
 export function updateSoundUI(){ const b = document.getElementById('soundToggle'); if(b) b.classList.toggle('muted', !Sound.isEnabled()); }
 
 export function switchPage(page){
-  const valid = ['drop','earn','exchange','garage','accountant','news','rank','info','admin'];
+  const valid = ['drop','earn','exchange','garage','upgrader','accountant','news','rank','info','admin'];
   if(!valid.includes(page) || (page === 'admin' && !S.testAdmin)) page = 'drop';
   document.querySelectorAll('.topnav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
   document.querySelector('.topnav-btn.active')?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
@@ -31,6 +32,7 @@ export function switchPage(page){
   if(page === 'earn'){ if(!flags.earnProblem) renderEarnProblem(); setTimeout(() => { const i = document.getElementById('earnInput'); if(i) i.focus(); }, 100); }
   if(page === 'news') renderNews();
   if(page === 'exchange') renderExchange();
+  if(page === 'upgrader') renderUpgrader();
   if(page === 'rank') renderRank();
   if(page === 'admin') renderAdmin();
 }
