@@ -2,7 +2,7 @@ import { SOCIAL_PAUSED } from '../config/constants.js';
 const SESSION_KEY = 'numdrop_session_v1';
 
 export function apiBase(){
-  return 'https://kotlarovti.temp.swtest.ru/api';
+  return 'https://numdrop.online/api';
 }
 
 export function readSession(){
