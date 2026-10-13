@@ -121,16 +121,13 @@ export async function init(){
   if(me && (me.epoch || 0) > (S.epoch || 0)) S.epoch = me.epoch;
   if(me && me.nick) S.playerName = me.nick;
   if(!SOCIAL_PAUSED) startProfileSync();
-  const adminNav = document.getElementById('adminNav');
-  if(S.testAdmin) syncAdminNav();
-  else if(adminNav) adminNav.hidden = SOCIAL_PAUSED || !me || me.role !== 'admin';
+  syncAdminNav();
   const rankNav = document.querySelector('.topnav-btn[data-page="rank"]');
   if(rankNav) rankNav.hidden = SOCIAL_PAUSED;
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
   if(!['drop','earn','exchange','garage','accountant','news','rank','info','admin'].includes(savedPage)) savedPage = 'drop';
-  if(savedPage === 'admin' && !S.testAdmin && (SOCIAL_PAUSED || !me || me.role !== 'admin')) savedPage = 'drop';
   if(savedPage === 'rank' && SOCIAL_PAUSED) savedPage = 'drop';
   switchPage(savedPage);
 

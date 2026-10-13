@@ -40,23 +40,17 @@ function paint(){
 export async function renderAdmin(){
   const bench = document.getElementById('testBench');
   const remote = document.getElementById('remoteAdmin');
+  const locked = document.getElementById('adminLocked');
   if(S.testAdmin){
     if(bench) bench.hidden = false;
     if(remote) remote.hidden = true;
+    if(locked) locked.hidden = true;
     paintTestBench();
     return;
   }
   if(bench) bench.hidden = true;
-  if(remote) remote.hidden = false;
-  const host = document.getElementById('adminList');
-  if(host) host.innerHTML = '<div class="empty">Загружаю игроков…</div>';
-  try {
-    const data = await fetchPlayers();
-    rows = data.players || [];
-    paint();
-  } catch(error){
-    if(host) host.innerHTML = '<div class="empty">' + esc(error.message || 'Не удалось загрузить') + '</div>';
-  }
+  if(locked) locked.hidden = false;
+  if(remote) remote.hidden = true;
 }
 
 async function run(nick, action, balance){

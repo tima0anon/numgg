@@ -32,7 +32,7 @@ function knownCode(code){
 
 function syncAdminNav(){
   const nav = document.getElementById('adminNav');
-  if(nav) nav.hidden = !S.testAdmin;
+  if(nav) nav.hidden = false;
 }
 
 export function enableTestAdmin(){
@@ -49,7 +49,7 @@ export function disableTestAdmin(){
   save();
   syncAdminNav();
   const onAdmin = document.getElementById('page-admin')?.classList.contains('active');
-  if(onAdmin) switchPage('drop');
+  if(onAdmin) switchPage('admin');
   Sound.click();
   notify('Тестовая админка закрыта');
 }

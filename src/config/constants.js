@@ -27,7 +27,7 @@ export const DAILY_KEY = 'numdrop_daily_v13';
 
 export const HISTORY_MAX = 25;
 
-export const MAX_CUSTOM_SPIN = 1000;
+export const MAX_CUSTOM_SPIN = 100;
 
 export const SESSION_MS = 60000;
 export const OFFER_TTL_MS = 30000;
