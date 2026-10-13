@@ -1,4 +1,5 @@
-import { OFFER_TTL_MS, SALE_ROLL_MS, SESSION_MS } from '../../config/constants.js';
+import { SESSION_MS, TICK_MS } from '../../config/constants.js';
+import { RARITY_ORDER } from '../../config/rarity.js';
 import {
   isRecentPlate,
   rememberPlate,
@@ -9,7 +10,7 @@ import {
 } from '../../domain/plates/countries.js';
 import { marketMood, saleChance } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
-import { rnd } from '../../domain/random.js';
+import { randGauss, rnd } from '../../domain/random.js';
 import {
   addAcctLog,
   runAccountantSession,
@@ -33,86 +34,59 @@ import { S } from '../../state/player.js';
 
 export function weightedRarityForOffers(){
   const r = Math.random();
-  if(r < 0.16) return 'common';
-  if(r < 0.36) return 'uncommon';
-  if(r < 0.58) return 'rare';
-  if(r < 0.76) return 'epic';
-  if(r < 0.88) return 'legendary';
-  if(r < 0.96) return 'mythic';
+  if(r < 0.42) return 'common';
+  if(r < 0.72) return 'uncommon';
+  if(r < 0.87) return 'rare';
+  if(r < 0.95) return 'epic';
+  if(r < 0.985) return 'legendary';
+  if(r < 0.997) return 'mythic';
   return 'divine';
 }
 
-function desiredBargain(){
-  const roll = Math.random();
-  let frac;
-  if(roll < 0.52) frac = 0.04 + Math.random() * 0.08;
-  else if(roll < 0.72) frac = 0.12 + Math.random() * 0.10;
-  else if(roll < 0.86) frac = 0.22 + Math.random() * 0.12;
-  else if(roll < 0.95) frac = 0.34 + Math.random() * 0.16;
-  else frac = 0.50 + Math.random() * 0.25;
-  if(Math.random() < 0.5) frac = -frac;
-  return { frac };
-}
-
-function rarityForBargain(frac){
-  const size = Math.abs(frac);
-  if(size >= 0.5) return Math.random() < 0.4 ? 'divine' : 'mythic';
-  if(size >= 0.34) return Math.random() < 0.45 ? 'mythic' : 'legendary';
-  if(size >= 0.22) return Math.random() < 0.5 ? 'legendary' : 'epic';
-  if(size >= 0.12) return Math.random() < 0.45 ? 'epic' : 'rare';
-  return weightedRarityForOffers();
-}
-
-function botSnatch(edge, hypo){
-  if(edge <= 0) return 0;
-  const frac = edge / Math.max(1, hypo);
-  if(frac >= 0.18) return 0.04;
-  if(frac < 0.05) return 0;
-  return 0.012;
-}
-
 export function makeOffer(){
-  const bargain = desiredBargain();
-  const rid = rarityForBargain(bargain.frac);
+  const rid = weightedRarityForOffers();
   const cd = rnd(COUNTRIES);
   let res, attempts=0;
   do { res = cd.gen(rid); attempts++; } while(isRecentPlate(res.plate, cd.flag) && attempts < 20);
   rememberPlate(res.plate, cd.flag);
   const region = extractRegion(res.plate, cd.flag);
   const hypo = hypoPrice(rid, cd.flag, region, res.plate);
-  let edge = Math.round(hypo * bargain.frac);
-  const cap = hypo * 0.82;
-  if(Math.abs(edge) > cap) edge = Math.sign(edge || 1) * Math.round(hypo * (0.35 + Math.random() * 0.4));
-  const listedAt = Date.now();
-  const life = Math.abs(edge) / Math.max(1, hypo) >= 0.12 ? 3000 + Math.random() * 1000 : OFFER_TTL_MS;
+  let dev = randGauss() * 0.18;
+  if(dev > 0.9) dev = 0.9;
+  if(dev < -0.7) dev = -0.7;
   return {
     id: 'o' + (S.nextId++) + '_' + (Math.random()*1e6|0),
     plate: res.plate, flag: cd.flag, country: cd.name, rarity: rid, region,
-    hypo, price: Math.max(1, Math.round(hypo - edge)),
-    listedAt, until: listedAt + life, accountantFound: false
+    hypo, price: Math.max(1, Math.round(hypo * (1 + dev))),
+    listedAt: Date.now(), accountantFound: false
   };
 }
 
 export function makeOrder(){
   let rid;
   const r = Math.random();
-  if(r < 0.2) rid = 'common';
-  else if(r < 0.42) rid = 'uncommon';
-  else if(r < 0.64) rid = 'rare';
-  else if(r < 0.82) rid = 'epic';
-  else if(r < 0.93) rid = 'legendary';
-  else if(r < 0.98) rid = 'mythic';
+  if(r < 0.35) rid = 'common';
+  else if(r < 0.60) rid = 'uncommon';
+  else if(r < 0.80) rid = 'rare';
+  else if(r < 0.92) rid = 'epic';
+  else if(r < 0.975) rid = 'legendary';
+  else if(r < 0.995) rid = 'mythic';
   else rid = 'divine';
   const cd = rnd(COUNTRIES);
   const res = cd.gen(rid);
   const region = extractRegion(res.plate, cd.flag);
   let wildcardRatio;
-  wildcardRatio = 0.08;
+  if(rid === 'divine' || rid === 'mythic') wildcardRatio = 0.15;
+  else if(rid === 'legendary') wildcardRatio = 0.20;
+  else if(rid === 'epic') wildcardRatio = 0.30;
+  else if(rid === 'rare') wildcardRatio = 0.40;
+  else if(rid === 'uncommon') wildcardRatio = 0.55;
+  else wildcardRatio = 0.65;
   const mask = maskPlate(res.plate, wildcardRatio);
   const spec = specificity(mask);
+  const mult = orderMultiplier(spec);
   const hypo = hypoPrice(rid, cd.flag, region, res.plate);
-  const markup = 0.5 + Math.random() * 1.5;
-  const reward = Math.max(1, Math.round(hypo * (1 + markup)));
+  const reward = Math.max(1, Math.round(hypo * mult * (0.9 + Math.random()*0.25)));
   const now = Date.now();
   let lifetime = SESSION_MS;
   if(spec >= 0.85) lifetime = 120000 + ~~(Math.random()*60000);
@@ -121,28 +95,28 @@ export function makeOrder(){
   return {
     id: 'r' + (S.nextId++) + '_' + (Math.random()*1e6|0),
     mask, flag: cd.flag, country: cd.name, rarity: rid, region,
-    hypo, reward, specificity: spec,
+    hypo, reward, specificity: spec, multiplier: mult,
     createdAt: now, until: now + lifetime, accountantFound: false
   };
 }
 
 export function maskPlate(plate, ratio){
-  const chars = plate.split('');
-  const hidden = [];
-  for(let i=0;i<chars.length;i++){
-    if(chars[i] === ' ') continue;
-    if(Math.random() < ratio){ chars[i] = '*'; hidden.push(i); }
+  let m = '';
+  let stars = 0;
+  for(let i=0;i<plate.length;i++){
+    const ch = plate[i];
+    if(ch === ' ') m += ' ';
+    else if(Math.random() < ratio){ m += '*'; stars++; }
+    else m += ch;
   }
-  while(hidden.length > 1){
-    const at = hidden.splice(~~(Math.random()*hidden.length), 1)[0];
-    chars[at] = plate[at];
-  }
-  if(!hidden.length){
+  if(!stars){
+    const chars = m.split('');
     const open = [];
     for(let i=0;i<plate.length;i++) if(plate[i] !== ' ') open.push(i);
     if(open.length) chars[open[~~(Math.random()*open.length)]] = '*';
+    return chars.join('');
   }
-  return chars.join('');
+  return m;
 }
 
 export function specificity(mask){
@@ -169,18 +143,23 @@ export function generateExchangeSession(){
   market.sessionNum++;
   market.sessionNextAt = Date.now() + SESSION_MS;
   const now = Date.now();
-  market.offers = [];
-  market.orders = [];
+  market.offers = market.offers.filter(o => o && !o._removed);
+  market.orders = market.orders.filter(o => o && !o._removed && o.until > now);
 
+  const targetOffers = 96;
   const targetOrders = 12;
-  refillOffers(now);
+  const keepCount = Math.floor(market.offers.length * 0.5);
+  if(market.offers.length > keepCount) market.offers = market.offers.slice(0, keepCount);
+  while(market.offers.length < targetOffers) market.offers.push(makeOffer());
+  if(market.offers.length > targetOffers) market.offers = market.offers.slice(0, targetOffers);
 
-  market.orders = market.orders.filter(o => o.until > now + 5000).slice(0, 10);
+  market.orders = market.orders.filter(o => o.until > now + 5000);
   let longOrders = market.orders.filter(o => (o.until - o.createdAt) > 60000).length;
+  const maxLongOrders = Math.max(3, Math.floor(targetOrders / 4));
   while(market.orders.length < targetOrders){
     const o = makeOrder();
     const isLong = (o.until - o.createdAt) > 60000;
-    if(isLong && longOrders >= 10) o.until = Date.now() + SESSION_MS;
+    if(isLong && longOrders >= maxLongOrders) o.until = Date.now() + SESSION_MS + ~~(Math.random()*SESSION_MS);
     else if(isLong) longOrders++;
     market.orders.push(o);
   }
@@ -195,11 +174,14 @@ export function generateExchangeSession(){
 
 export function bumpListingsSessions(){ for(const l of market.listings) l.sessions++; }
 
-export function refillOffers(now){
-  const targetOffers = 96;
-  market.offers = market.offers.filter(o => o && !o._removed && (o.until || o.listedAt + OFFER_TTL_MS) > now);
-  while(market.offers.length < targetOffers) market.offers.push(makeOffer());
-  if(market.offers.length > targetOffers) market.offers = market.offers.slice(-targetOffers);
+function ticksPerSession(){
+  return Math.max(1, Math.round(SESSION_MS / TICK_MS));
+}
+
+export function tickSaleChance(sessionChance){
+  if(sessionChance <= 0) return 0;
+  if(sessionChance >= 1) return 1;
+  return 1 - Math.pow(1 - sessionChance, 1 / ticksPerSession());
 }
 
 export function tickExchange(){
@@ -207,12 +189,12 @@ export function tickExchange(){
   let removed = 0;
   for(let i=market.offers.length-1;i>=0;i--){
     const o = market.offers[i];
-    const until = o.until || (o.listedAt + OFFER_TTL_MS);
-    if(now >= until){ market.offers.splice(i, 1); removed++; continue; }
-    const edge = o.hypo - o.price;
-    if(Math.random() < botSnatch(edge, o.hypo)){ market.offers.splice(i, 1); removed++; }
+    const dev = (o.hypo - o.price) / Math.max(1, o.hypo);
+    const rarityBonus = RARITY_ORDER.indexOf(o.rarity) * 0.06;
+    let p = 0.0003 + Math.max(0, dev) * 0.1 + rarityBonus * 0.006;
+    if(dev > 0.2) p += 0.018;
+    if(Math.random() < p){ market.offers.splice(i, 1); removed++; }
   }
-  refillOffers(now);
   for(let i=market.orders.length-1;i>=0;i--){
     const o = market.orders[i];
     if(now > o.until){ market.orders.splice(i,1); removed++; continue; }
@@ -222,10 +204,6 @@ export function tickExchange(){
     if(Math.random() < p){ market.orders.splice(i, 1); removed++; }
   }
   updateSessionCountdown();
-  document.querySelectorAll('#exOfferGrid .lot-life').forEach(el => {
-    const left = Math.max(0, Math.ceil((Number(el.dataset.until) - now) / 1000));
-    el.textContent = left + ' с';
-  });
   if(removed && now - (market.offerPaintAt || 0) > 700 && document.getElementById('page-exchange')?.classList.contains('active')){
     market.offerPaintAt = now;
     const active = document.activeElement;
@@ -236,43 +214,37 @@ export function tickExchange(){
       if(document.scrollingElement) document.scrollingElement.scrollTop = top;
     }
   }
-  document.querySelectorAll('.roll-wait').forEach(el => {
-    const left = Math.max(0, Math.ceil((Number(el.dataset.until) - now) / 1000));
-    el.textContent = String(left);
-  });
-  rollListings(now);
+  const soldListings = rollListings();
+  if(soldListings && document.getElementById('page-exchange')?.classList.contains('active')){
+    const active = document.activeElement;
+    const typing = active && active.closest && active.closest('#page-exchange') && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
+    if(!typing) renderExchange();
+  }
   if(now >= market.sessionNextAt){
     generateExchangeSession();
   }
 }
 
-export function rollListings(now = Date.now()){
-  if(!market.listings.length) return false;
+export function rollListings(){
+  if(!market.listings.length) return 0;
   const sold = [];
-  let spun = false;
   for(let i=market.listings.length-1;i>=0;i--){
     const l = market.listings[i];
-    if(!l.nextRollAt) l.nextRollAt = now + SALE_ROLL_MS;
-    if(now < l.nextRollAt) continue;
     const num = S.col.find(n => Number(n.id) === Number(l.numId));
     if(!num){ market.listings.splice(i,1); continue; }
-    spun = true;
-    l.nextRollAt = now + SALE_ROLL_MS;
     const region = extractRegion(num.plate, num.flag);
     const hypo = hypoPrice(num.rarity, num.flag, region, num.plate);
     const mood = marketMood(num.flag, region, num.rarity);
-    const chance = saleChance(l.price, hypo, mood, num.rarity);
-    if(Math.random() < chance){
+    const sessionChance = saleChance(l.price, hypo, mood, num.rarity);
+    if(Math.random() < tickSaleChance(sessionChance)){
       S.rub += l.price; S.totalEarned += l.price;
       const idx = S.col.findIndex(n => Number(n.id) === Number(l.numId));
       if(idx >= 0) S.col.splice(idx, 1);
       market.listings.splice(i,1);
       sold.push({ plate: num.plate, price: l.price });
-    } else {
-      l.missUntil = now + 2200;
     }
   }
-  if(!spun) return false;
+  if(!sold.length) return 0;
   if(sold.length === 1){
     notify('💸 ' + sold[0].plate + ' продан за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽');
     addAcctLog('💸 Продан ' + sold[0].plate + ' за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽', 'ok');
@@ -284,11 +256,9 @@ export function rollListings(now = Date.now()){
     Sound.sell(); haptic(10);
   }
   updateBalances();
-  const active = document.activeElement;
-  const typing = active && active.closest && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
-  if(!typing){ renderCollection(); renderExchange(); }
+  renderCollection();
   save();
-  return true;
+  return sold.length;
 }
 
 export function updateSessionCountdown(){

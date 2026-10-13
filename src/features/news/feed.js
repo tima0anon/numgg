@@ -74,7 +74,7 @@ export function renderTape(){
   const now = Date.now();
   const items = S.news.filter(n => n.until > now);
   if(!items.length){
-    el.innerHTML = '<span class="tape-quiet">Рынок тихий. Рулетка всё равно крутится каждые 25 секунд, новость поднимает шанс.</span>';
+    el.innerHTML = '<span class="tape-quiet">Рынок тихий. Шанс продажи за минуту всё равно есть, новость его поднимает.</span>';
     return;
   }
   el.innerHTML = items.map(n => {

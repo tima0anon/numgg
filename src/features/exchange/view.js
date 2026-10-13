@@ -89,7 +89,6 @@ export function renderOffers(){
       '<div class="bought-line">'+describePlate(o.plate, o.flag, o.region, o.rarity)+'</div>'+
       '<div class="card-price">'+rub(o.price)+'<span>цена покупки</span></div>'+
       marketLine(o.price, o.hypo)+
-      '<div class="lot-life" data-until="'+(o.until || 0)+'">'+Math.max(0, Math.ceil(((o.until || 0) - Date.now()) / 1000))+' с</div>'+
       '<button class="buy-btn" data-id="'+o.id+'"'+(canBuy?'':' disabled')+'>'+(cooling?'Подожди':canBuy?'Купить':'Не хватает '+rub(o.price-S.rub))+'</button>'+
       '</div>';
   }).join('');
@@ -119,7 +118,7 @@ export function renderOrders(){
       '<div class="plate-stage" title="Звёздочка — любой символ">'+renderRealPlate(o.mask, o.flag, '')+'</div>'+
       '<div class="card-meta"><span class="who">'+o.country+'</span><span class="rar '+o.rarity+'">'+R.name+'</span></div>'+
       '<div class="card-price">'+rub(o.reward)+'<span>заплатят тебе</span></div>'+
-      '<div class="deal good">Плюс '+rub(Math.max(0, o.reward - o.hypo))+' · +'+Math.round((o.reward / Math.max(1, o.hypo) - 1) * 100)+'%</div>'+
+      '<div class="deal good">×'+(o.multiplier || (o.reward / Math.max(1, o.hypo))).toFixed(2)+' к рынку заказа · '+rub(o.reward - o.hypo)+'</div>'+
       '<div class="deal">'+(canFulfill ? fit : 'В гараже нет такого номера')+'</div>'+
       pick+
       '<button class="fulfill-btn" data-id="'+o.id+'"'+(canFulfill?'':' disabled')+'>'+(canFulfill?'Продать этот номер':'Нет подходящего')+'</button>'+
@@ -161,7 +160,7 @@ export function renderMyListings(){
       '<div class="card-meta"><span class="who">'+num.country+'</span><span class="rar '+num.rarity+'">'+R.name+'</span></div>'+
       '<div class="card-price">'+rub(l.price)+'<span>твоя цена</span></div>'+
       '<div class="bought-line">'+describePlate(num.plate, num.flag, region, num.rarity)+'</div>'+
-      '<div class="deal '+mood.cls+'"><span class="roulette">⟳</span> шанс '+Math.round(chance*100)+'%'+(l.missUntil && Date.now() < l.missUntil ? ' · мимо' : '')+' · ещё <span class="roll-wait" data-until="'+(l.nextRollAt || 0)+'">'+Math.max(0, Math.ceil(((l.nextRollAt || 0) - Date.now()) / 1000))+'</span> с</div>'+
+      '<div class="deal '+mood.cls+'"><span class="roulette">⟳</span> шанс '+Math.round(chance*100)+'% за эту минуту</div>'+
       '<div class="deal">'+saleHint(chance, l.price, hypo, mood)+'</div>'+
       '<button class="buy-btn" style="background:var(--red)" data-id="'+l.numId+'">Снять с продажи</button>'+
       '</div>';
