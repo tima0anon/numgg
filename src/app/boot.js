@@ -2,6 +2,7 @@ import {
   MAX_CUSTOM_SPIN,
   NEWS_CHECK_INTERVAL,
   PAGE_KEY,
+  KEY,
   ACCT_AUTO_COST,
   ACCT_HIRE_COST,
   SOCIAL_PAUSED,
@@ -115,7 +116,10 @@ export async function init(){
   let me = null;
   if(!SOCIAL_PAUSED){
     me = await ensureSession();
-    dropSaveForSeason(me.epoch || 0);
+    if(me) dropSaveForSeason(me.epoch || 0);
+    if(me && me.save && typeof me.save === 'object' && (me.save.epoch || 0) >= (me.epoch || 0)){
+      try { localStorage.setItem(KEY, JSON.stringify(me.save)); } catch(e){}
+    }
   }
   const gate = document.getElementById('authGate');
   if(SOCIAL_PAUSED && gate) gate.hidden = true;

@@ -37,8 +37,8 @@ export function applyServer(me){
 export function startProfileSync(){
   watchProfile(applyServer);
   setInterval(() => {
-    fetchMe().then(applyServer).catch(error => {
+    fetchMe(false).then(applyServer).catch(error => {
       if(error.payload && error.payload.reset) applyServer(error.payload);
     });
-  }, 8000);
+  }, 20000);
 }

@@ -2,10 +2,7 @@ import { SOCIAL_PAUSED } from '../config/constants.js';
 const SESSION_KEY = 'numdrop_session_v1';
 
 export function apiBase(){
-  const host = location.hostname;
-  if(host === '127.0.0.1' || host === 'localhost') return 'http://127.0.0.1:8787';
-  if(host.endsWith('castledev.ru')) return location.origin + '/api';
-  return 'https://pw902.castledev.ru/api';
+  return 'https://kotlarovti.temp.swtest.ru/api';
 }
 
 export function readSession(){
@@ -41,7 +38,7 @@ async function call(path, { method, body, auth } = {}){
       method: method || (body ? 'POST' : 'GET'),
       headers,
       body: body ? JSON.stringify(body) : undefined,
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(12000),
     });
   } catch {
     const error = new Error('Нет связи с сервером рейтинга');
@@ -66,8 +63,17 @@ export function loginAccount(nick, password){
   return call('/login', { body: { nick, password } });
 }
 
-export function fetchMe(){
-  return call('/me', { auth: true });
+export function fetchMe(withSave){
+  return call('/me' + (withSave ? '?save=1' : ''), { auth: true });
+}
+
+let cloudTimer = 0;
+export function queueCloudSave(payload){
+  if(SOCIAL_PAUSED || !readSession() || !payload) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(() => {
+    call('/save', { body: { save: payload }, auth: true }).catch(() => {});
+  }, 1200);
 }
 
 export function fetchPlayers(){

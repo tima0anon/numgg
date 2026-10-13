@@ -1,6 +1,17 @@
 <section class="page" id="page-rank">
   <div class="group">
     <div class="group-header">Рейтинг</div>
-    <div class="admin-lead">Топ и регистрация на паузе, пока нет базы. Играть можно сразу.</div>
+    <div class="rank-hero">
+      <div class="rank-kicker">Топ 100 по максимальному балансу</div>
+      <div class="rank-place" id="rankPlace">—</div>
+      <div class="rank-sub" id="rankSub">Войди, и здесь появится твоё место</div>
+      <p class="rank-account" id="rankAccount"></p>
+      <div class="rank-actions">
+        <button type="button" class="ios-btn" id="rankInbox">Забрать номера</button>
+        <button type="button" class="ios-btn gray" id="rankLogout">Выйти</button>
+      </div>
+      <p class="rank-hint">Передать номер можно с карточки в гараже. Получатель забирает его здесь.</p>
+    </div>
+    <div class="rank-list" id="rankList"></div>
   </div>
 </section>

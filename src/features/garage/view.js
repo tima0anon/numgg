@@ -83,7 +83,7 @@ function syncListed(){
 }
 
 async function givePlate(id){
-  if(!readSession()){ notify('Чтобы передать номер, войди на вкладке «Рейтинг»'); Sound.error(); return; }
+  if(!readSession()){ notify('Чтобы передать номер, сначала войди'); Sound.error(); return; }
   const num = S.col.find(n => n.id === id);
   if(!num || num.listed){ notify('Сначала сними номер с продажи'); return; }
   const to = prompt('Ник, кому отдать ' + num.plate);

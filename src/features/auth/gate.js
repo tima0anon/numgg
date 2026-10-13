@@ -18,7 +18,10 @@ function gate(){ return document.getElementById('authGate'); }
 
 function showError(text){
   const el = document.getElementById('authError');
-  if(el) el.textContent = text || '';
+  if(!el) return;
+  el.textContent = text || '';
+  el.classList.remove('is-on');
+  if(text) requestAnimationFrame(() => el.classList.add('is-on'));
 }
 
 function setMode(next){
@@ -40,12 +43,18 @@ function showNick(nick){
 
 export function showGate(){
   const el = gate();
-  if(el) el.hidden = false;
+  if(!el) return;
+  el.hidden = false;
+  el.classList.remove('is-leaving');
+  requestAnimationFrame(() => el.classList.add('is-open'));
 }
 
 export function hideGate(){
   const el = gate();
-  if(el) el.hidden = true;
+  if(!el) return;
+  el.classList.remove('is-open');
+  el.classList.add('is-leaving');
+  setTimeout(() => { if(!el.classList.contains('is-open')) el.hidden = true; }, 520);
 }
 
 export function logoutToGate(){
@@ -63,13 +72,15 @@ function bind(){
     const nick = document.getElementById('authNick').value;
     const password = document.getElementById('authPass').value;
     const button = document.getElementById('authSubmit');
+    const label = button.textContent;
     button.disabled = true;
+    button.textContent = 'Секунду…';
     showError('');
     try {
       const result = mode === 'register' ? await registerAccount(nick, password) : await loginAccount(nick, password);
       writeSession(result);
       document.getElementById('authPass').value = '';
-      const me = typeof result.epoch === 'number' ? result : await fetchMe();
+      const me = typeof result.epoch === 'number' ? result : await fetchMe(true);
       showNick(me.nick);
       Sound.click();
       hideGate();
@@ -79,6 +90,7 @@ function bind(){
       Sound.error();
     } finally {
       button.disabled = false;
+      button.textContent = label;
     }
   });
 }
@@ -91,7 +103,7 @@ export function ensureSession(){
     const saved = readSession();
     if(!saved){ pending = resolve; return; }
     showNick(saved.nick);
-    fetchMe().then(me => {
+    fetchMe(true).then(me => {
       if(me.banned){
         clearSession();
         showError('Аккаунт заблокирован');
@@ -105,8 +117,12 @@ export function ensureSession(){
       if(error.status === 401 || error.payload?.banned){
         clearSession();
         showError(error.payload?.banned ? 'Аккаунт заблокирован' : 'Сессия истекла, войди снова');
+      } else if(error.status !== 401){
+        showError('Сервер молчит. Подожди немного и попробуй ещё раз');
+        pending = resolve;
+        return;
       } else {
-        showError('Сервер недоступен. Без входа игра не откроется');
+        showError('Сессия истекла, войди снова');
       }
       pending = resolve;
     });

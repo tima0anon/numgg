@@ -1,5 +1,5 @@
 import { DAILY_KEY, HISTORY_MAX, KEY, MAX_CUSTOM_SPIN, SALE_ROLL_MS, START_RUB } from '../config/constants.js';
-import { queueScore } from './remote.js';
+import { queueCloudSave, queueScore } from './remote.js';
 import { market } from '../state/market.js';
 import { S } from '../state/player.js';
 
@@ -20,6 +20,7 @@ export function save(){
     };
     localStorage.setItem(KEY, JSON.stringify(data));
     queueScore(Math.max(S.rub, S.peakRub || 0), S.epoch || 0, S.forceId || '');
+    queueCloudSave(data);
   } catch(e){}
 }
 

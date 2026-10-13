@@ -1,4 +1,4 @@
-import { fetchInbox, loginAccount, logoutAccount, readSession, registerAccount, takeGift, writeSession } from '../../services/remote.js';
+import { fetchInbox, logoutAccount, readSession, takeGift } from '../../services/remote.js';
 import { Sound } from '../../services/audio.js';
 import { notify } from '../../services/notify.js';
 import { save } from '../../services/storage.js';
@@ -6,43 +6,14 @@ import { S } from '../../state/player.js';
 import { renderCollection } from '../garage/view.js';
 import { updateBalances } from '../hud/balance.js';
 
-let mode = 'login';
-
-function paint(){
+export function bindRankAccount(){
   const session = readSession();
-  const guest = document.getElementById('rankGuest');
-  const user = document.getElementById('rankUser');
-  if(guest) guest.hidden = !!session;
-  if(user) user.hidden = !session;
   const account = document.getElementById('rankAccount');
   if(account && session) account.textContent = session.nick + ' · место в топе по максимальному балансу';
-  const button = document.getElementById('rankAuth');
-  if(button) button.textContent = mode === 'login' ? 'Войти' : 'Создать аккаунт';
-}
-
-export function bindRankAccount(){
-  paint();
-  const loginTab = document.getElementById('rankTabLogin');
-  const regTab = document.getElementById('rankTabReg');
-  if(!loginTab) return;
-  loginTab.addEventListener('click', () => { mode = 'login'; loginTab.classList.add('active'); regTab.classList.remove('active'); paint(); });
-  regTab.addEventListener('click', () => { mode = 'register'; regTab.classList.add('active'); loginTab.classList.remove('active'); paint(); });
-  document.getElementById('rankAuth').addEventListener('click', async () => {
-    const err = document.getElementById('rankAuthError');
-    const nick = document.getElementById('rankNick').value;
-    const password = document.getElementById('rankPass').value;
-    err.textContent = '';
-    try {
-      const data = mode === 'login' ? await loginAccount(nick, password) : await registerAccount(nick, password);
-      writeSession(data);
-      location.reload();
-    } catch(error){
-      err.textContent = error.message || 'Не вышло';
-      Sound.error();
-    }
-  });
-  document.getElementById('rankLogout').addEventListener('click', () => { logoutAccount().finally(() => location.reload()); });
-  document.getElementById('rankInbox').addEventListener('click', claimInbox);
+  const inbox = document.getElementById('rankInbox');
+  const logout = document.getElementById('rankLogout');
+  if(inbox) inbox.addEventListener('click', claimInbox);
+  if(logout) logout.addEventListener('click', () => { logoutAccount().finally(() => location.reload()); });
 }
 
 export async function claimInbox(){

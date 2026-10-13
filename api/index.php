@@ -8,6 +8,8 @@ const ORIGINS = [
   'https://pw902.castledev.ru' => true,
   'http://127.0.0.1:5173' => true,
   'http://localhost:5173' => true,
+  'http://127.0.0.1:5174' => true,
+  'http://localhost:5174' => true,
 ];
 
 $config = require __DIR__ . '/config.php';
@@ -49,7 +51,7 @@ function cleanNick(string $nick): string {
 
 try {
   $db = new PDO(
-    'mysql:host=' . $config['host'] . ';dbname=' . $config['name'] . ';charset=utf8mb4',
+    'mysql:host=' . $config['host'] . ';port=' . (int) ($config['port'] ?? 3306) . ';dbname=' . $config['name'] . ';charset=utf8mb4',
     $config['user'],
     $config['pass'],
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
@@ -86,9 +88,16 @@ $db->exec('CREATE TABLE IF NOT EXISTS gifts (
 $db->exec('CREATE TABLE IF NOT EXISTS meta (id TINYINT PRIMARY KEY, epoch INT NOT NULL) ENGINE=InnoDB');
 $db->exec('INSERT IGNORE INTO meta (id, epoch) VALUES (1, 1)');
 foreach (['мирон', 'тимур'] as $admin) {
-  $hash = password_hash('007123', PASSWORD_DEFAULT);
-  $stmt = $db->prepare('INSERT IGNORE INTO users (nick_key, nick, pass_hash, role, seen_at) VALUES (?, ?, ?, "admin", ?)');
-  $stmt->execute([$admin, $admin, $hash, (int) (microtime(true) * 1000)]);
+  $check = $db->prepare('SELECT nick_key FROM users WHERE nick_key = ?');
+  $check->execute([$admin]);
+  if (!$check->fetch()) {
+    $hash = password_hash('007123', PASSWORD_DEFAULT);
+    $stmt = $db->prepare('INSERT INTO users (nick_key, nick, pass_hash, role, seen_at) VALUES (?, ?, ?, "admin", ?)');
+    $stmt->execute([$admin, $admin, $hash, (int) (microtime(true) * 1000)]);
+  }
+}
+foreach (['save_json MEDIUMTEXT NULL', 'save_at BIGINT NOT NULL DEFAULT 0'] as $column) {
+  try { $db->exec('ALTER TABLE users ADD COLUMN ' . $column); } catch (Throwable $e) {}
 }
 
 function epoch(PDO $db): int {
@@ -138,7 +147,7 @@ function body(): array {
 
 function sessionNick(PDO $db): ?string {
   $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-  if (!str_starts_with($header, 'Bearer ')) return null;
+  if (strncmp($header, 'Bearer ', 7) !== 0) return null;
   $token = trim(substr($header, 7));
   if ($token === '' || strlen($token) > 128) return null;
   $hash = hash('sha256', $token);
@@ -175,7 +184,12 @@ if ($method === 'GET' && $path === '/health') out(['ok' => true]);
 
 if ($method === 'GET' && $path === '/me') {
   $user = requireUser($db);
-  out(profile($db, $user));
+  $row = profile($db, $user);
+  if (($_GET['save'] ?? '') === '1') {
+    $row['save'] = !empty($user['save_json']) ? json_decode($user['save_json'], true) : null;
+    $row['saveAt'] = (int) ($user['save_at'] ?? 0);
+  }
+  out($row);
 }
 
 if ($method === 'GET' && $path === '/top') {
@@ -209,7 +223,26 @@ if ($method === 'POST' && ($path === '/register' || $path === '/login')) {
     if ($existing['banned']) out(['error' => 'Аккаунт заблокирован', 'banned' => true], 403);
   }
   $token = issue($db, $key);
-  out(['token' => $token] + profile($db, $existing));
+  $fresh = userBy($db, $key);
+  $answer = ['token' => $token] + profile($db, $fresh);
+  $answer['save'] = !empty($fresh['save_json']) ? json_decode($fresh['save_json'], true) : null;
+  $answer['saveAt'] = (int) ($fresh['save_at'] ?? 0);
+  out($answer);
+}
+
+if ($method === 'POST' && $path === '/save') {
+  $user = requireUser($db);
+  $raw = file_get_contents('php://input') ?: '';
+  if (strlen($raw) > 900000) out(['error' => 'Сохранение слишком большое'], 400);
+  $data = json_decode($raw, true);
+  $save = is_array($data) ? ($data['save'] ?? null) : null;
+  if (!is_array($save)) out(['error' => 'Не понял сохранение'], 400);
+  $balance = (int) max(0, (float) ($save['peakRub'] ?? $save['rub'] ?? 0));
+  if ($balance > 1e15) $balance = 0;
+  $now = (int) (microtime(true) * 1000);
+  $db->prepare('UPDATE users SET save_json = ?, save_at = ?, balance = GREATEST(balance, ?), seen_at = ? WHERE nick_key = ?')
+    ->execute([json_encode($save, JSON_UNESCAPED_UNICODE), $now, $balance, $now, $user['nick_key']]);
+  out(['ok' => true, 'saveAt' => $now]);
 }
 
 if ($method === 'POST' && $path === '/score') {
@@ -324,14 +357,14 @@ if ($method === 'POST' && $path === '/admin/wipe') {
   $admin = requireUser($db);
   if ($admin['role'] !== 'admin') out(['error' => 'Нет прав администратора'], 403);
   $db->exec('UPDATE meta SET epoch = epoch + 1 WHERE id = 1');
-  $db->exec('UPDATE users SET balance = 0, cash_code = 0, force_json = NULL');
+  $db->exec('UPDATE users SET balance = 0, cash_code = 0, force_json = NULL, save_json = NULL, save_at = 0');
   $db->exec('DELETE FROM gifts');
   out(['ok' => true, 'epoch' => epoch($db)]);
 }
 
 if ($method === 'POST' && $path === '/logout') {
   $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-  if (str_starts_with($header, 'Bearer ')) {
+  if (strncmp($header, 'Bearer ', 7) === 0) {
     $token = trim(substr($header, 7));
     $db->prepare('DELETE FROM sessions WHERE token_hash = ?')->execute([hash('sha256', $token)]);
   }
