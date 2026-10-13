@@ -319,15 +319,7 @@ export default {
       if(request.method === 'POST' && path === '/redeem'){
         const nick = await sessionNick(request, env);
         if(!nick) return reply(request, { error: 'Нужно войти' }, 401);
-        const body = await readBody(request);
-        if(String(body.code) !== '525262') return reply(request, { error: 'Нет такого кода' }, 400);
-        const user = await loadUser(env, nick);
-        if(!user) return reply(request, { error: 'Аккаунт не найден' }, 401);
-        if(user.banned) return reply(request, { error: 'Аккаунт заблокирован', banned: true }, 403);
-        if(user.cashCode) return reply(request, { error: 'Код уже использован на этом аккаунте', used: true }, 409);
-        user.cashCode = true;
-        await env.DATA.put('u:' + nick, JSON.stringify(user));
-        return reply(request, { ok: true });
+        return reply(request, { error: 'Нет такого кода' }, 400);
       }
       if(request.method === 'POST' && path === '/gift'){
         const nick = await sessionNick(request, env);

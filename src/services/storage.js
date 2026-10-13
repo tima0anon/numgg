@@ -13,7 +13,7 @@ export function save(){
       history: S.history, rarityCount: S.rarityCount, customSpinN: S.customSpinN,
       earnSolved: S.earnSolved, earnWrong: S.earnWrong, earnStreak: S.earnStreak, earnBest: S.earnBest,
       coefLow: S.coefLow, coefHigh: S.coefHigh, news: S.news, acct: S.acct,
-      earnLevel: S.earnLevel, usedCashCode: S.usedCashCode,
+      earnLevel: S.earnLevel, usedPromos: S.usedPromos, testAdmin: S.testAdmin,
       playerName: S.playerName, peakRub: S.peakRub, rivals: S.rivals, epoch: S.epoch || 0, forceId: S.forceId || '',
       myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind, listedAt: l.listedAt, nextRollAt: l.nextRollAt }))
     };
@@ -59,7 +59,8 @@ export function load(){
     S.customSpinN = (typeof p.customSpinN==='number' && p.customSpinN>=1 && p.customSpinN<=MAX_CUSTOM_SPIN) ? p.customSpinN : 25;
     S.earnSolved = p.earnSolved||0; S.earnWrong = p.earnWrong||0; S.earnStreak = p.earnStreak||0; S.earnBest = p.earnBest||0;
     S.earnLevel = [0,1,2,3].includes(p.earnLevel) ? p.earnLevel : 0;
-    S.usedCashCode = !!p.usedCashCode;
+    S.usedPromos = Array.isArray(p.usedPromos) ? p.usedPromos.filter(code => typeof code === 'string').slice(0, 8) : [];
+    S.testAdmin = !!p.testAdmin;
     S.coefLow = (typeof p.coefLow==='number' && p.coefLow>=10 && p.coefLow<=90) ? p.coefLow : 20;
     S.coefHigh = (typeof p.coefHigh==='number' && p.coefHigh>=1 && p.coefHigh<=200) ? p.coefHigh : 20;
     S.news = Array.isArray(p.news) ? p.news.filter(n => n.until > Date.now()) : [];

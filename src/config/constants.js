@@ -35,15 +35,13 @@ export const OFFER_TTL_MS = 30000;
 export const TICK_MS = 500;
 export const SALE_ROLL_MS = 25000;
 
-export const SECRET_CODE = 525242;
+export const PROMO_REWARD = 200000;
 
-export const SECRET_REWARD = 1500000000;
+export const PROMO_CODES = ['ЩЕДРОСТЬ', 'ПРОМОКОД'];
 
-export const SECRET_FULL_CODE = 525252;
+export const TEST_ADMIN_ON = '007123';
 
-export const SECRET_CASH_CODE = 525262;
-
-export const SECRET_CASH = 2000000;
+export const TEST_ADMIN_OFF = '035123';
 
 export const ACCT_HIRE_COST = 2200000;
 

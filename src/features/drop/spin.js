@@ -104,7 +104,7 @@ export function updateCd(){
 
 export function readCustomSpinN(){
   const inp = document.getElementById('customSpinCount');
-  if(!inp) return S.customSpinN || 1;
+  if(!inp || !/^\d+$/.test(inp.value.trim())) return S.customSpinN || 1;
   let n = parseInt(inp.value, 10);
   if(!isFinite(n) || n < 1) n = 1;
   if(n > MAX_CUSTOM_SPIN) n = MAX_CUSTOM_SPIN;

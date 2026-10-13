@@ -1,6 +1,8 @@
 import { adminAct, adminWipe, fetchPlayers } from '../../services/remote.js';
 import { Sound } from '../../services/audio.js';
 import { notify } from '../../services/notify.js';
+import { S } from '../../state/player.js';
+import { paintTestBench } from './bench.js';
 
 function esc(value){
   return String(value).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
@@ -36,6 +38,16 @@ function paint(){
 }
 
 export async function renderAdmin(){
+  const bench = document.getElementById('testBench');
+  const remote = document.getElementById('remoteAdmin');
+  if(S.testAdmin){
+    if(bench) bench.hidden = false;
+    if(remote) remote.hidden = true;
+    paintTestBench();
+    return;
+  }
+  if(bench) bench.hidden = true;
+  if(remote) remote.hidden = false;
   const host = document.getElementById('adminList');
   if(host) host.innerHTML = '<div class="empty">Загружаю игроков…</div>';
   try {

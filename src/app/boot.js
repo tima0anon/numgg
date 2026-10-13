@@ -4,9 +4,6 @@ import {
   PAGE_KEY,
   ACCT_AUTO_COST,
   ACCT_HIRE_COST,
-  SECRET_CASH_CODE,
-  SECRET_CODE,
-  SECRET_FULL_CODE,
   SOCIAL_PAUSED,
   TICK_MS,
 } from '../config/constants.js';
@@ -55,6 +52,7 @@ import {
 } from '../features/exchange/view.js';
 import { sellBulk } from '../features/garage/sell.js';
 import { renderCollection } from '../features/garage/view.js';
+import { bindTestBench } from '../features/admin/bench.js';
 import { bindAdmin } from '../features/admin/panel.js';
 import { ensureSession } from '../features/auth/gate.js';
 import { applyServer, startProfileSync } from '../features/auth/live.js';
@@ -95,10 +93,10 @@ import {
 } from '../features/shell/chrome.js';
 import { resetProgress } from '../features/shell/reset.js';
 import {
-  triggerCashCode,
+  isSpinCode,
+  previewSpinField,
+  syncAdminNav,
   triggerCustomSpin,
-  triggerEasterEgg,
-  triggerFullCollection,
 } from '../features/shell/secrets.js';
 import { Sound } from '../services/audio.js';
 import { notify } from '../services/notify.js';
@@ -124,14 +122,15 @@ export async function init(){
   if(me && me.nick) S.playerName = me.nick;
   if(!SOCIAL_PAUSED) startProfileSync();
   const adminNav = document.getElementById('adminNav');
-  if(adminNav) adminNav.hidden = SOCIAL_PAUSED || !me || me.role !== 'admin';
+  if(S.testAdmin) syncAdminNav();
+  else if(adminNav) adminNav.hidden = SOCIAL_PAUSED || !me || me.role !== 'admin';
   const rankNav = document.querySelector('.topnav-btn[data-page="rank"]');
   if(rankNav) rankNav.hidden = SOCIAL_PAUSED;
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
   if(!['drop','earn','exchange','garage','accountant','news','rank','info','admin'].includes(savedPage)) savedPage = 'drop';
-  if(savedPage === 'admin' && (SOCIAL_PAUSED || !me || me.role !== 'admin')) savedPage = 'drop';
+  if(savedPage === 'admin' && !S.testAdmin && (SOCIAL_PAUSED || !me || me.role !== 'admin')) savedPage = 'drop';
   if(savedPage === 'rank' && SOCIAL_PAUSED) savedPage = 'drop';
   switchPage(savedPage);
 
@@ -145,21 +144,14 @@ export async function init(){
   const cs = document.getElementById('customSpinCount');
   if(cs){
     cs.value = S.customSpinN || 25;
-    cs.addEventListener('input', () => {
-      const raw = parseInt(cs.value, 10);
-      if(raw === SECRET_CODE){ triggerEasterEgg(); return; }
-      if(raw === SECRET_FULL_CODE){ triggerFullCollection(); return; }
-      if(raw === SECRET_CASH_CODE){ triggerCashCode(); return; }
-      updateDropCostsUI();
-    });
+    cs.addEventListener('input', previewSpinField);
     cs.addEventListener('change', () => {
-      let n = parseInt(cs.value, 10);
-      if(n === SECRET_CODE){ triggerEasterEgg(); return; }
-      if(n === SECRET_FULL_CODE){ triggerFullCollection(); return; }
-      if(n === SECRET_CASH_CODE){ triggerCashCode(); return; }
+      const raw = cs.value.trim();
+      if(isSpinCode(raw) || !/^\d+$/.test(raw)) return;
+      let n = parseInt(raw, 10);
       if(!isFinite(n) || n < 1) n = 1;
       if(n > MAX_CUSTOM_SPIN) n = MAX_CUSTOM_SPIN;
-      cs.value = n; S.customSpinN = n; save(); updateDropCostsUI();
+      cs.value = String(n); S.customSpinN = n; save(); updateDropCostsUI();
     });
     cs.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); triggerCustomSpin(); } });
   }
@@ -285,6 +277,7 @@ export async function init(){
 
   if(!SOCIAL_PAUSED) bindRankAccount();
   bindAdmin();
+  bindTestBench();
   setInterval(() => {
     if(document.getElementById('page-rank')?.classList.contains('active')) renderRank();
   }, 20000);

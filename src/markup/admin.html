@@ -1,5 +1,45 @@
 <section class="page" id="page-admin">
-  <div class="group">
+  <div class="group" id="testBench" hidden>
+    <div class="group-header">Тест</div>
+    <div class="admin-lead" id="testStatus">Локальная панель. Чужие игроки отсюда не меняются.</div>
+    <div class="admin-tools">
+      <input id="testBalance" inputmode="numeric" placeholder="Баланс">
+      <button type="button" class="ios-btn" id="testSetBalance">Поставить</button>
+      <button type="button" class="ios-btn gray" id="testPlus">+1 млн</button>
+      <button type="button" class="ios-btn gray" id="testStart">На старт</button>
+    </div>
+    <div class="admin-tools">
+      <select id="testCountry">
+        <option value="ru">Россия</option>
+        <option value="by">Беларусь</option>
+        <option value="ua">Украина</option>
+        <option value="us">США</option>
+        <option value="cn">Китай</option>
+      </select>
+      <select id="testRarity">
+        <option value="common">Мусор</option>
+        <option value="uncommon">Необычный</option>
+        <option value="rare">Редкий</option>
+        <option value="epic">Эпический</option>
+        <option value="legendary">Легендарный</option>
+        <option value="mythic">Мифический</option>
+        <option value="divine">Божественный</option>
+      </select>
+      <button type="button" class="ios-btn" id="testGive">Выдать номер</button>
+    </div>
+    <div class="admin-tools">
+      <button type="button" class="ios-btn" id="testMax">Макс. улучшения</button>
+      <button type="button" class="ios-btn" id="testAcct">Бухгалтер готов</button>
+      <button type="button" class="ios-btn gray" id="testBull">Хорошая новость</button>
+      <button type="button" class="ios-btn gray" id="testBear">Плохая новость</button>
+    </div>
+    <div class="admin-tools">
+      <button type="button" class="ios-btn gray" id="testBoard">Обновить биржу</button>
+      <button type="button" class="ios-btn gray" id="testPromos">Сбросить промокоды</button>
+      <button type="button" class="ios-btn red" id="testClear">Очистить гараж</button>
+    </div>
+  </div>
+  <div class="group" id="remoteAdmin">
     <div class="group-header">Админ</div>
     <div class="admin-lead">Ники <b>мирон</b> и <b>тимур</b> видят всех игроков. Баланс и сброс доходят до чужого браузера при следующем заходе. Бан закрывает вход.</div>
     <div class="admin-tools">

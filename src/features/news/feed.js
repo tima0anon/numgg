@@ -186,6 +186,18 @@ function pickFreshTemplate(){
   return exists ? null : tpl;
 }
 
+export function injectNews(kind){
+  const pool = NEWS_TEMPLATES.filter(t => t.kind === kind);
+  const tpl = pool.length ? rnd(pool) : null;
+  if(!tpl) return;
+  const now = Date.now();
+  S.news = S.news.filter(n => n.until > now);
+  if(S.news.length >= NEWS_MAX_ACTIVE) S.news.shift();
+  pushNews(tpl, now);
+  renderNews();
+  refreshBoards();
+}
+
 export function generateNews(){
   const now = Date.now();
   S.news = S.news.filter(n => n.until > now);

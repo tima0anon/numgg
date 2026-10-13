@@ -86,10 +86,6 @@ export function fetchTop(){
   return call('/top', { auth: true });
 }
 
-export function redeemCashCode(){
-  return call('/redeem', { body: { code: '525262' }, auth: true });
-}
-
 export function sendPlate(to, plate){
   return call('/gift', { body: { to, plate }, auth: true });
 }

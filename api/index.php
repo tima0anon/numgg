@@ -232,12 +232,8 @@ if ($method === 'POST' && $path === '/score') {
 }
 
 if ($method === 'POST' && $path === '/redeem') {
-  $user = requireUser($db);
-  $data = body();
-  if ((string) ($data['code'] ?? '') !== '525262') out(['error' => 'Нет такого кода'], 400);
-  if ($user['cash_code']) out(['error' => 'Код уже использован на этом аккаунте', 'used' => true], 409);
-  $db->prepare('UPDATE users SET cash_code = 1 WHERE nick_key = ?')->execute([$user['nick_key']]);
-  out(['ok' => true]);
+  requireUser($db);
+  out(['error' => 'Нет такого кода'], 400);
 }
 
 if ($method === 'POST' && $path === '/gift') {

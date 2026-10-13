@@ -9,7 +9,7 @@ import { resetProgress } from '../shell/reset.js';
 export function applyServer(me){
   if(!me) return;
   const nav = document.getElementById('adminNav');
-  if(nav) nav.hidden = me.role !== 'admin';
+  if(nav) nav.hidden = me.role !== 'admin' && !S.testAdmin;
   if(me.banned){
     clearSession();
     location.reload();
