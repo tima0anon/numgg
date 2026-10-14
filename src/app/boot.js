@@ -3,6 +3,7 @@ import {
   NEWS_CHECK_INTERVAL,
   PAGE_KEY,
   KEY,
+  RANK_ENABLED,
   ACCT_AUTO_COST,
   ACCT_HIRE_COST,
   SOCIAL_PAUSED,
@@ -131,12 +132,12 @@ export async function init(){
   if(!SOCIAL_PAUSED) startProfileSync();
   syncAdminNav();
   const rankNav = document.querySelector('.topnav-btn[data-page="rank"]');
-  if(rankNav) rankNav.hidden = SOCIAL_PAUSED;
+  if(rankNav) rankNav.hidden = SOCIAL_PAUSED || !RANK_ENABLED;
   document.querySelectorAll('.topnav-btn').forEach(b => b.addEventListener('click', () => { Sound.click(); switchPage(b.dataset.page); }));
   let savedPage = 'drop';
   try { savedPage = localStorage.getItem(PAGE_KEY) || 'drop'; } catch(e){}
   if(!['drop','earn','exchange','garage','upgrader','accountant','news','rank','info','admin'].includes(savedPage)) savedPage = 'drop';
-  if(savedPage === 'rank' && SOCIAL_PAUSED) savedPage = 'drop';
+  if(savedPage === 'rank' && (SOCIAL_PAUSED || !RANK_ENABLED)) savedPage = 'drop';
   switchPage(savedPage);
 
   document.querySelectorAll('#countryPicker .cpill').forEach(b => b.addEventListener('click', () => selectCountry(b.dataset.country)));
@@ -280,7 +281,7 @@ export async function init(){
     if(t.dataset.tab === 'wealth') renderWealthTable();
   }));
 
-  if(!SOCIAL_PAUSED) bindRankAccount();
+  if(!SOCIAL_PAUSED && RANK_ENABLED) bindRankAccount();
   bindAdmin();
   bindTestBench();
   bindUpgrader();

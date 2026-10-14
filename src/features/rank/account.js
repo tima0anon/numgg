@@ -9,7 +9,7 @@ import { updateBalances } from '../hud/balance.js';
 export function bindRankAccount(){
   const session = readSession();
   const account = document.getElementById('rankAccount');
-  if(account && session) account.textContent = session.nick + ' · место в топе по максимальному балансу';
+  if(account && session) account.textContent = session.nick + ' · место в топе по текущему балансу';
   const inbox = document.getElementById('rankInbox');
   const logout = document.getElementById('rankLogout');
   if(inbox) inbox.addEventListener('click', claimInbox);

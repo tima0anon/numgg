@@ -20,17 +20,17 @@ export async function renderRank(){
     return;
   }
   const tier = WEALTH_TIERS[wealthTierIdx(S.rub)];
-  const peak = Math.max(Math.floor(S.rub), Math.floor(S.peakRub || 0));
+  const nowRub = Math.max(0, Math.floor(S.rub));
   const place = document.getElementById('rankPlace');
   const sub = document.getElementById('rankSub');
-  if(place) place.textContent = tier.emoji + ' ' + peak.toLocaleString('ru-RU') + ' ₽';
-  if(sub) sub.textContent = tier.label + ' · твой максимальный баланс';
+  if(place) place.textContent = tier.emoji + ' ' + nowRub.toLocaleString('ru-RU') + ' ₽';
+  if(sub) sub.textContent = tier.label + ' · твой баланс сейчас';
   list.innerHTML = '<div class="empty">Загружаю топ…</div>';
   try {
     const data = await fetchTop();
     const me = data.me;
     if(me && me.place){
-      sub.textContent = tier.label + ' · ' + me.place + ' место в топе по максимальному балансу';
+      sub.textContent = tier.label + ' · ' + me.place + ' место в топе по текущему балансу';
     }
     if(!data.top.length){
       list.innerHTML = '<div class="empty">Общая таблица пока пустая.</div>';

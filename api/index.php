@@ -239,10 +239,10 @@ if ($method === 'POST' && $path === '/save') {
   $data = json_decode($raw, true);
   $save = is_array($data) ? ($data['save'] ?? null) : null;
   if (!is_array($save)) out(['error' => 'Не понял сохранение'], 400);
-  $balance = (int) max(0, (float) ($save['peakRub'] ?? $save['rub'] ?? 0));
+  $balance = (int) max(0, (float) ($save['rub'] ?? 0));
   if ($balance > 1e15) $balance = 0;
   $now = (int) (microtime(true) * 1000);
-  $db->prepare('UPDATE users SET save_json = ?, save_at = ?, balance = GREATEST(balance, ?), seen_at = ? WHERE nick_key = ?')
+  $db->prepare('UPDATE users SET save_json = ?, save_at = ?, balance = ?, seen_at = ? WHERE nick_key = ?')
     ->execute([json_encode($save, JSON_UNESCAPED_UNICODE), $now, $balance, $now, $user['nick_key']]);
   out(['ok' => true, 'saveAt' => $now]);
 }
@@ -260,7 +260,7 @@ if ($method === 'POST' && $path === '/score') {
     $db->prepare('UPDATE users SET balance = ?, force_json = NULL, seen_at = ? WHERE nick_key = ?')
       ->execute([$next, (int) (microtime(true) * 1000), $user['nick_key']]);
   } else {
-    $db->prepare('UPDATE users SET balance = GREATEST(balance, ?), seen_at = ? WHERE nick_key = ?')
+    $db->prepare('UPDATE users SET balance = ?, seen_at = ? WHERE nick_key = ?')
       ->execute([$balance, (int) (microtime(true) * 1000), $user['nick_key']]);
   }
   out(profile($db, userBy($db, $user['nick_key'])));

@@ -1,5 +1,6 @@
 import {
   PAGE_KEY,
+  RANK_ENABLED,
   THEME_KEY,
 } from '../../config/constants.js';
 import { renderEarnProblem } from '../earn/math.js';
@@ -24,7 +25,7 @@ export function updateSoundUI(){ const b = document.getElementById('soundToggle'
 
 export function switchPage(page){
   const valid = ['drop','earn','exchange','garage','upgrader','accountant','news','rank','info','admin'];
-  if(!valid.includes(page) || (page === 'admin' && !S.testAdmin)) page = 'drop';
+  if(!valid.includes(page) || (page === 'admin' && !S.testAdmin) || (page === 'rank' && !RANK_ENABLED)) page = 'drop';
   document.querySelectorAll('.topnav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
   document.querySelector('.topnav-btn.active')?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-'+page));

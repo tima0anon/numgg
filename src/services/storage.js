@@ -19,7 +19,7 @@ export function save(){
       myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind, listedAt: l.listedAt, nextRollAt: l.nextRollAt }))
     };
     localStorage.setItem(KEY, JSON.stringify(data));
-    queueScore(Math.max(S.rub, S.peakRub || 0), S.epoch || 0, S.forceId || '');
+    queueScore(Math.max(0, Math.floor(S.rub)), S.epoch || 0, S.forceId || '');
     queueCloudSave(data);
   } catch(e){}
 }

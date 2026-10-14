@@ -37,7 +37,7 @@ function showNick(nick){
   const chip = document.getElementById('accountChip');
   if(chip){ chip.hidden = false; chip.textContent = nick; }
   const account = document.getElementById('rankAccount');
-  if(account) account.textContent = nick + ' · место в топе по максимальному балансу';
+  if(account) account.textContent = nick + ' · место в топе по текущему балансу';
   S.playerName = nick;
 }
 
