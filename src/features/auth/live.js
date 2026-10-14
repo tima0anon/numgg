@@ -1,13 +1,21 @@
-import { clearSession, fetchMe, watchProfile } from '../../services/remote.js';
+import { renderCollection } from '../garage/view.js';
+import { clearSession, fetchMe, readSession, watchProfile, writeSession } from '../../services/remote.js';
 import { notify } from '../../services/notify.js';
 import { save } from '../../services/storage.js';
 import { flags } from '../../state/flags.js';
+import { market } from '../../state/market.js';
 import { S } from '../../state/player.js';
 import { updateBalances } from '../hud/balance.js';
+import { syncAdminNav } from '../shell/secrets.js';
 import { resetProgress } from '../shell/reset.js';
 
 export function applyServer(me){
   if(!me) return;
+  const session = readSession();
+  if(session && typeof me.role === 'string'){
+    writeSession({ token: session.token, nick: me.nick || session.nick, role: me.role });
+    syncAdminNav();
+  }
   if(me.banned){
     clearSession();
     location.reload();
@@ -30,6 +38,15 @@ export function applyServer(me){
       notify('Баланс изменён администратором');
     } else if(me.force.kind === 'reset'){
       resetProgress(true);
+    } else if(me.force.kind === 'garage'){
+      S.col = [];
+      S.bestNum = null;
+      market.listings = [];
+      flags.lastShownRub = null;
+      updateBalances();
+      renderCollection();
+      save();
+      notify('Гараж очищен администратором');
     }
   }
 }

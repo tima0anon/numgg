@@ -98,7 +98,7 @@ foreach (['мирон', 'тимур'] as $admin) {
     $stmt->execute([$admin, $admin, $hash, (int) (microtime(true) * 1000)]);
   }
 }
-foreach (['save_json MEDIUMTEXT NULL', 'save_at BIGINT NOT NULL DEFAULT 0'] as $column) {
+foreach (['save_json MEDIUMTEXT NULL', 'save_at BIGINT NOT NULL DEFAULT 0', 'hidden TINYINT NOT NULL DEFAULT 0'] as $column) {
   try { $db->exec('ALTER TABLE users ADD COLUMN ' . $column); } catch (Throwable $e) {}
 }
 
@@ -119,8 +119,17 @@ function userBy(PDO $db, string $key): ?array {
   return $row;
 }
 
+function patchSave(?string $json, callable $change): ?string {
+  if ($json === null || $json === '') return null;
+  $save = json_decode($json, true);
+  if (!is_array($save)) return null;
+  $change($save);
+  $encoded = json_encode($save, JSON_UNESCAPED_UNICODE);
+  return $encoded === false ? null : $encoded;
+}
+
 function placeOf(PDO $db, string $key): ?int {
-  $rows = $db->query('SELECT nick_key FROM users WHERE banned = 0 ORDER BY balance DESC, nick ASC')->fetchAll();
+  $rows = $db->query('SELECT nick_key FROM users WHERE banned = 0 AND hidden = 0 ORDER BY balance DESC, nick ASC')->fetchAll();
   foreach ($rows as $i => $row) if ($row['nick_key'] === $key) return $i + 1;
   return null;
 }
@@ -195,7 +204,7 @@ if ($method === 'GET' && $path === '/me') {
 }
 
 if ($method === 'GET' && $path === '/top') {
-  $rows = $db->query('SELECT nick, balance FROM users WHERE banned = 0 ORDER BY balance DESC, nick ASC LIMIT 100')->fetchAll();
+  $rows = $db->query('SELECT nick, balance FROM users WHERE banned = 0 AND hidden = 0 ORDER BY balance DESC, nick ASC LIMIT 100')->fetchAll();
   $top = [];
   foreach ($rows as $i => $row) $top[] = ['nick' => $row['nick'], 'balance' => (int) $row['balance'], 'place' => $i + 1];
   $key = sessionNick($db);
@@ -322,10 +331,23 @@ if ($method === 'POST' && $path === '/inbox/take') {
 if ($method === 'GET' && $path === '/admin/players') {
   $admin = requireUser($db);
   if ($admin['role'] !== 'admin') out(['error' => 'Нет прав администратора'], 403);
-  $rows = $db->query('SELECT nick, balance, banned, seen_at, role FROM users ORDER BY balance DESC, nick ASC LIMIT 500')->fetchAll();
+  $rows = $db->query('SELECT nick, balance, banned, hidden, seen_at, role, save_json FROM users ORDER BY balance DESC, nick ASC LIMIT 500')->fetchAll();
   $players = [];
   foreach ($rows as $row) {
-    $players[] = ['nick' => $row['nick'], 'balance' => (int) $row['balance'], 'banned' => (bool) $row['banned'], 'at' => (int) $row['seen_at'], 'role' => $row['role'] ?: ''];
+    $plates = 0;
+    if (!empty($row['save_json'])) {
+      $save = json_decode($row['save_json'], true);
+      if (is_array($save) && isset($save['col']) && is_array($save['col'])) $plates = count($save['col']);
+    }
+    $players[] = [
+      'nick' => $row['nick'],
+      'balance' => (int) $row['balance'],
+      'banned' => (bool) $row['banned'],
+      'hidden' => (bool) $row['hidden'],
+      'plates' => $plates,
+      'at' => (int) $row['seen_at'],
+      'role' => $row['role'] ?: '',
+    ];
   }
   out(['players' => $players]);
 }
@@ -339,17 +361,62 @@ if ($method === 'POST' && $path === '/admin/player') {
   $user = userBy($db, $key);
   if (!$user) out(['error' => 'Такого игрока нет'], 404);
   $action = (string) ($data['action'] ?? '');
+  $staff = ($user['role'] ?? '') === 'admin';
+  if ($staff && $action !== 'balance' && $action !== 'grant') out(['error' => 'Админа так менять нельзя'], 400);
   if ($action === 'balance') {
     $rub = (int) floor((float) ($data['balance'] ?? -1));
     if ($rub < 0 || $rub > 1e15) out(['error' => 'Некорректный баланс'], 400);
     $force = json_encode(['id' => bin2hex(random_bytes(16)), 'kind' => 'balance', 'rub' => $rub], JSON_UNESCAPED_UNICODE);
-    $db->prepare('UPDATE users SET balance = ?, force_json = ? WHERE nick_key = ?')->execute([$rub, $force, $key]);
+    $patched = patchSave($user['save_json'] ?? null, function (&$save) use ($rub) {
+      $save['rub'] = $rub;
+      if (!isset($save['peakRub']) || $rub > $save['peakRub']) $save['peakRub'] = $rub;
+    });
+    if ($patched !== null) {
+      $db->prepare('UPDATE users SET balance = ?, force_json = ?, save_json = ? WHERE nick_key = ?')->execute([$rub, $force, $patched, $key]);
+    } else {
+      $db->prepare('UPDATE users SET balance = ?, force_json = ? WHERE nick_key = ?')->execute([$rub, $force, $key]);
+    }
+  } elseif ($action === 'grant') {
+    $add = (int) floor((float) ($data['balance'] ?? -1));
+    if ($add < 1 || $add > 1e15) out(['error' => 'Некорректная сумма'], 400);
+    $base = (int) $user['balance'];
+    $decoded = !empty($user['save_json']) ? json_decode($user['save_json'], true) : null;
+    if (is_array($decoded) && isset($decoded['rub'])) $base = (int) $decoded['rub'];
+    $rub = $base + $add;
+    if ($rub < 0 || $rub > 1e15) out(['error' => 'Некорректная сумма'], 400);
+    $force = json_encode(['id' => bin2hex(random_bytes(16)), 'kind' => 'balance', 'rub' => $rub], JSON_UNESCAPED_UNICODE);
+    $patched = patchSave($user['save_json'] ?? null, function (&$save) use ($rub) {
+      $save['rub'] = $rub;
+      if (!isset($save['peakRub']) || $rub > $save['peakRub']) $save['peakRub'] = $rub;
+    });
+    if ($patched !== null) {
+      $db->prepare('UPDATE users SET balance = ?, force_json = ?, save_json = ? WHERE nick_key = ?')->execute([$rub, $force, $patched, $key]);
+    } else {
+      $db->prepare('UPDATE users SET balance = ?, force_json = ? WHERE nick_key = ?')->execute([$rub, $force, $key]);
+    }
   } elseif ($action === 'reset') {
     $force = json_encode(['id' => bin2hex(random_bytes(16)), 'kind' => 'reset'], JSON_UNESCAPED_UNICODE);
     $db->prepare('UPDATE users SET balance = 0, cash_code = 0, force_json = ? WHERE nick_key = ?')->execute([$force, $key]);
+  } elseif ($action === 'garage') {
+    $force = json_encode(['id' => bin2hex(random_bytes(16)), 'kind' => 'garage'], JSON_UNESCAPED_UNICODE);
+    $patched = patchSave($user['save_json'] ?? null, function (&$save) {
+      $save['col'] = [];
+      $save['bestNum'] = null;
+      $save['myListings'] = [];
+    });
+    if ($patched !== null) {
+      $db->prepare('UPDATE users SET force_json = ?, save_json = ? WHERE nick_key = ?')->execute([$force, $patched, $key]);
+    } else {
+      $db->prepare('UPDATE users SET force_json = ? WHERE nick_key = ?')->execute([$force, $key]);
+    }
+  } elseif ($action === 'kick') {
+    $db->prepare('DELETE FROM sessions WHERE nick_key = ?')->execute([$key]);
+  } elseif ($action === 'hide' || $action === 'show') {
+    $db->prepare('UPDATE users SET hidden = ? WHERE nick_key = ?')->execute([$action === 'hide' ? 1 : 0, $key]);
   } elseif ($action === 'ban' || $action === 'unban') {
     if ($key === $admin['nick_key']) out(['error' => 'Себя заблокировать нельзя'], 400);
     $db->prepare('UPDATE users SET banned = ?, balance = IF(? = 1, 0, balance) WHERE nick_key = ?')->execute([$action === 'ban' ? 1 : 0, $action === 'ban' ? 1 : 0, $key]);
+    if ($action === 'ban') $db->prepare('DELETE FROM sessions WHERE nick_key = ?')->execute([$key]);
   } else out(['error' => 'Не понял действие'], 400);
   $fresh = userBy($db, $key);
   out(['ok' => true, 'nick' => $fresh['nick'], 'balance' => (int) $fresh['balance'], 'banned' => (bool) $fresh['banned']]);

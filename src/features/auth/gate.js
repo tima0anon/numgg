@@ -78,7 +78,7 @@ function bind(){
     showError('');
     try {
       const result = mode === 'register' ? await registerAccount(nick, password) : await loginAccount(nick, password);
-      writeSession(result);
+      writeSession({ token: result.token, nick: result.nick, role: result.role || '' });
       document.getElementById('authPass').value = '';
       const me = typeof result.epoch === 'number' ? result : await fetchMe(true);
       showNick(me.nick);
@@ -110,6 +110,7 @@ export function ensureSession(){
         pending = resolve;
         return;
       }
+      writeSession({ token: saved.token, nick: me.nick, role: me.role || '' });
       showNick(me.nick);
       hideGate();
       resolve(me);

@@ -20,7 +20,14 @@ export function readSession(){
 }
 
 export function writeSession(data){
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ token: data.token, nick: data.nick }));
+  const prev = readSession();
+  const next = {
+    token: data.token || (prev && prev.token) || '',
+    nick: data.nick || (prev && prev.nick) || '',
+    role: typeof data.role === 'string' ? data.role : ((prev && prev.role) || ''),
+  };
+  if(!next.token || !next.nick) return;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(next));
 }
 
 export function clearSession(){

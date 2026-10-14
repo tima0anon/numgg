@@ -47,10 +47,6 @@ export const PROMO_REWARDS = {
 
 export const PROMO_CODES = Object.keys(PROMO_REWARDS);
 
-export const TEST_ADMIN_ON = '007123';
-
-export const TEST_ADMIN_OFF = '035123';
-
 export const ACCT_HIRE_COST = 2200000;
 
 export const ACCT_AUTO_COST = 11000000;
