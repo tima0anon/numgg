@@ -49,7 +49,24 @@ export const NEWS_TEMPLATES = [
   {type:'region', target:'02', mult:0.7, title:'02 регион переполнен', desc:'Лишние предложения давят на цену.', kind:'bear'},
   {type:'rarity', target:'rare', mult:1.2, title:'Редкие серии в дефиците', desc:'Редкие номера продаются заметно легче.', kind:'bull'},
   {type:'rarity', target:'uncommon', mult:0.84, title:'Необычные серии надоели рынку', desc:'Их берут только со скидкой.', kind:'bear'},
-  {type:'global', target:'all', mult:1.16, title:'Выходные: все смотрят биржу', desc:'Общий спрос выше, дорогие лоты тоже смотрят.', kind:'bull'}
+  {type:'global', target:'all', mult:1.16, title:'Выходные: все смотрят биржу', desc:'Общий спрос выше, дорогие лоты тоже смотрят.', kind:'bull'},
+  {type:'country', target:'ru', mult:1.22, title:'Дилеры открыли закупку по России', desc:'Российские серии берут живее обычного.', kind:'bull'},
+  {type:'country', target:'by', mult:1.18, title:'Брест разобрал белорусские серии', desc:'Спрос на Беларусь вырос за вечер.', kind:'bull'},
+  {type:'country', target:'ua', mult:1.21, title:'Одесса ищет ровные серии', desc:'Украинские номера получили вторую волну спроса.', kind:'bull'},
+  {type:'country', target:'cn', mult:1.27, title:'Пекин платит за зеркальные цифры', desc:'Китайские лоты уходят с наценкой.', kind:'bull'},
+  {type:'country', target:'us', mult:1.19, title:'Техас поднял vanity', desc:'Американские номера снова ликвидны.', kind:'bull'},
+  {type:'region', target:'78', mult:1.34, title:'Петербург, 78 регион, в спросе', desc:'Северо-западные серии подорожали.', kind:'bull'},
+  {type:'region', target:'116', mult:1.28, title:'Татарстан, 116, разбирают', desc:'Региональные коллекционеры подняли цену.', kind:'bull'},
+  {type:'region', target:'150', mult:1.33, title:'Подмосковье, 150, пошло вверх', desc:'Лоты 150 региона смотрят чаще.', kind:'bull'},
+  {type:'rarity', target:'epic', mult:1.18, title:'Эпики снова в чатах', desc:'Эпические серии берут без долгой торговли.', kind:'bull'},
+  {type:'rarity', target:'legendary', mult:1.24, title:'Легенды не залеживаются', desc:'На легендарные номера нашёлся живой спрос.', kind:'bull'},
+  {type:'global', target:'all', mult:1.12, title:'Вечерний спрос на всю доску', desc:'Покупатели смотрят и обычные, и дорогие лоты.', kind:'bull'},
+  {type:'country', target:'ru', mult:0.83, title:'Россия: дилеры взяли паузу', desc:'Российские лоты стоят дольше.', kind:'bear'},
+  {type:'country', target:'cn', mult:0.86, title:'Китай закрыл часть торгов', desc:'Китайские номера охладели.', kind:'bear'},
+  {type:'region', target:'78', mult:0.76, title:'78 регион переполнен', desc:'Петербургских серий слишком много.', kind:'bear'},
+  {type:'region', target:'97', mult:0.74, title:'97 регион выдохся', desc:'Премия на 97-й временно спала.', kind:'bear'},
+  {type:'rarity', target:'rare', mult:0.86, title:'Редкие серии застоялись', desc:'Редкие номера берут только с уступкой.', kind:'bear'},
+  {type:'global', target:'all', mult:0.9, title:'Тихий понедельник', desc:'Общий спрос чуть ниже обычного.', kind:'bear'}
 ];
 
 export function kindClass(k){ return k==='bull'?'bull':k==='bear'?'bear':'warn'; }
@@ -173,17 +190,37 @@ function pushNews(tpl, now){
   });
 }
 
+function pickOfKind(kind){
+  const pool = NEWS_TEMPLATES.filter(t => t.kind === kind && !S.news.some(n => n.type===t.type && n.target===t.target && n.title===t.title));
+  return pool.length ? rnd(pool) : null;
+}
+
 function pickFreshTemplate(){
   let tpl, attempts = 0, exists = true;
   while(exists && attempts < 24){
     const bears = NEWS_TEMPLATES.filter(t => t.kind === 'bear');
     const rest = NEWS_TEMPLATES.filter(t => t.kind !== 'bear');
-    const pool = Math.random() < 0.68 ? bears : rest;
+    const pool = Math.random() < 0.55 ? bears : rest;
     tpl = rnd(pool.length ? pool : NEWS_TEMPLATES);
-    exists = S.news.some(n => n.type===tpl.type && n.target===tpl.target);
+    exists = S.news.some(n => n.type===tpl.type && n.target===tpl.target && n.title===tpl.title);
     attempts++;
   }
   return exists ? null : tpl;
+}
+
+function ensureThreeBulls(now){
+  let guard = 0;
+  while(S.news.filter(n => n.kind === 'bull' && n.until > now).length < 3 && guard < 8){
+    guard++;
+    if(S.news.length >= NEWS_MAX_ACTIVE){
+      const bearIdx = S.news.findIndex(n => n.kind === 'bear');
+      if(bearIdx < 0) break;
+      S.news.splice(bearIdx, 1);
+    }
+    const tpl = pickOfKind('bull');
+    if(!tpl) break;
+    pushNews(tpl, now + guard);
+  }
 }
 
 export function injectNews(kind){
@@ -201,7 +238,12 @@ export function injectNews(kind){
 export function generateNews(){
   const now = Date.now();
   S.news = S.news.filter(n => n.until > now);
-  if(S.news.length >= NEWS_MAX_ACTIVE) return;
+  const before = S.news.length;
+  ensureThreeBulls(now);
+  if(S.news.length >= NEWS_MAX_ACTIVE){
+    if(S.news.length !== before){ renderNews(); refreshBoards(); }
+    return;
+  }
   const empty = S.news.length === 0;
   const slots = empty ? 3 : (S.news.length < 4 && Math.random() < 0.8) ? 1 : (Math.random() < 0.45 ? 1 : 0);
   let added = 0;
@@ -211,7 +253,7 @@ export function generateNews(){
     pushNews(tpl, now + i);
     added++;
   }
-  if(added){
+  if(added || S.news.length !== before){
     renderNews();
     refreshBoards();
   }

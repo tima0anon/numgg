@@ -24,6 +24,7 @@ import {
 } from '../../domain/plates/countries.js';
 import { renderRealPlate } from '../../domain/plates/render.js';
 import { hypoPrice } from '../../domain/pricing.js';
+import { saleCut } from '../../domain/saleFee.js';
 import { rnd } from '../../domain/random.js';
 import { stopAutoSpin } from './autospin.js';
 import { renderCollection } from '../garage/view.js';
@@ -189,8 +190,8 @@ export function doDrop(count){
       S.rarityCount[num.rarity] = (S.rarityCount[num.rarity]||0) + 1;
       newHistory.push({ plate:num.plate, flag:num.flag, rarity:num.rarity, price:num.price, id:num.id, country:num.country });
       if(shouldAutoSell(num.rarity)){
-        const sp = calcAutoSellPrice(num);
-        S.rub += sp; S.totalEarned += sp; autoSoldSum += sp; autoSoldCount++;
+        const cut = saleCut(calcAutoSellPrice(num), num.bought);
+        S.rub += cut.net; S.totalEarned += cut.net; autoSoldSum += cut.net; autoSoldCount++;
       } else S.col.push(num);
       if(!S.bestNum || num.price > S.bestNum.price) S.bestNum = num;
       results.push(num);

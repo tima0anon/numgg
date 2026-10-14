@@ -28,7 +28,6 @@ function sortedOffers(){
   if(market.filters.oCountry !== 'all') list = list.filter(o => o.flag === market.filters.oCountry);
   if(market.filters.oRarity !== 'all') list = list.filter(o => o.rarity === market.filters.oRarity);
   if(market.filters.oSearch){ const q = market.filters.oSearch.toLowerCase(); list = list.filter(o => o.plate.toLowerCase().includes(q)); }
-  if(market.filters.oBelow) list = list.filter(o => o.price < o.hypo);
   return list;
 }
 
@@ -97,7 +96,7 @@ export function renderOffers(){
   if(!grid) return;
   const list = sortedOffers();
   if(!list.length){
-    grid.innerHTML = '<div class="empty">'+(market.filters.oBelow ? 'Ниже рынка сейчас пусто. Скидка редкая.' : 'Сейчас продавать нечего. Новые номера появятся со следующим обновлением.')+'</div>';
+    grid.innerHTML = '<div class="empty">Сейчас продавать нечего. Новые номера появятся со следующим обновлением.</div>';
     return;
   }
   grid.innerHTML = list.map(o => {

@@ -13,6 +13,7 @@ import { haptic } from '../../services/haptic.js';
 import { notify } from '../../services/notify.js';
 import { save } from '../../services/storage.js';
 import { SALE_ROLL_MS } from '../../config/constants.js';
+import { saleCut, feeNote } from '../../domain/saleFee.js';
 import { market } from '../../state/market.js';
 import { S } from '../../state/player.js';
 
@@ -41,12 +42,13 @@ export function sellLow(numId){
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
   const coef = Math.max(10, Math.min(90, S.coefLow)) / 100;
   const price = Math.max(1, Math.round(hypo * (1 - coef)));
-  S.rub += price; S.totalEarned += price;
+  const cut = saleCut(price, num.bought);
+  S.rub += cut.net; S.totalEarned += cut.net;
   const idx = S.col.findIndex(n => n.id === numId);
   if(idx >= 0) S.col.splice(idx, 1);
   Sound.sell(); haptic(10);
-  notify('⚡ Мгновенно продан ' + num.plate + ' за ' + price.toLocaleString('ru-RU') + ' ₽');
-  addAcctLog('⚡ Мгновенная продажа ' + num.plate + ' · ' + price.toLocaleString('ru-RU') + ' ₽', 'n');
+  notify('⚡ Мгновенно продан ' + num.plate + ' за ' + cut.net.toLocaleString('ru-RU') + ' ₽' + feeNote(cut.fee));
+  addAcctLog('⚡ Мгновенная продажа ' + num.plate + ' · ' + cut.net.toLocaleString('ru-RU') + ' ₽' + feeNote(cut.fee), 'n');
   updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements(); save();
 }
 
@@ -127,19 +129,25 @@ export function sellBulk(kind){
     Sound.error();
     return;
   }
-  const priced = items.map(n => ({ n, price: unitPrice(n, kind) }));
+  const priced = items.map(n => {
+    const gross = unitPrice(n, kind);
+    const cut = saleCut(gross, n.bought);
+    return { n, price: gross, net: cut.net, fee: cut.fee };
+  });
   const sum = priced.reduce((s, x) => s + x.price, 0);
+  const net = priced.reduce((s, x) => s + x.net, 0);
+  const fee = priced.reduce((s, x) => s + x.fee, 0);
   const verb = kind === 'low' ? 'Мгновенно продать' : kind === 'high' ? 'Выставить выше рынка' : 'Выставить по рынку';
   const money = kind === 'low' ? ' за ' : ' на ';
   if(!confirm(verb + ' ' + priced.length + ' номеров' + money + sum.toLocaleString('ru-RU') + ' ₽?\nИзбранное и лоты, которые уже на бирже, останутся.')) return;
   if(kind === 'low'){
     const ids = new Set(priced.map(x => x.n.id));
-    S.rub += sum;
-    S.totalEarned += sum;
+    S.rub += net;
+    S.totalEarned += net;
     S.col = S.col.filter(n => !ids.has(n.id));
     Sound.sell(); haptic(10);
-    notify('⚡ Продано ' + priced.length + ' номеров за ' + sum.toLocaleString('ru-RU') + ' ₽');
-    addAcctLog('⚡ Массовая продажа · ' + priced.length + ' шт · ' + sum.toLocaleString('ru-RU') + ' ₽', 'n');
+    notify('⚡ Продано ' + priced.length + ' номеров за ' + net.toLocaleString('ru-RU') + ' ₽' + feeNote(fee));
+    addAcctLog('⚡ Массовая продажа · ' + priced.length + ' шт · ' + net.toLocaleString('ru-RU') + ' ₽' + feeNote(fee), 'n');
   } else {
     for(const { n, price } of priced){
       n.listed = true;

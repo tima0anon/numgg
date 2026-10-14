@@ -2,6 +2,8 @@ import { SOCIAL_PAUSED } from '../config/constants.js';
 const SESSION_KEY = 'numdrop_session_v1';
 
 export function apiBase(){
+  const host = location.hostname;
+  if(host === 'numdrop.online' || host.endsWith('swtest.ru')) return location.origin + '/api';
   return 'https://numdrop.online/api';
 }
 

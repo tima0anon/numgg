@@ -1,7 +1,7 @@
 import {
   MAX_CUSTOM_SPIN,
   PROMO_CODES,
-  PROMO_REWARD,
+  PROMO_REWARDS,
   TEST_ADMIN_OFF,
   TEST_ADMIN_ON,
 } from '../../config/constants.js';
@@ -60,14 +60,15 @@ function redeemPromo(code){
     Sound.error();
     return;
   }
+  const reward = PROMO_REWARDS[code] || 0;
   S.usedPromos.push(code);
-  S.rub += PROMO_REWARD;
-  S.totalEarned += PROMO_REWARD;
+  S.rub += reward;
+  S.totalEarned += reward;
   Sound.coin_big();
   haptic([30, 20, 40]);
   updateBalances();
   save();
-  notify('💵 +' + PROMO_REWARD.toLocaleString('ru-RU') + ' ₽');
+  notify('💵 +' + reward.toLocaleString('ru-RU') + ' ₽');
 }
 
 function applyCode(code){

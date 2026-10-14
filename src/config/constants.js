@@ -17,7 +17,7 @@ export const EARN_BASE = 3000;
 
 export const KEY = 'numdrop_save_v13';
 
-export const SOCIAL_PAUSED = true;
+export const SOCIAL_PAUSED = false;
 
 export const THEME_KEY = 'numdrop_theme';
 
@@ -37,9 +37,13 @@ export const OFFER_TTL_MS = 30000;
 export const TICK_MS = 500;
 export const SALE_ROLL_MS = 25000;
 
-export const PROMO_REWARD = 200000;
+export const PROMO_REWARDS = {
+  'ЩЕДРОСТЬ': 200000,
+  'ПРОМОКОД': 200000,
+  'КОД': 300000,
+};
 
-export const PROMO_CODES = ['ЩЕДРОСТЬ', 'ПРОМОКОД'];
+export const PROMO_CODES = Object.keys(PROMO_REWARDS);
 
 export const TEST_ADMIN_ON = '007123';
 

@@ -10,6 +10,7 @@ import {
 } from '../../domain/plates/countries.js';
 import { marketMood, saleChance } from '../../domain/demand.js';
 import { hypoPrice } from '../../domain/pricing.js';
+import { feeNote, saleCut } from '../../domain/saleFee.js';
 import { randGauss, rnd } from '../../domain/random.js';
 import {
   addAcctLog,
@@ -53,8 +54,9 @@ export function makeOffer(){
   const hypo = hypoPrice(rid, cd.flag, region, res.plate);
   let dev = 0.06 + randGauss() * 0.08;
   const rare = Math.random();
-  if(rare < 0.04) dev = -(0.25 + Math.random() * 0.45);
-  else if(rare < 0.07) dev = 0.45 + Math.random() * 0.45;
+  if(rare < 0.18) dev = (Math.random() - 0.5) * 0.02;
+  else if(rare < 0.22) dev = -(0.25 + Math.random() * 0.45);
+  else if(rare < 0.25) dev = 0.45 + Math.random() * 0.45;
   if(dev > 0.9) dev = 0.9;
   if(dev < -0.7) dev = -0.7;
   return {
@@ -270,22 +272,24 @@ export function rollListings(){
     const mood = marketMood(num.flag, region, num.rarity);
     const sessionChance = saleChance(l.price, hypo, mood, num.rarity);
     if(Math.random() < tickSaleChance(sessionChance)){
-      S.rub += l.price; S.totalEarned += l.price;
+      const cut = saleCut(l.price, num.bought);
+      S.rub += cut.net; S.totalEarned += cut.net;
       const idx = S.col.findIndex(n => Number(n.id) === Number(l.numId));
       if(idx >= 0) S.col.splice(idx, 1);
       market.listings.splice(i,1);
-      sold.push({ plate: num.plate, price: l.price });
+      sold.push({ plate: num.plate, price: cut.net, fee: cut.fee });
     }
   }
   if(!sold.length) return 0;
   if(sold.length === 1){
-    notify('💸 ' + sold[0].plate + ' продан за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽');
-    addAcctLog('💸 Продан ' + sold[0].plate + ' за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽', 'ok');
+    notify('💸 ' + sold[0].plate + ' продан за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽' + feeNote(sold[0].fee));
+    addAcctLog('💸 Продан ' + sold[0].plate + ' за ' + sold[0].price.toLocaleString('ru-RU') + ' ₽' + feeNote(sold[0].fee), 'ok');
     Sound.sell(); haptic(10);
   } else if(sold.length > 1){
     const sum = sold.reduce((s, x) => s + x.price, 0);
-    notify('💸 Продано ' + sold.length + ' лотов на ' + sum.toLocaleString('ru-RU') + ' ₽');
-    addAcctLog('💸 Продано лотов: ' + sold.length + ' · ' + sum.toLocaleString('ru-RU') + ' ₽', 'ok');
+    const fee = sold.reduce((s, x) => s + (x.fee || 0), 0);
+    notify('💸 Продано ' + sold.length + ' лотов на ' + sum.toLocaleString('ru-RU') + ' ₽' + feeNote(fee));
+    addAcctLog('💸 Продано лотов: ' + sold.length + ' · ' + sum.toLocaleString('ru-RU') + ' ₽' + feeNote(fee), 'ok');
     Sound.sell(); haptic(10);
   }
   updateBalances();
@@ -341,9 +345,11 @@ export function doFulfillOrder(orderId, numId, silent, batch){
   if(silent && num.favorite) return false;
   if(!plateMatchesMask(num.plate, o.mask)){ if(!silent && !batch) notify('Не подходит под маску'); return false; }
   const hypo = hypoPrice(num.rarity, num.flag, extractRegion(num.plate, num.flag), num.plate);
-  const reward = o.payFromPlate
+  const rewardGross = o.payFromPlate
     ? Math.max(1, Math.round(hypo * (o.multiplier || 1.1)))
     : o.reward;
+  const cut = saleCut(rewardGross, num.bought);
+  const reward = cut.net;
   S.rub += reward; S.totalEarned += reward;
   const idx = S.col.findIndex(n => n.id === numId);
   if(idx >= 0) S.col.splice(idx, 1);
@@ -357,7 +363,7 @@ export function doFulfillOrder(orderId, numId, silent, batch){
     S.acct.profit += (reward - hypo);
   }
   if(silent && !batch) addAcctLog('Продал ' + num.plate + ' в заказ за ' + reward.toLocaleString('ru-RU') + ' ₽, рынок номера ' + Math.round(hypo).toLocaleString('ru-RU') + ' ₽', 'ok');
-  else if(!batch) notify('🎯 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽');
+  else if(!batch) notify('🎯 Заказ выполнен: +' + reward.toLocaleString('ru-RU') + ' ₽' + feeNote(cut.fee));
   if(!batch){
     updateBalances(); renderCollection(); renderExchange(); updateStats(); updateAchievements();
     save();
