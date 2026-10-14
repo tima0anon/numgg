@@ -19,7 +19,7 @@ export const KEY = 'numdrop_save_v13';
 
 export const SOCIAL_PAUSED = false;
 
-export const RANK_ENABLED = import.meta.env.VITE_NO_RANK !== '1';
+export const RANK_ENABLED = (import.meta.env && import.meta.env.VITE_NO_RANK) !== '1';
 
 export const THEME_KEY = 'numdrop_theme';
 

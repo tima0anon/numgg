@@ -104,6 +104,7 @@ import {
 } from '../features/shell/secrets.js';
 import { Sound } from '../services/audio.js';
 import { notify } from '../services/notify.js';
+import { localNewerThanLink, rememberLink } from '../services/accountLink.js';
 import {
   dropSaveForSeason,
   load,
@@ -117,14 +118,17 @@ export async function init(){
   let me = null;
   if(!SOCIAL_PAUSED){
     me = await ensureSession();
-    if(me) dropSaveForSeason(me.epoch || 0);
-    if(me && me.save && typeof me.save === 'object' && (me.save.epoch || 0) >= (me.epoch || 0)){
+    if(me && !me.offline) dropSaveForSeason(me.epoch || 0);
+    const newer = !!(me && !me.offline && me.nick && localNewerThanLink(me.nick));
+    if(!newer && me && me.save && typeof me.save === 'object' && (me.save.epoch || 0) >= (me.epoch || 0)){
       try { localStorage.setItem(KEY, JSON.stringify(me.save)); } catch(e){}
+      rememberLink(me.nick, me.saveAt || 0);
     }
   }
   const gate = document.getElementById('authGate');
   if(SOCIAL_PAUSED && gate) gate.hidden = true;
   load();
+  if(me && !me.offline && me.nick && localNewerThanLink(me.nick)) save();
   const settledUp = settleUpgrader();
   if(settledUp) notify(settledUp.win ? 'Апргейдербета докрутила: ' + settledUp.target.plate : 'Апргейдербета докрутила мимо');
   if(me && (me.epoch || 0) > (S.epoch || 0)) S.epoch = me.epoch;

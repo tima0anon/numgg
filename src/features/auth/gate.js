@@ -9,6 +9,8 @@ import {
   registerAccount,
   writeSession,
 } from '../../services/remote.js';
+import { armLink } from '../../services/accountLink.js';
+import { storedEpoch } from '../../services/storage.js';
 import { S } from '../../state/player.js';
 
 let mode = 'login';
@@ -118,13 +120,18 @@ export function ensureSession(){
       if(error.status === 401 || error.payload?.banned){
         clearSession();
         showError(error.payload?.banned ? 'Аккаунт заблокирован' : 'Сессия истекла, войди снова');
-      } else if(error.status !== 401){
-        showError('Сервер молчит. Подожди немного и попробуй ещё раз');
         pending = resolve;
         return;
-      } else {
-        showError('Сессия истекла, войди снова');
       }
+      if(!error.status){
+        showNick(saved.nick);
+        hideGate();
+        armLink(saved.nick);
+        notify('Сервер сейчас не виден. Партия пишется в этот браузер и уйдёт на ник, когда связь вернётся.');
+        resolve({ offline: true, nick: saved.nick, epoch: storedEpoch() });
+        return;
+      }
+      showError('Сессия истекла, войди снова');
       pending = resolve;
     });
   });

@@ -6,6 +6,7 @@ import {
 import { COUNTRY_FLAGS } from '../../config/economy.js';
 import { RMAP } from '../../config/rarity.js';
 import { rnd } from '../../domain/random.js';
+import { tapeAt } from '../../domain/newsTape.js';
 import { renderExchange } from '../exchange/view.js';
 import { renderCollection } from '../garage/view.js';
 import { S } from '../../state/player.js';
@@ -170,7 +171,7 @@ export function updateNewsTimers(){
   const now = Date.now();
   const before = S.news.length;
   S.news = S.news.filter(n => n.until > now);
-  if(S.news.length !== before){ renderNews(); refreshBoards(); return; }
+  if(S.news.length !== before){ applyTape(now); return; }
   box.querySelectorAll('[data-news-id]').forEach(el => {
     const n = S.news.find(x => x.id === el.dataset.newsId);
     if(!n) return;
@@ -179,82 +180,43 @@ export function updateNewsTimers(){
   });
 }
 
-function pushNews(tpl, now){
-  let durMs = NEWS_MIN_LIFE + ~~(Math.random()*NEWS_LIFE_RANGE);
-  if(tpl.kind === 'bear') durMs = Math.round(durMs * 1.75);
-  S.news.push({
-    id: 'n' + now + '_' + (Math.random()*1e6|0),
-    type: tpl.type, target: tpl.target, mult: tpl.mult,
-    title: tpl.title, desc: tpl.desc, kind: tpl.kind,
-    until: now + durMs, startedAt: now
-  });
-}
-
-function pickOfKind(kind){
-  const pool = NEWS_TEMPLATES.filter(t => t.kind === kind && !S.news.some(n => n.type===t.type && n.target===t.target && n.title===t.title));
-  return pool.length ? rnd(pool) : null;
-}
-
-function pickFreshTemplate(){
-  let tpl, attempts = 0, exists = true;
-  while(exists && attempts < 24){
-    const bears = NEWS_TEMPLATES.filter(t => t.kind === 'bear');
-    const rest = NEWS_TEMPLATES.filter(t => t.kind !== 'bear');
-    const pool = Math.random() < 0.55 ? bears : rest;
-    tpl = rnd(pool.length ? pool : NEWS_TEMPLATES);
-    exists = S.news.some(n => n.type===tpl.type && n.target===tpl.target && n.title===tpl.title);
-    attempts++;
-  }
-  return exists ? null : tpl;
-}
-
-function ensureThreeBulls(now){
-  let guard = 0;
-  while(S.news.filter(n => n.kind === 'bull' && n.until > now).length < 3 && guard < 8){
-    guard++;
-    if(S.news.length >= NEWS_MAX_ACTIVE){
-      const bearIdx = S.news.findIndex(n => n.kind === 'bear');
-      if(bearIdx < 0) break;
-      S.news.splice(bearIdx, 1);
-    }
-    const tpl = pickOfKind('bull');
-    if(!tpl) break;
-    pushNews(tpl, now + guard);
-  }
-}
+let localNews = [];
 
 export function injectNews(kind){
   const pool = NEWS_TEMPLATES.filter(t => t.kind === kind);
   const tpl = pool.length ? rnd(pool) : null;
   if(!tpl) return;
   const now = Date.now();
-  S.news = S.news.filter(n => n.until > now);
-  if(S.news.length >= NEWS_MAX_ACTIVE) S.news.shift();
-  pushNews(tpl, now);
-  renderNews();
-  refreshBoards();
+  localNews = localNews.filter(n => n.until > now);
+  if(localNews.length >= 2) localNews.shift();
+  let durMs = NEWS_MIN_LIFE + ~~(Math.random()*NEWS_LIFE_RANGE);
+  if(tpl.kind === 'bear') durMs = Math.round(durMs * 1.75);
+  localNews.push({
+    id: 'local' + now,
+    type: tpl.type, target: tpl.target, mult: tpl.mult,
+    title: tpl.title, desc: tpl.desc, kind: tpl.kind,
+    until: now + durMs, startedAt: now
+  });
+  applyTape(now);
 }
 
-export function generateNews(){
-  const now = Date.now();
-  S.news = S.news.filter(n => n.until > now);
-  const before = S.news.length;
-  ensureThreeBulls(now);
-  if(S.news.length >= NEWS_MAX_ACTIVE){
-    if(S.news.length !== before){ renderNews(); refreshBoards(); }
-    return;
-  }
-  const empty = S.news.length === 0;
-  const slots = empty ? 3 : (S.news.length < 4 && Math.random() < 0.8) ? 1 : (Math.random() < 0.45 ? 1 : 0);
-  let added = 0;
-  for(let i=0;i<slots && S.news.length < NEWS_MAX_ACTIVE;i++){
-    const tpl = pickFreshTemplate();
-    if(!tpl) break;
-    pushNews(tpl, now + i);
-    added++;
-  }
-  if(added || S.news.length !== before){
+function sameTape(a, b){
+  if(a.length !== b.length) return false;
+  for(let i = 0; i < a.length; i++) if(!b[i] || a[i].id !== b[i].id) return false;
+  return true;
+}
+
+function applyTape(now){
+  localNews = localNews.filter(n => n.until > now);
+  const next = tapeAt(now, NEWS_TEMPLATES).concat(localNews).slice(-NEWS_MAX_ACTIVE);
+  const same = sameTape(S.news, next);
+  S.news = next;
+  if(!same){
     renderNews();
     refreshBoards();
   }
+}
+
+export function generateNews(){
+  applyTape(Date.now());
 }

@@ -1,4 +1,5 @@
 import { SOCIAL_PAUSED } from '../config/constants.js';
+import { rememberLink } from './accountLink.js';
 const SESSION_KEY = 'numdrop_session_v1';
 
 export function apiBase(){
@@ -81,7 +82,10 @@ export function queueCloudSave(payload){
   if(SOCIAL_PAUSED || !readSession() || !payload) return;
   clearTimeout(cloudTimer);
   cloudTimer = setTimeout(() => {
-    call('/save', { body: { save: payload }, auth: true }).catch(() => {});
+    const session = readSession();
+    call('/save', { body: { save: payload }, auth: true }).then(result => {
+      if(session && result && result.saveAt) rememberLink(session.nick, result.saveAt);
+    }).catch(() => {});
   }, 1200);
 }
 

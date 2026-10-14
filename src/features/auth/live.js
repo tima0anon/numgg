@@ -1,3 +1,4 @@
+import { localNewerThanLink } from '../../services/accountLink.js';
 import { renderCollection } from '../garage/view.js';
 import { clearSession, fetchMe, readSession, watchProfile, writeSession } from '../../services/remote.js';
 import { notify } from '../../services/notify.js';
@@ -54,7 +55,11 @@ export function applyServer(me){
 export function startProfileSync(){
   watchProfile(applyServer);
   setInterval(() => {
-    fetchMe(false).then(applyServer).catch(error => {
+    fetchMe(false).then(me => {
+      applyServer(me);
+      const session = readSession();
+      if(session && me && localNewerThanLink(session.nick)) save();
+    }).catch(error => {
       if(error.payload && error.payload.reset) applyServer(error.payload);
     });
   }, 20000);

@@ -16,6 +16,7 @@ export function save(){
       earnLevel: S.earnLevel, usedPromos: S.usedPromos, testAdmin: S.testAdmin,
       upgraderPending: S.upgraderPending, upgraderLog: S.upgraderLog, upgraderStats: S.upgraderStats,
       playerName: S.playerName, peakRub: S.peakRub, rivals: S.rivals, epoch: S.epoch || 0, forceId: S.forceId || '',
+      savedAt: Date.now(),
       myListings: market.listings.map(l => ({ numId: l.numId, price: l.price, sessions: l.sessions, kind: l.kind, listedAt: l.listedAt, nextRollAt: l.nextRollAt }))
     };
     localStorage.setItem(KEY, JSON.stringify(data));
