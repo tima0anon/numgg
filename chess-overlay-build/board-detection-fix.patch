@@ -1,0 +1,104 @@
+--- a/app/src/main/java/com/charlie/chessoverlay/BoardDetector.java
++++ b/app/src/main/java/com/charlie/chessoverlay/BoardDetector.java
+@@ -25,6 +25,8 @@
+     private boolean rookRightsWa=true,rookRightsWh=true,rookRightsBa=true,rookRightsBh=true;
+     private boolean castlingInitialized=false;
+     private char lastTurn='w';
++    private String diagnostic="";
++    public String diagnostic(){return diagnostic;}
+ 
+     private static class Template {
+         final char piece;
+@@ -136,7 +138,7 @@
+     }
+     private int[] findBoard(Bitmap bitmap){
+         int w=bitmap.getWidth(),h=bitmap.getHeight();double best=0;int bx=0,by=0,bs=0;
+-        for(float scale:new float[]{1f,.94f,.88f,.82f,.75f}){
++        for(float scale:new float[]{1f,.97f,.94f,.90f,.86f,.82f,.75f,.68f,.60f}){
+             int size=Math.round(w*scale);if(size>h||size<240)continue;
+             int x=(w-size)/2;
+             for(int y=0;y<=h-size;y+=4){
+@@ -212,25 +214,54 @@
+         return true;
+     }
+     public Board recognize(Bitmap frame){
+-        int[] pos=findBoard(frame);if(pos==null)return null;
+-        int x=pos[0],y=pos[1],size=pos[2];float cell=size/8f;
++        diagnostic="Сканирование экрана";
++        int[] pos=findBoard(frame);
++        if(pos==null){
++            int samples=0,greens=0,light=0,dark=0;
++            for(int yy=frame.getHeight()/8;yy<frame.getHeight()*7/8;yy+=Math.max(1,frame.getHeight()/50))
++                for(int xx=frame.getWidth()/8;xx<frame.getWidth()*7/8;xx+=Math.max(1,frame.getWidth()/30)){
++                    int color=frame.getPixel(xx,yy);samples++;
++                    if(distance(color,DARK)<65*65||distance(color,LAST_DARK)<65*65)greens++;
++                    if(Color.red(color)>185&&Color.green(color)>185)light++;
++                    if(Color.red(color)<35&&Color.green(color)<35&&Color.blue(color)<35)dark++;
++                }
++            if(dark>samples*.90)diagnostic="Чёрный кадр — выбери «Весь экран»";
++            else if(greens<samples*.02)diagnostic="Нет зелёной доски в захвате";
++            else diagnostic="Доска не найдена — другая разметка";
++            return null;
++        }
++        // A rendered square can be shifted a few source pixels by the Android
++        // display compositor. Verify neighboring grid alignments before giving up.
++        String firstFailure="";
++        for(int shift:new int[]{0,2,-2,4,-4,6,-6,9,-9}){
++            int trialY=pos[1]+shift;
++            if(trialY<0 || trialY+pos[2]>frame.getHeight())continue;
++            Board found=recognizeAt(frame,pos[0],trialY,pos[2]);
++            if(found!=null){diagnostic="Доска распознана";return found;}
++            if(firstFailure.isEmpty())firstFailure=diagnostic;
++        }
++        diagnostic=firstFailure.isEmpty()?"Невозможно распознать фигуры":firstFailure;
++        return null;
++    }
++    private Board recognizeAt(Bitmap frame,int x,int y,int size){
++        float cell=size/8f;
+         char[][] board=new char[8][8];int whiteBottomScore=0,kingW=0,kingB=0;
+         List<int[]> highlighted=new ArrayList<>();
+         for(int r=0;r<8;r++)for(int c=0;c<8;c++){
+             int x0=Math.round(x+c*cell),y0=Math.round(y+r*cell);
+             int x1=Math.round(x+(c+1)*cell),y1=Math.round(y+(r+1)*cell);
+             int w=x1-x0,h=y1-y0;
+-            if(w<=0||h<=0||x0+w>frame.getWidth()||y0+h>frame.getHeight())return null;
++            if(w<=0||h<=0||x0<0||y0<0||x0+w>frame.getWidth()||y0+h>frame.getHeight()){diagnostic="Клетки за границей кадра";return null;}
+             // Crop square then resize to 64x64. A 1px margin is ignored by the mask.
+             Mask mask=extract(frame,x0,y0,Math.min(w,h));
+-            char piece=classify(mask);if(piece=='?')return null;
++            char piece=classify(mask);if(piece=='?'){diagnostic="Не распознана фигура: клетка "+(r+1)+"/"+(c+1);return null;}
+             board[r][c]=piece;
+             if(piece=='K')kingW++;
+             if(piece=='k')kingB++;
+             if(piece!='.')whiteBottomScore+=(isWhite(piece)?1:-1)*(r<4?-1:1);
+             if(highlighted(frame,x,y,size,r,c))highlighted.add(new int[]{r,c});
+         }
+-        if(kingW!=1||kingB!=1)return null;
++        if(kingW!=1||kingB!=1){diagnostic="Короли не распознаны: "+kingW+"/"+kingB;return null;}
+         boolean whiteBottom=whiteBottomScore>=0;
+         // Chess.com marks the two most recently moved squares. The now-empty origin
+         // and occupied destination tell us which side just moved -> other side to move.
+--- a/app/src/main/java/com/charlie/chessoverlay/OverlayService.java
++++ b/app/src/main/java/com/charlie/chessoverlay/OverlayService.java
+@@ -152,7 +152,7 @@
+     private void analyze(android.graphics.Bitmap frame){
+         try{
+             BoardDetector.Board board=detector.recognize(frame);
+-            if(board==null){status("Доска не найдена");main.post(()->arrows.show(null,null));}
++            if(board==null){status(detector.diagnostic());lastFen="";main.post(()->arrows.show(null,null));}
+             else {
+                 String fen=board.fen();
+                 if(!fen.equals(lastFen)){
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -7,8 +7,8 @@
+         applicationId 'com.charlie.chessoverlay'
+         minSdk 29
+         targetSdk 35
+-        versionCode 1
+-        versionName '0.1.0'
++        versionCode 2
++        versionName '0.1.1'
+         ndk { abiFilters 'arm64-v8a' }
+     }
+     packaging {
