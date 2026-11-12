@@ -26,6 +26,15 @@ jobs:
           cp chess-overlay/patch/CalibrationView.java android/app/src/main/java/com/chessoverlay/mobile/
           python3 chess-overlay/patch/fix_capture.py
           sha256sum android/app/src/main/java/com/chessoverlay/mobile/OverlayService.java
+      - name: Apply automatic two-button accessibility build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat chess-overlay/auto-v03/source.part* | base64 -d > /tmp/chess-auto-patch.tar.xz
+          echo "117c7b609ea053ea731b58521de8945481e15c94b536c08def288627be510517  /tmp/chess-auto-patch.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/chess-auto-patch.tar.xz -C android
+          rm -f android/app/src/main/java/com/chessoverlay/mobile/OverlayService.java
+          rm -f android/app/src/main/java/com/chessoverlay/mobile/CalibrationView.java
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
