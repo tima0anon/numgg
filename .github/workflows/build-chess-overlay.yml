@@ -35,6 +35,16 @@ jobs:
           tar -xJf /tmp/chess-auto-patch.tar.xz -C android
           rm -f android/app/src/main/java/com/chessoverlay/mobile/OverlayService.java
           rm -f android/app/src/main/java/com/chessoverlay/mobile/CalibrationView.java
+      - name: Apply move list reader update
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d chess-overlay/auto-v04/delta.b64 > /tmp/chess-auto-v04.tar.xz
+          echo "6f9fc7930cdc0f756668ec085950f1c94bf9f2679a4549b633d000491c301e5c  /tmp/chess-auto-v04.tar.xz" | sha256sum -c -
+          mkdir -p /tmp/chess-auto-v04
+          tar -xJf /tmp/chess-auto-v04.tar.xz -C /tmp/chess-auto-v04
+          (cd android && patch -p1 < /tmp/chess-auto-v04/changes.patch)
+          cp /tmp/chess-auto-v04/app/src/main/java/com/chessoverlay/mobile/ChessMoveReader.java android/app/src/main/java/com/chessoverlay/mobile/
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
